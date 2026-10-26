@@ -461,24 +461,14 @@ Rancang aplikasi dengan gaya modern, elegan, premium, bersih, dan profesional, t
 - Hindari terlalu banyak gradien, shadow berat, dan warna mencolok.
 - Jangan menggunakan emoji sebagai pengganti ikon antarmuka.
 - Buat dark mode dan light mode.
-- Gunakan Bahasa Indonesia untuk UI utama.
+- Buat preset warna thema pakai OKLCH colors, bikin minimal 7 preset thema warna
+- Buat satu file yang berisi seluruh warna yang dipakai dalam aplikasi agar memudahkan penggantian warna.
+- Buat satu file untuk seluruh icon yang dipakai dalam aplikasi
+- Bahasa aplikasi terdiri dari indonesia dan inggris.
 - Format mata uang dalam Rupiah dengan formatter yang konsisten.
 
-### Palet warna
-
-Gunakan palet awal yang dapat dikustomisasi:
-
-- Primary: indigo atau biru modern.
-- Secondary: teal.
-- Background light: abu-abu sangat muda.
-- Surface: putih.
-- Background dark: charcoal.
-- Success: hijau.
-- Warning: amber.
-- Error: merah.
-- Text: kontras tinggi dan mudah dibaca.
-
 Jangan menyebarkan warna hardcoded di seluruh widget. Gunakan `ThemeData`, `ColorScheme`, dan token desain.
+Jangan hardcoded icon langsung.
 
 ### Komponen visual
 
@@ -500,7 +490,7 @@ Buat reusable widgets untuk:
 - Bottom sheet.
 - Form fields.
 - Pagination.
-- Snackbar.
+- Toast.
 - Sync status indicator.
 - Offline banner.
 
@@ -528,7 +518,6 @@ Dukung:
 - Tablet Android.
 - Windows desktop.
 - Linux desktop.
-- macOS jika memungkinkan.
 - Web jika tidak bertentangan dengan kebutuhan keamanan dan akses perangkat.
 
 Gunakan `LayoutBuilder`, `MediaQuery`, dan breakpoint yang konsisten.

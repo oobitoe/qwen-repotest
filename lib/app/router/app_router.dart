@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
-import '../responsive/responsive_layout.dart';
+import '../responsive/responsive_shell.dart';
 
 /// Rute utama aplikasi.
 class AppRoutes {
@@ -58,70 +58,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-/// Shell responsif: NavigationBar bawah di mobile, NavigationRail di tablet/desktop.
-class ResponsiveShell extends StatelessWidget {
-  const ResponsiveShell({super.key, required this.child});
-
-  final Widget child;
-
-  static const _destinations = <_ShellDestination>[
-    _ShellDestination(AppRoutes.dashboard, 'Dashboard',
-        Icons.dashboard_outlined, Icons.dashboard),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    var currentIndex = _destinations.indexWhere((d) => d.path == location);
-    if (currentIndex < 0) currentIndex = 0;
-
-    if (context.isDesktop || context.isTablet) {
-      return Scaffold(
-        body: Row(
-          children: [
-            NavigationRail(
-              selectedIndex: currentIndex,
-              labelType: NavigationRailLabelType.all,
-              destinations: [
-                for (final d in _destinations)
-                  NavigationRailDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selectedIcon),
-                    label: Text(d.label),
-                  ),
-              ],
-              onDestinationSelected: (i) => context.go(_destinations[i].path),
-            ),
-            const VerticalDivider(width: 1),
-            Expanded(child: child),
-          ],
-        ),
-      );
-    }
-
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (i) => context.go(_destinations[i].path),
-        destinations: [
-          for (final d in _destinations)
-            NavigationDestination(
-              icon: Icon(d.icon),
-              selectedIcon: Icon(d.selectedIcon),
-              label: d.label,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ShellDestination {
-  const _ShellDestination(this.path, this.label, this.icon, this.selectedIcon);
-  final String path;
-  final String label;
-  final IconData icon;
-  final IconData selectedIcon;
-}

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Konfigurasi Supabase. Nilai dibaca dari environment (dart-define / .env),
+/// Konfigurasi Supabase. Nilai dibaca dari environment (dart-define),
 /// TIDAK ADA secret di source code. Hanya anon/public key yang boleh dipakai
 /// di klien; service_role key tidak pernah disertakan.
 class SupabaseConfig {
@@ -22,6 +22,8 @@ class SupabaseConfig {
   static const SupabaseConfig instance =
       SupabaseConfig(url: envUrl, anonKey: envAnonKey);
 
+  static bool _initialized = false;
+
   /// Inisialisasi SDK. Aman dipanggil saat kredensial belum dikonfigurasi:
   /// aplikasi tetap jalan penuh dalam mode offline-only.
   static Future<bool> initialize() async {
@@ -33,11 +35,12 @@ class SupabaseConfig {
       return false;
     }
     await Supabase.initialize(url: instance.url, anonKey: instance.anonKey);
+    _initialized = true;
     return true;
   }
 
   static SupabaseClient? get client {
-    if (!instance.isValid || !Supabase.instance.isInitialized) return null;
+    if (!instance.isValid || !_initialized) return null;
     return Supabase.instance.client;
   }
 }

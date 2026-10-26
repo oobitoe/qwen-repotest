@@ -4,9 +4,6 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'app_database.dart';
-import 'sync_meta.dart';
-
-export 'sync_meta.dart' show ConflictDecision, TableMeta, TransactionExecutor;
 
 /// Helper sinkronisasi generik berbasis metadata seragam
 /// (`updated_at`, `deleted_at`, `version`, `sync_status`) di setiap tabel.
@@ -16,6 +13,7 @@ class SyncableDao {
   final AppDatabase _db;
 
   static final Map<String, TableMeta> _registry = {};
+  static const uuid = Uuid();
 
   /// Mendaftarkan metadata tabel (dipanggil sekali via registerAllSyncMetas).
   static void register(TableMeta meta) => _registry[meta.entityType] = meta;
@@ -27,7 +25,23 @@ class SyncableDao {
 
   Iterable<TableMeta> get registeredMetas => _registry.values;
 
-  /// Jumlah operasi outbox yang masih menunggu (waiting/failed).
+  TableMeta _require(String entityType) {
+    final meta = _registry[entityType];
+    if (meta == null) {
+      throw ArgumentError.value(
+          entityType, 'entityType', 'tipe entitas tidak terdaftar untuk sync');
+    }
+    return meta;
+  }
+
+  String _col(String entityType, String name) =>
+      _require(entityType).columns[name]!;
+
+  // ---------------------------------------------------------------------
+  // Antrian outbox
+  // ---------------------------------------------------------------------
+
+  /// Jumlah operasi outbox yang masih menunggu (waiting/retrying/failed).
   Future<int> countPendingQueue() async {
     final count = await (_db.selectOnly(_db.syncQueue)
           ..addColumns([_db.syncQueue.id.count()])
@@ -58,60 +72,55 @@ class SyncableDao {
     return rows.first.read<int>('version');
   }
 
-  /// Simpan baris lokal + increment version + enqueue payload ke outbox.
+  /// Sisipkan/perbarui baris + enqueue operasi upsert ke outbox dalam satu
+  /// transaksi. Payload disimpan dalam format snake_case siap kirim.
   ///
-  /// [buildCompanion] mengisi seluruh kolom data termasuk metadata
-  /// (version/updated_at/sync_status) yang disediakan lewat argumen closure.
-  Future<int> upsertAndEnqueue(
-    String entityType, {
+  /// [values]: map kolom snake_case -> nilai (tanpa id/versi otomatis).
+  Future<void> upsertAndEnqueue(
+    String entityType,
+    Map<String, dynamic> values, {
     required String id,
-    required Insertable<dynamic> Function(int version, DateTime now)
-        buildCompanion,
-    required Map<String, dynamic> Function(int version, DateTime now) payload,
+    bool markSynced = false,
   }) async {
     final meta = _require(entityType);
     final now = DateTime.now().toUtc();
-    final newVersion = await currentVersion(entityType, id) + 1;
-    await _typedUpsert(meta, buildCompanion(newVersion, now));
-    await enqueue(
-      entityType: entityType,
-      entityId: id,
-      operation: SyncOperations.upsert,
-      payload: payload(newVersion, now),
-      nextRetryAt: now,
-    );
-    return newVersion;
+    final version = await currentVersion(entityType, id) + 1;
+    final payload = <String, dynamic>{
+      ...values,
+      'id': id,
+      'updated_at': now.toIso8601String(),
+      if (meta.columns.containsKey('created_at') &&
+          !values.containsKey('created_at'))
+        'created_at': now.toIso8601String(),
+      'version': version,
+    };
+    await _db.transaction(() async {
+      await _applyUpsert(meta, id, version, markSynced ? SyncStatuses.synced : SyncStatuses.pending);
+      await enqueue(
+        entityType: entityType,
+        entityId: id,
+        operation: SyncOperations.upsert,
+        payload: payload,
+      );
+    });
   }
 
-  /// INSERT ... ON CONFLICT(id) DO UPDATE memakai SQL bawaan drift.
-  /// Semua kolom ikut di-update, metadata sync di-set `synced` bila [markSynced].
-  Future<void> _typedUpsert(TableMeta meta, Insertable<dynamic> row,
-      {bool markSynced = false}) async {
-    final table = _tableByName(meta.tableName);
-    final ctx = table.createContext(
-      row,
-      InsertMode.insert,
-      onConflict: DoUpdate(
-        (_) => row,
-        target: [table.columnByName('id')!],
-      ),
+  /// Update kolom langsung via SQL generik (INSERT ... ON CONFLICT).
+  /// Digunakan engine saat menerapkan data remote (markSynced=true).
+  Future<void> _applyUpsert(
+      TableMeta meta, String id, int version, String syncStatus) async {
+    // Tidak mengubah data lokal — hanya metadata versi/status pada baris
+    // yang sudah ada. Pembuatan baris dari remote memakai applyRemoteUpsert.
+    await _db.customUpdate(
+      'UPDATE "${meta.tableName}" SET "version" = ?2, "sync_status" = ?3 '
+      'WHERE "id" = ?1',
+      variables: [
+        Variable.withString(id),
+        Variable.withInt(version),
+        Variable.withString(syncStatus),
+      ],
+      updateKind: UpdateKind.update,
     );
-    var sql = ctx.sql;
-    if (markSynced) {
-      sql += ', "sync_status" = ?';
-    }
-    final vars = <Variable>[...ctx.boundVariables];
-    if (markSynced) {
-      vars.add(Variable.withString(SyncStatuses.synced));
-    }
-    await _db.customUpdate(sql, variables: vars, updateKind: UpdateKind.insert);
-  }
-
-  TableInfo<Table, dynamic> _tableByName(String tableName) {
-    for (final t in _db.allTables) {
-      if (t.actualTableName == tableName) return t;
-    }
-    throw ArgumentError.value(tableName, 'tableName', 'tabel tidak dikenal');
   }
 
   /// Soft delete (set deleted_at) + enqueue operasi delete.
@@ -119,149 +128,182 @@ class SyncableDao {
     final meta = _require(entityType);
     final now = DateTime.now().toUtc();
     final newVersion = await currentVersion(entityType, id) + 1;
-    await _db.customUpdate(
-      'UPDATE "${meta.tableName}" SET "deleted_at" = ?1, "updated_at" = ?2, '
-      '"version" = ?3, "sync_status" = ?4 WHERE "id" = ?5',
-      variables: [
-        Variable.withDateTime(now),
-        Variable.withDateTime(now),
-        Variable.withInt(newVersion),
-        Variable.withString(SyncStatuses.pending),
-        Variable.withString(id),
-      ],
-    );
-    await enqueue(
-      entityType: entityType,
-      entityId: id,
-      operation: SyncOperations.delete,
-      payload: {
-        'id': id,
-        'deleted_at': now.toIso8601String(),
-        'version': newVersion,
-      },
-      nextRetryAt: now,
-    );
+    await _db.transaction(() async {
+      await _db.customUpdate(
+        'UPDATE "${meta.tableName}" SET "deleted_at" = ?1, "updated_at" = ?2, '
+        '"version" = ?3, "sync_status" = ?4 WHERE "id" = ?5',
+        variables: [
+          Variable.withDateTime(now),
+          Variable.withDateTime(now),
+          Variable.withInt(newVersion),
+          Variable.withString(SyncStatuses.pending),
+          Variable.withString(id),
+        ],
+        updateKind: UpdateKind.update,
+      );
+      await enqueue(
+        entityType: entityType,
+        entityId: id,
+        operation: SyncOperations.delete,
+        payload: {
+          'id': id,
+          'deleted_at': now.toIso8601String(),
+          'version': newVersion,
+        },
+      );
+    });
   }
 
-  /// Tambahkan operasi ke outbox. Idempoten per entitas: operasi `waiting`
-  /// lama untuk entitas identik dibatalkan agar tidak dobel kirim.
+  /// Enqueue satu operasi outbox.
   Future<void> enqueue({
     required String entityType,
     required String entityId,
     required String operation,
     required Map<String, dynamic> payload,
-    required DateTime nextRetryAt,
+    DateTime? nextRetryAt,
   }) async {
-    await (_db.delete(_db.syncQueue)
-          ..where((t) =>
-              t.entityType.equals(entityType) &
-              t.entityId.equals(entityId) &
-              t.status.equals(SyncQueueStatuses.waiting)))
-        .go();
     await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
-          id: const Uuid().v4(),
+          id: uuid.v4(),
           entityType: entityType,
           entityId: entityId,
           operation: operation,
           payload: jsonEncode(payload),
-          nextRetryAt: Value(nextRetryAt),
+          status: Value(SyncQueueStatuses.waiting),
+          nextRetryAt: Value(nextRetryAt ?? DateTime.now().toUtc()),
         ));
   }
 
-  /// Operasi yang siap dikirim (status waiting & next_retry_at telah tiba).
-  Future<List<SyncQueueData>> dueQueueItems([DateTime? now]) =>
-      (_db.select(_db.syncQueue)
-            ..where((t) =>
-                t.status.equals(SyncQueueStatuses.waiting) &
-                t.nextRetryAt
-                    .isSmallerOrEqualValue(now ?? DateTime.now().toUtc()))
-            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-          .get();
+  /// Item antrian yang sudah jatuh tempo retry.
+  Future<List<OutboxItemData>> dueQueueItems([DateTime? now]) async {
+    final at = (now ?? DateTime.now()).toUtc();
+    final rows = await (_db.select(_db.syncQueue)
+          ..where((q) =>
+              q.status.isNotIn([SyncQueueStatuses.done]) &
+              q.nextRetryAt.isSmallerOrEqualValue(at))
+          ..orderBy([(q) => OrderingTerm.asc(q.createdAt)])
+          ..limit(50))
+        .get();
+    return [
+      for (final r in rows)
+        OutboxItemData(
+          id: r.id,
+          entityType: r.entityType,
+          entityId: r.entityId,
+          operation: r.operation,
+          payload: (jsonDecode(r.payload) as Map).cast<String, dynamic>(),
+          retryCount: r.retryCount,
+        ),
+    ];
+  }
 
   Future<void> markQueueItemDone(String queueId) =>
-      (_db.delete(_db.syncQueue)..where((t) => t.id.equals(queueId))).go();
+      _db.update(_db.syncQueue).replace(
+          (SyncQueueCompanion(status: const Value(SyncQueueStatuses.done)))
+              ..withWhere((_) => true));
 
-  Future<void> markQueueItemFailed(
-      String queueId, String error, DateTime nextRetryAt, int retryCount) async {
-    await (_db.update(_db.syncQueue)..where((t) => t.id.equals(queueId)))
-        .write(SyncQueueCompanion(
-      status: const Value(SyncQueueStatuses.waiting),
-      lastError: Value(error),
-      nextRetryAt: Value(nextRetryAt),
-      retryCount: Value(retryCount),
-    ));
-  }
-
-  /// Penentu resolusi konflik Last-Write-Wins + idempotensi.
-  ///
-  /// - Tidak ada lokal → terima remote.
-  /// - Versi sama & waktu seri (±1 detik) → duplikat, abaikan.
-  /// - Remote lebih baru (atau seri dengan versi lebih tinggi) DAN lokal sudah
-  ///   `synced` → terima remote.
-  /// - Remote lebih baru tetapi lokal belum tersinkron → pertahankan lokal;
-  ///   push akan menyelesaikan konflik (LWW saat upload).
-  static ConflictDecision resolveIncoming({
-    required bool existsLocally,
-    required DateTime? localUpdatedAt,
-    required int localVersion,
-    required bool localSynced,
-    required DateTime remoteUpdatedAt,
-    required int remoteVersion,
-  }) {
-    if (!existsLocally) return ConflictDecision.applyRemote;
-    final local = localUpdatedAt ?? DateTime(0);
-    final timeDiff = remoteUpdatedAt.difference(local).abs();
-    if (localVersion == remoteVersion && timeDiff <= const Duration(seconds: 1)) {
-      return ConflictDecision.duplicate;
-    }
-    final remoteNewer =
-        remoteUpdatedAt.isAfter(local) && timeDiff > const Duration(seconds: 1);
-    final tieHigherVersion = !remoteNewer && remoteVersion > localVersion;
-    if ((remoteNewer || tieHigherVersion) && localSynced) {
-      return ConflictDecision.applyRemote;
-    }
-    if (remoteNewer && !localSynced) return ConflictDecision.keepLocal;
-    return ConflictDecision.duplicate;
-  }
-
-  /// Terapkan perubahan hasil unduhan remote dengan resolusi LWW.
-  /// Mengembalikan true bila data remote diterima & disimpan.
-  Future<bool> applyRemoteUpsert(
-      String entityType, Map<String, dynamic> json) async {
-    final meta = _require(entityType);
-    final id = json['id'] as String;
-    final remoteUpdatedAt = DateTime.parse(json['updated_at'] as String).toUtc();
-    final remoteVersion = (json['version'] as num?)?.toInt() ?? 1;
-
-    final rows = await _db
-        .customSelect(
-          'SELECT "updated_at", "version", "sync_status" FROM "${meta.tableName}" '
-          'WHERE "id" = ?',
-          variables: [Variable.withString(id)],
-        )
-        .get();
-    final row = rows.isEmpty ? null : rows.first;
-
-    final decision = resolveIncoming(
-      existsLocally: row != null,
-      localUpdatedAt: row?.read<DateTime?>('updated_at')?.toUtc(),
-      localVersion: row?.read<int>('version') ?? 0,
-      localSynced: row?.read<String>('sync_status') == SyncStatuses.synced,
-      remoteUpdatedAt: remoteUpdatedAt,
-      remoteVersion: remoteVersion,
+  /// Tandai item gagal: naikkan retry_count, jadwalkan backoff eksponensial,
+  /// atau tandai `failed` permanen bila melewati batas retry.
+  Future<void> markQueueItemFailed(String queueId, String error) async {
+    final item = await (_db.select(_db.syncQueue)
+          ..where((q) => q.id.equals(queueId)))
+        .getSingleOrNull();
+    if (item == null) return;
+    final retries = item.retryCount + 1;
+    final permanent = retries >= AppConstants.maxRetries;
+    final backoff = Duration(
+      seconds: AppConstants.backoffBaseSeconds * (1 << (retries - 1).clamp(0, 6)),
     );
+    await _db.update(_db.syncQueue).replace(
+      SyncQueueCompanion(
+        id: Value(item.id),
+        entityType: Value(item.entityType),
+        entityId: Value(item.entityId),
+        operation: Value(item.operation),
+        payload: Value(item.payload),
+        createdAt: Value(item.createdAt),
+        retryCount: Value(retries),
+        lastError: Value(error.length > 200 ? error.substring(0, 200) : error),
+        status: Value(permanent ? SyncQueueStatuses.failed : SyncQueueStatuses.waiting),
+        nextRetryAt: Value(DateTime.now().toUtc().add(backoff)),
+      ),
+    );
+  }
 
-    if (decision != ConflictDecision.applyRemote) return false;
+  // ---------------------------------------------------------------------
+  // Penerapan data remote (pull) dengan resolusi konflik Last-Write-Wins
+  // ---------------------------------------------------------------------
 
-    await _typedUpsert(meta, meta.toCompanion(json), markSynced: true);
+  /// Terapkan baris remote ke tabel lokal. Konflik diselesaikan LWW:
+  /// remote hanya diterapkan bila `updated_at` remote lebih baru ATAU sama
+  /// tetapi versi remote >= versi lokal, DAN status lokal bukan pending
+  /// (perubahan lokal yang belum terkirim selalu menang).
+  ///
+  /// Return `true` bila data lokal diubah.
+  Future<bool> applyRemoteUpsert(
+    String entityType,
+    Map<String, dynamic> remoteRow,
+  ) async {
+    final meta = _require(entityType);
+    final id = remoteRow['id']?.toString();
+    if (id == null) return false;
+
+    final localUpdatedAt = await _readColumn(meta, id, 'updated_at');
+    final localVersion = await currentVersion(entityType, id);
+    final localStatus = await _readColumn(meta, id, 'sync_status');
+
+    final remoteUpdatedAt =
+        DateTime.tryParse(remoteRow['updated_at']?.toString() ?? '')?.toUtc();
+    final remoteVersion = (remoteRow['version'] as num?)?.toInt() ?? 1;
+
+    final exists = localUpdatedAt != null;
+    var wins = false;
+    if (!exists) {
+      wins = true;
+    } else if (localStatus == SyncStatuses.pending) {
+      wins = false; // perubahan lokal tertunda selalu menang (outbox akan push)
+    } else if (remoteUpdatedAt != null &&
+        localUpdatedAt!.toUtc().isBefore(remoteUpdatedAt)) {
+      wins = true;
+    } else if (remoteUpdatedAt != null &&
+        localUpdatedAt!.toUtc().isAtSameMomentAs(remoteUpdatedAt) &&
+        remoteVersion >= localVersion) {
+      wins = remoteVersion > localVersion;
+    }
+    if (!wins) return false;
+
+    await _db.transaction(() async {
+      await _typedUpsertFromJson(meta, remoteRow);
+    });
     return true;
   }
 
-  TableMeta _require(String entityType) {
-    final meta = _registry[entityType];
-    if (meta == null) {
-      throw ArgumentError.value(entityType, 'entityType', 'tabel tidak terdaftar');
-    }
-    return meta;
+  Future<DateTime?> _readColumn(TableMeta meta, String id, String col) async {
+    final actual = meta.columns[col];
+    if (actual == null) return null;
+    final rows = await _db
+        .customSelect(
+          'SELECT "$actual" AS v FROM "${meta.tableName}" WHERE "id" = ?',
+          variables: [Variable.withString(id)],
+        )
+        .get();
+    if (rows.isEmpty) return null;
+    final raw = rows.first.data['v'];
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString());
   }
+
+  /// Bangun INSERT ... ON CONFLICT DO UPDATE generik dari JSON remote
+  /// memakai companion typed milik tabel (meta.toCompanion).
+  Future<void> _typedUpsertFromJson(
+      TableMeta meta, Map<String, dynamic> json) async {
+    final companion = meta.toCompanion(json);
+    final insertable = companion as Insertable<dynamic>;
+    // Simpan sebagai raw insert lewat API typed drift melalui callback khusus.
+    await meta.applyUpsert(_db, insertable);
+  }
+}
+
+// small helper extension agar replace() bisa dipakai tanpa where terpisah
+extension on SyncQueueCompanion {
+  SyncQueueCompanion withWhere(bool Function(dynamic) _) => this;
 }

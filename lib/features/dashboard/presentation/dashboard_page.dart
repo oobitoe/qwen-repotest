@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/responsive/responsive_layout.dart';
+import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/database/sync_engine.dart';
 import '../../../shared/providers/core_providers.dart';
 import '../../auth/application/auth_controller.dart';
@@ -53,29 +55,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final snapshot = ref.watch(dashboardSnapshotProvider);
     final role = ref.watch(currentRoleProvider);
     final isDesktop = context.isDesktop;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            Text(isDesktop ? 'Dashboard' : 'POSku'),
+            Text(isDesktop ? l10n.dashboard : l10n.appDisplayName),
             const SizedBox(width: AppSpacing.md),
-            if (isDesktop) _GreetingChip(role: role?.name ?? 'owner'),
+            if (isDesktop) _GreetingChip(role: role?.name ?? 'owner', l10n: l10n),
           ],
         ),
         actions: [
-          _SyncBadge(status: sync),
+          _SyncBadge(status: sync, l10n: l10n),
           const SizedBox(width: AppSpacing.sm),
           IconButton(
-            tooltip: 'Sinkronkan sekarang',
+            tooltip: l10n.syncNow,
             onPressed: () => runManualSync(ref),
-            icon: const Icon(Icons.sync),
+            icon: const Icon(AppIcons.sync),
           ),
           IconButton(
-            tooltip: 'Keluar',
+            tooltip: l10n.logout,
             onPressed: () =>
                 ref.read(authProvider.notifier).signOut(),
-            icon: const Icon(Icons.logout),
+            icon: const Icon(AppIcons.logout),
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
@@ -90,10 +93,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             SliverPadding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               sliver: SliverToBoxAdapter(
-                child: FadeTransition(
-                  opacity: _intro,
-                  child: slideUp(_intro, const _SyncBanner()),
-                ),
+              child: FadeTransition(
+                opacity: _intro,
+                child: slideUp(_intro, _SyncBanner(l10n: l10n)),
+              ),
               ),
             ),
             SliverPadding(
@@ -105,11 +108,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     message: '$e',
                     onRetry: () =>
                         ref.invalidate(dashboardSnapshotProvider),
+                    l10n: l10n,
                   ),
                   data: (data) => _DashboardBody(
                     data: data,
                     controller: _intro,
                     wide: context.isTablet || context.isDesktop,
+                    l10n: l10n,
                   ),
                 ),
               ),
@@ -123,9 +128,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         onPressed: () {},
         backgroundColor: AppTheme.success,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.point_of_sale_rounded),
+        icon: const Icon(AppIcons.pointOfSaleRounded),
         label: Text(
-          'Transaksi Baru',
+          l10n.newTransaction,
           style: theme.textTheme.labelLarge
               ?.copyWith(color: Colors.white),
         ),
@@ -148,7 +153,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 // ---------------------------------------------------------------------------
 
 class _SyncBanner extends ConsumerWidget {
-  const _SyncBanner();
+  const _SyncBanner({required this.l10n});
+
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -157,31 +164,31 @@ class _SyncBanner extends ConsumerWidget {
     final pending = snapshot?.pendingSyncCount ?? 0;
 
     final (icon, color, label) = sync.when(
-      loading: () => (Icons.cloud_upload_outlined,
-          Theme.of(context).colorScheme.primary, 'Menyiapkan sinkronisasi…'),
-      error: (_, __) => (Icons.cloud_off_rounded, AppTheme.error,
-          'Sinkronisasi terganggu'),
+      loading: () => (AppIcons.cloudUploadOutlined,
+          Theme.of(context).colorScheme.primary, l10n.syncNow),
+      error: (_, __) => (AppIcons.cloudOffRounded, AppTheme.error,
+          l10n.syncInterrupted),
       data: (s) => switch (s.phase) {
         SyncPhase.offline => (
-            Icons.wifi_off_rounded,
+            AppIcons.wifiOffRounded,
             AppTheme.warning,
             pending > 0
-                ? 'Offline · $pending perubahan menunggu antrean'
-                : 'Offline · semua data tersimpan lokal'),
+                ? l10n.offlinePending.replaceAll('{pending}', pending.toString())
+                : l10n.offlineSaved),
         SyncPhase.syncing => (
-            Icons.sync_rounded,
+            AppIcons.syncRounded,
             AppTheme.info,
-            'Sedang sinkronisasi… (${s.inFlight + s.pendingCount} item)'),
+            l10n.syncing.replaceAll('{count}', (s.inFlight + s.pendingCount).toString())),
         SyncPhase.error => (
-            Icons.error_outline_rounded,
+            AppIcons.errorOutlineRounded,
             AppTheme.error,
-            'Galat sync: ${s.message ?? 'coba lagi'}'),
+            l10n.syncError.replaceAll('{message}', s.message ?? l10n.retry)),
         SyncPhase.idle => (
-            Icons.cloud_done_rounded,
+            AppIcons.cloudDoneRounded,
             AppTheme.success,
             s.lastSyncAt == null
-                ? 'Siap · tersimpan lokal'
-                : 'Tersinkron · terakhir ${_ago(s.lastSyncAt!)}'),
+                ? l10n.syncReady
+                : l10n.syncSynced.replaceAll('{ago}', _ago(l10n, s.lastSyncAt!))),
       },
     );
 
@@ -227,11 +234,11 @@ class _SyncBanner extends ConsumerWidget {
     );
   }
 
-  static String _ago(DateTime t) {
+  String _ago(AppLocalizations l10n, DateTime t) {
     final diff = DateTime.now().difference(t);
-    if (diff.inSeconds < 60) return 'baru saja';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} mnt lalu';
-    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    if (diff.inSeconds < 60) return l10n.agoJustNow;
+    if (diff.inMinutes < 60) return l10n.agoMinutes.replaceAll('{n}', diff.inMinutes.toString());
+    if (diff.inHours < 24) return l10n.agoHours.replaceAll('{n}', diff.inHours.toString());
     return DateFormat('d MMM, HH:mm').format(t.toLocal());
   }
 }
@@ -245,11 +252,13 @@ class _DashboardBody extends StatelessWidget {
     required this.data,
     required this.controller,
     required this.wide,
+    required this.l10n,
   });
 
   final DashboardSnapshot data;
   final AnimationController controller;
   final bool wide;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -257,43 +266,43 @@ class _DashboardBody extends StatelessWidget {
       _StatCard(
         index: 0,
         controller: controller,
-        title: 'Pendapatan Hari Ini',
+        title: l10n.revenueToday,
         value: _idr(data.todayRevenue),
         delta: data.todayRevenueDelta,
-        icon: Icons.payments_rounded,
+        icon: AppIcons.paymentsRounded,
         color: AppTheme.success,
       ),
       _StatCard(
         index: 1,
         controller: controller,
-        title: 'Transaksi Hari Ini',
+        title: l10n.transactionsToday,
         value: '${data.todayTx}',
         delta: null,
-        icon: Icons.receipt_long_rounded,
+        icon: AppIcons.receiptLongRounded,
         color: AppTheme.info,
-        subtitle: 'invoice selesai',
+        subtitle: l10n.subtitleInvoice,
       ),
       _StatCard(
         index: 2,
         controller: controller,
-        title: 'Laba Kotor Hari Ini',
+        title: l10n.grossProfitToday,
         value: _idr(data.todayProfit),
         delta: null,
-        icon: Icons.trending_up_rounded,
+        icon: AppIcons.trendingUpRounded,
         color: const Color(0xFF8B5CF6),
-        subtitle: 'setelah HPP',
+        subtitle: l10n.subtitleCogs,
       ),
       _StatCard(
         index: 3,
         controller: controller,
-        title: 'Produk Aktif',
+        title: l10n.activeProducts,
         value: '${data.productCount}',
         delta: null,
-        icon: Icons.inventory_2_rounded,
+        icon: AppIcons.inventory2Rounded,
         color: AppTheme.warning,
         subtitle: data.lowStock.isNotEmpty
-            ? '${data.lowStock.length} perlu restok'
-            : 'stok aman',
+            ? l10n.lowStockCount.replaceAll('{count}', data.lowStock.length.toString())
+            : l10n.stockSafe,
       ),
     ];
 
@@ -316,19 +325,19 @@ class _DashboardBody extends StatelessWidget {
             children: [
               Expanded(
                 flex: 3,
-                child: _SalesChartCard(series: data.salesSeries),
+                child: _SalesChartCard(series: data.salesSeries, l10n: l10n),
               ),
               const SizedBox(width: AppSpacing.lg),
-              Expanded(flex: 2, child: _LowStockCard(items: data.lowStock)),
+              Expanded(flex: 2, child: _LowStockCard(items: data.lowStock, l10n: l10n)),
             ],
           )
         else ...[
-          _SalesChartCard(series: data.salesSeries),
+          _SalesChartCard(series: data.salesSeries, l10n: l10n),
           const SizedBox(height: AppSpacing.lg),
-          _LowStockCard(items: data.lowStock),
+          _LowStockCard(items: data.lowStock, l10n: l10n),
         ],
         const SizedBox(height: AppSpacing.lg),
-        _ActivityCard(entries: data.activities),
+        _ActivityCard(entries: data.activities, l10n: l10n),
       ],
     );
   }
@@ -479,7 +488,7 @@ class _DeltaChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(up ? Icons.arrow_upward : Icons.arrow_downward,
+          Icon(up ? AppIcons.arrowUpward : AppIcons.arrowDownward,
               size: 12, color: color),
           const SizedBox(width: 2),
           Text('${value.abs().toStringAsFixed(0)}%',
@@ -496,8 +505,9 @@ class _DeltaChip extends StatelessWidget {
 // Grafik penjualan 14 hari --------------------------------------------------
 
 class _SalesChartCard extends StatelessWidget {
-  const _SalesChartCard({required this.series});
+  const _SalesChartCard({required this.series, required this.l10n});
   final List<SalesPoint> series;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -507,9 +517,9 @@ class _SalesChartCard extends StatelessWidget {
     final fmt = NumberFormat.compact(locale: 'id_ID');
 
     return _SectionCard(
-      title: 'Grafik Penjualan',
-      subtitle: '14 hari terakhir',
-      trailing: Icon(Icons.insights_rounded,
+      title: l10n.chartSales,
+      subtitle: l10n.chartSubtitle,
+      trailing: Icon(AppIcons.insightsRounded,
           color: theme.colorScheme.primary),
       child: SizedBox(
         height: 220,
@@ -613,26 +623,27 @@ class _SalesChartCard extends StatelessWidget {
 // Stok menipis ---------------------------------------------------------------
 
 class _LowStockCard extends StatelessWidget {
-  const _LowStockCard({required this.items});
+  const _LowStockCard({required this.items, required this.l10n});
   final List<LowStockItem> items;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return _SectionCard(
-      title: 'Stok Menipis',
+      title: l10n.lowStockTitle,
       subtitle: items.isEmpty ? null : '${items.length} produk',
-      trailing: const Icon(Icons.warning_amber_rounded,
+      trailing: const Icon(AppIcons.warningAmberRounded,
           color: AppTheme.warning),
       child: items.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
               child: Column(
                 children: [
-                  const Icon(Icons.check_circle_outline_rounded,
+                  const Icon(AppIcons.checkCircleOutlineRounded,
                       size: 36, color: AppTheme.success),
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Semua stok aman 🎉',
+                  Text(l10n.allStockSafe,
                       style: theme.textTheme.bodyMedium),
                 ],
               ),
@@ -651,8 +662,8 @@ class _LowStockCard extends StatelessWidget {
                           .withValues(alpha: 0.15),
                       child: Icon(
                         it.stock == 0
-                            ? Icons.remove_shopping_cart_rounded
-                            : Icons.production_quantity_limits_rounded,
+                            ? AppIcons.removeShoppingCartRounded
+                            : AppIcons.productionQuantityLimitsRounded,
                         size: 16,
                         color: it.stock == 0
                             ? AppTheme.error
@@ -665,7 +676,7 @@ class _LowStockCard extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w600)),
                     subtitle: Text(it.sku,
                         style: theme.textTheme.bodySmall),
-                    trailing: _StockPill(stock: it.stock, min: it.minStock),
+                    trailing: _StockPill(stock: it.stock, min: it.minStock, l10n: l10n),
                   ),
               ],
             ),
@@ -674,9 +685,10 @@ class _LowStockCard extends StatelessWidget {
 }
 
 class _StockPill extends StatelessWidget {
-  const _StockPill({required this.stock, required this.min});
+  const _StockPill({required this.stock, required this.min, required this.l10n});
   final double stock;
   final double min;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -691,7 +703,7 @@ class _StockPill extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
-        out ? 'Habis' : '${stock.toInt()} / $min',
+        out ? l10n.outOfStock : '${stock.toInt()} / $min',
         style: Theme.of(context)
             .textTheme
             .labelSmall
@@ -704,8 +716,9 @@ class _StockPill extends StatelessWidget {
 // Aktivitas terbaru ------------------------------------------------------------
 
 class _ActivityCard extends StatelessWidget {
-  const _ActivityCard({required this.entries});
+  const _ActivityCard({required this.entries, required this.l10n});
   final List<ActivityEntry> entries;
+  final AppLocalizations l10n;
 
   static final _df = DateFormat('d MMM · HH:mm');
   static final _money =
@@ -715,13 +728,13 @@ class _ActivityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return _SectionCard(
-      title: 'Aktivitas Terbaru',
-      trailing: Icon(Icons.history_rounded,
+      title: l10n.recentActivity,
+      trailing: Icon(AppIcons.historyRounded,
           color: theme.colorScheme.primary),
       child: entries.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-              child: Text('Belum ada aktivitas.',
+              child: Text(l10n.noActivity,
                   style: theme.textTheme.bodyMedium),
             )
           : Column(
@@ -738,8 +751,8 @@ class _ActivityCard extends StatelessWidget {
                           .withValues(alpha: 0.12),
                       child: Icon(
                         a.kind == ActivityKind.sale
-                            ? Icons.shopping_bag_rounded
-                            : Icons.savings_rounded,
+                            ? AppIcons.shoppingBagRounded
+                            : AppIcons.savingsRounded,
                         size: 16,
                         color: a.kind == ActivityKind.sale
                             ? AppTheme.success
@@ -827,19 +840,20 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _GreetingChip extends StatelessWidget {
-  const _GreetingChip({required this.role});
+  const _GreetingChip({required this.role, required this.l10n});
   final String role;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final hour = DateTime.now().hour;
     final greet = hour < 11
-        ? 'Selamat pagi'
+        ? l10n.greetingMorning
         : hour < 15
-            ? 'Selamat siang'
+            ? l10n.greetingAfternoon
             : hour < 19
-                ? 'Selamat sore'
-                : 'Selamat malam';
+                ? l10n.greetingEvening
+                : l10n.greetingNight;
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md, vertical: 4),
@@ -847,30 +861,31 @@ class _GreetingChip extends StatelessWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
-      child: Text('$greet · role $role',
+      child: Text(l10n.greetingRole.replaceAll('{greet}', greet).replaceAll('{role}', role),
           style: Theme.of(context).textTheme.labelMedium),
     );
   }
 }
 
 class _SyncBadge extends ConsumerWidget {
-  const _SyncBadge({required this.status});
+  const _SyncBadge({required this.status, required this.l10n});
   final AsyncValue<SyncStatus> status;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = status.valueOrNull;
     final (icon, color) = switch (s?.phase) {
-      SyncPhase.offline => (Icons.cloud_off_rounded, AppTheme.warning),
-      SyncPhase.syncing => (Icons.sync_rounded, AppTheme.info),
-      SyncPhase.error => (Icons.error_outline_rounded, AppTheme.error),
-      _ => (Icons.cloud_done_rounded, AppTheme.success),
+      SyncPhase.offline => (AppIcons.cloudOffRounded, AppTheme.warning),
+      SyncPhase.syncing => (AppIcons.syncRounded, AppTheme.info),
+      SyncPhase.error => (AppIcons.errorOutlineRounded, AppTheme.error),
+      _ => (AppIcons.cloudDoneRounded, AppTheme.success),
     };
     return Tooltip(
       message: switch (s?.phase) {
-        SyncPhase.offline => 'Offline — data tetap aman di perangkat',
+        SyncPhase.offline => l10n.offlineSaved,
         SyncPhase.syncing => 'Sinkronisasi berjalan',
-        SyncPhase.error => 'Sinkronisasi gagal',
+        SyncPhase.error => l10n.syncInterrupted,
         _ => 'Terhubung & tersinkron',
       },
       child: Container(
@@ -911,9 +926,10 @@ class _DashboardSkeleton extends StatelessWidget {
 }
 
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
+  const _ErrorState({required this.message, required this.onRetry, required this.l10n});
   final String message;
   final VoidCallback onRetry;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -922,14 +938,14 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.bug_report_outlined, size: 40),
+          const Icon(AppIcons.bugReportOutlined, size: 40),
           const SizedBox(height: AppSpacing.md),
           Text(message, textAlign: TextAlign.center),
           const SizedBox(height: AppSpacing.md),
           FilledButton.tonalIcon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Coba lagi'),
+            icon: const Icon(AppIcons.refresh),
+            label: Text(l10n.retry),
           ),
         ],
       ),

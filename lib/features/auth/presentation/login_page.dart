@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/providers/core_providers.dart';
 import '../application/auth_controller.dart';
 
@@ -37,8 +38,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           .signIn(_email.text.trim(), _password.text);
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal masuk: $e')),
+          SnackBar(
+              content: Text(l10n.loginFailed.replaceAll('{error}', e.toString()))),
         );
       }
     } finally {
@@ -50,6 +53,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final offlineOnly = ref.watch(supabaseAvailableProvider) == false;
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Center(
@@ -66,17 +70,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(Icons.point_of_sale,
+                      Icon(AppIcons.pointOfSale,
                           size: 56, color: scheme.primary),
                       const SizedBox(height: AppSpacing.md),
-                      Text(AppConstants.appName,
+                      Text(l10n.appDisplayName,
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: AppSpacing.xxs),
                       Text(
                         offlineOnly
-                            ? 'Mode offline — data tersimpan di perangkat ini.'
-                            : 'Masuk dengan akun toko Anda.',
+                            ? l10n.offlineMode
+                            : l10n.loginSubtitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: scheme.onSurfaceVariant),
@@ -86,12 +90,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         controller: _email,
                         enabled: !offlineOnly && !_busy,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.mail_outline),
+                        decoration: InputDecoration(
+                          labelText: l10n.email,
+                          prefixIcon: const Icon(AppIcons.mailOutline),
                         ),
                         validator: (v) => (v == null || !v.contains('@'))
-                            ? 'Email tidak valid'
+                            ? l10n.invalidEmail
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -99,12 +103,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         controller: _password,
                         enabled: !offlineOnly && !_busy,
                         obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Kata sandi',
-                          prefixIcon: Icon(Icons.lock_outline),
+                        decoration: InputDecoration(
+                          labelText: l10n.password,
+                          prefixIcon: const Icon(AppIcons.lockOutline),
                         ),
                         validator: (v) => (v == null || v.length < 6)
-                            ? 'Minimal 6 karakter'
+                            ? l10n.minPasswordLength
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.lg),
@@ -117,7 +121,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 width: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Text('Masuk'),
+                            : Text(l10n.login),
                       ),
                     ],
                   ),

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
 import '../theme/design_tokens.dart';
+import '../../l10n/app_localizations.dart';
 import 'responsive_layout.dart';
 
 /// State sidebar: true = diciutkan. Dipertahankan selama sesi aplikasi.
@@ -27,9 +29,15 @@ class NavItem {
 
 /// Destinasi navigasi utama. Fase berikutnya menambah rute sesuai PRD.
 const appNavItems = <NavItem>[
-  NavItem('/dashboard', 'Dashboard', Icons.dashboard_outlined,
-      Icons.dashboard_rounded),
+  NavItem('/dashboard', 'dashboard', AppIcons.dashboardOutlined,
+      AppIcons.dashboardRounded),
 ];
+
+/// Resolve label tujuan navigasi ke string terlokalisasi.
+String _navLabel(AppLocalizations l10n, String key) => switch (key) {
+      'dashboard' => l10n.dashboard,
+      _ => key,
+    };
 
 /// Shell responsif dengan animasi:
 /// - Mobile: NavigationBar di bawah.
@@ -48,6 +56,7 @@ class ResponsiveShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _indexFor(location);
+    final l10n = AppLocalizations.of(context)!;
 
     if (context.isMobile) {
       return Scaffold(
@@ -61,21 +70,26 @@ class ResponsiveShell extends ConsumerWidget {
               NavigationDestination(
                 icon: Icon(d.icon),
                 selectedIcon: Icon(d.selectedIcon),
-                label: d.label,
+                label: _navLabel(l10n, d.label),
               ),
           ],
         ),
       );
     }
-    return _SidebarShell(currentIndex: currentIndex, child: child);
+    return _SidebarShell(currentIndex: currentIndex, l10n: l10n, child: child);
   }
 }
 
 class _SidebarShell extends ConsumerWidget {
-  const _SidebarShell({required this.currentIndex, required this.child});
+  const _SidebarShell({
+    required this.currentIndex,
+    required this.child,
+    required this.l10n,
+  });
 
   final int currentIndex;
   final Widget child;
+  final AppLocalizations l10n;
 
   static const double _expandedWidth = 240;
   static const double _collapsedWidth = 84;
@@ -113,7 +127,7 @@ class _SidebarShell extends ConsumerWidget {
                           ]),
                           borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
-                        child: const Icon(Icons.storefront_rounded,
+                        child: const Icon(AppIcons.storefrontRounded,
                             color: Colors.white, size: 22),
                       ),
                       Expanded(
@@ -125,13 +139,12 @@ class _SidebarShell extends ConsumerWidget {
                               : Padding(
                                   padding: const EdgeInsets.only(
                                       left: AppSpacing.md),
-                                  child: Text(
-                                    'POSku',
-                                    overflow: TextOverflow.clip,
-                                    style: theme.textTheme.titleLarge
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.bold),
-                                  ),
+                      child: Text(
+                        l10n.appDisplayName,
+                        overflow: TextOverflow.clip,
+                        style: theme.textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
                                 ),
                         ),
                       ),
@@ -164,7 +177,7 @@ class _SidebarShell extends ConsumerWidget {
                               icon: d.selectedIcon,
                               color: theme.colorScheme.primary,
                             ),
-                            label: Text(d.label),
+                            label: Text(_navLabel(l10n, d.label)),
                           ),
                       ],
                     ),
@@ -179,20 +192,20 @@ class _SidebarShell extends ConsumerWidget {
                         : MainAxisAlignment.spaceBetween,
                     children: [
                       if (!collapsed)
-                        Text('v0.1.0',
+                        Text(l10n.appVersion,
                             style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant)),
                       IconButton.filledTonal(
                         tooltip: collapsed
-                            ? 'Buka sidebar'
-                            : 'Ciutkan sidebar',
+                            ? l10n.tooltipOpenSidebar
+                            : l10n.tooltipCollapseSidebar,
                         onPressed: () => ref
                             .read(sidebarCollapsedProvider.notifier)
                             .toggle(),
                         icon: AnimatedRotation(
                           turns: collapsed ? 0.5 : 0,
                           duration: AppDurations.normal,
-                          child: const Icon(Icons.chevron_left_rounded),
+                          child: const Icon(AppIcons.chevronLeftRounded),
                         ),
                       ),
                     ],
@@ -231,16 +244,17 @@ class ComingSoonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.construction_rounded,
+            const Icon(AppIcons.constructionRounded,
                 size: 48, color: AppTheme.warning),
             const SizedBox(height: AppSpacing.md),
-            Text('$title akan hadir di fase berikutnya.',
+            Text(l10n.comingSoon.replaceAll('{title}', title),
                 style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),

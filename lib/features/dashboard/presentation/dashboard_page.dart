@@ -159,7 +159,7 @@ class _SyncBanner extends ConsumerWidget {
     final (icon, color, label) = sync.when(
       loading: () => (Icons.cloud_upload_outlined,
           Theme.of(context).colorScheme.primary, 'Menyiapkan sinkronisasi…'),
-      error: (_) => (Icons.cloud_off_rounded, AppTheme.error,
+      error: (_, __) => (Icons.cloud_off_rounded, AppTheme.error,
           'Sinkronisasi terganggu'),
       data: (s) => switch (s.phase) {
         SyncPhase.offline => (
@@ -291,7 +291,7 @@ class _DashboardBody extends StatelessWidget {
         delta: null,
         icon: Icons.inventory_2_rounded,
         color: AppTheme.warning,
-        subtitle: data.lowStock.length > 0
+        subtitle: data.lowStock.isNotEmpty
             ? '${data.lowStock.length} perlu restok'
             : 'stok aman',
       ),

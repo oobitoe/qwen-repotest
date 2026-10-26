@@ -3,7 +3,27 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../constants/app_constants.dart';
 import 'app_database.dart';
+
+/// Item antrian outbox siap kirim (bacaan mentah dari `sync_queue`).
+class OutboxItemData {
+  const OutboxItemData({
+    required this.id,
+    required this.entityType,
+    required this.entityId,
+    required this.operation,
+    required this.payload,
+    required this.retryCount,
+  });
+
+  final String id;
+  final String entityType;
+  final String entityId;
+  final String operation;
+  final Map<String, dynamic> payload;
+  final int retryCount;
+}
 
 /// Helper sinkronisasi generik berbasis metadata seragam
 /// (`updated_at`, `deleted_at`, `version`, `sync_status`) di setiap tabel.
@@ -34,9 +54,6 @@ class SyncableDao {
     return meta;
   }
 
-  String _col(String entityType, String name) =>
-      _require(entityType).columns[name]!;
-
   // ---------------------------------------------------------------------
   // Antrian outbox
   // ---------------------------------------------------------------------
@@ -45,37 +62,39 @@ class SyncableDao {
   Future<int> countPendingQueue() async {
     final count = await (_db.selectOnly(_db.syncQueue)
           ..addColumns([_db.syncQueue.id.count()])
-          ..where(_db.syncQueue.status.isNotIn(
-              [SyncQueueStatuses.done])))
+          ..where(_db.syncQueue.status.isNotIn([SyncQueueStatuses.done])))
         .getSingle();
     return count.read(_db.syncQueue.id.count()) ?? 0;
   }
 
   /// Jumlah operasi yang gagal permanen (melebihi batas retry).
-  Future<int> countFailedQueue() =>
-      (_db.selectOnly(_db.syncQueue)
-            ..addColumns([_db.syncQueue.id.count()])
-            ..where(_db.syncQueue.status.equals(SyncQueueStatuses.failed)))
-          .getSingle()
-          .then((row) => row.read(_db.syncQueue.id.count()) ?? 0);
+  Future<int> countFailedQueue() async {
+    final count = await (_db.selectOnly(_db.syncQueue)
+          ..addColumns([_db.syncQueue.id.count()])
+          ..where(_db.syncQueue.status.equals(SyncQueueStatuses.failed)))
+        .getSingle();
+    return count.read(_db.syncQueue.id.count()) ?? 0;
+  }
 
   /// Versi baris saat ini (0 bila belum ada).
   Future<int> currentVersion(String entityType, String id) async {
     final meta = _require(entityType);
     final rows = await _db
         .customSelect(
-          'SELECT "version" FROM "${meta.tableName}" WHERE "id" = ?',
+          'SELECT "version" AS v FROM "${meta.tableName}" WHERE "id" = ?',
           variables: [Variable.withString(id)],
         )
         .get();
     if (rows.isEmpty) return 0;
-    return rows.first.read<int>('version');
+    return (rows.first.data['v'] as num?)?.toInt() ?? 0;
   }
 
-  /// Sisipkan/perbarui baris + enqueue operasi upsert ke outbox dalam satu
-  /// transaksi. Payload disimpan dalam format snake_case siap kirim.
+  /// Terapkan perubahan data lokal (map snake_case -> nilai primitif) ke
+  /// baris [id] sekaligus enqueue operasi upsert ke outbox dalam satu
+  /// transaksi. Payload disimpan dalam format siap kirim (ISO-8601 UTC).
   ///
-  /// [values]: map kolom snake_case -> nilai (tanpa id/versi otomatis).
+  /// [values] harus memuat seluruh kolom data yang ingin diubah; kolom
+  /// metadata (updated_at/version/sync_status) dikelola otomatis.
   Future<void> upsertAndEnqueue(
     String entityType,
     Map<String, dynamic> values, {
@@ -85,42 +104,25 @@ class SyncableDao {
     final meta = _require(entityType);
     final now = DateTime.now().toUtc();
     final version = await currentVersion(entityType, id) + 1;
-    final payload = <String, dynamic>{
+    final row = <String, dynamic>{
       ...values,
       'id': id,
       'updated_at': now.toIso8601String(),
-      if (meta.columns.containsKey('created_at') &&
-          !values.containsKey('created_at'))
+      if (meta.hasColumn('created_at') && !values.containsKey('created_at'))
         'created_at': now.toIso8601String(),
       'version': version,
+      'sync_status':
+          markSynced ? SyncStatuses.synced : SyncStatuses.pending,
     };
     await _db.transaction(() async {
-      await _applyUpsert(meta, id, version, markSynced ? SyncStatuses.synced : SyncStatuses.pending);
+      await meta.applyUpsert(_db.executor, row);
       await enqueue(
         entityType: entityType,
         entityId: id,
         operation: SyncOperations.upsert,
-        payload: payload,
+        payload: row,
       );
     });
-  }
-
-  /// Update kolom langsung via SQL generik (INSERT ... ON CONFLICT).
-  /// Digunakan engine saat menerapkan data remote (markSynced=true).
-  Future<void> _applyUpsert(
-      TableMeta meta, String id, int version, String syncStatus) async {
-    // Tidak mengubah data lokal — hanya metadata versi/status pada baris
-    // yang sudah ada. Pembuatan baris dari remote memakai applyRemoteUpsert.
-    await _db.customUpdate(
-      'UPDATE "${meta.tableName}" SET "version" = ?2, "sync_status" = ?3 '
-      'WHERE "id" = ?1',
-      variables: [
-        Variable.withString(id),
-        Variable.withInt(version),
-        Variable.withString(syncStatus),
-      ],
-      updateKind: UpdateKind.update,
-    );
   }
 
   /// Soft delete (set deleted_at) + enqueue operasi delete.
@@ -130,8 +132,8 @@ class SyncableDao {
     final newVersion = await currentVersion(entityType, id) + 1;
     await _db.transaction(() async {
       await _db.customUpdate(
-        'UPDATE "${meta.tableName}" SET "deleted_at" = ?1, "updated_at" = ?2, '
-        '"version" = ?3, "sync_status" = ?4 WHERE "id" = ?5',
+        'UPDATE "${meta.tableName}" SET "deleted_at" = ?, "updated_at" = ?, '
+        '"version" = ?, "sync_status" = ? WHERE "id" = ?',
         variables: [
           Variable.withDateTime(now),
           Variable.withDateTime(now),
@@ -139,7 +141,6 @@ class SyncableDao {
           Variable.withString(SyncStatuses.pending),
           Variable.withString(id),
         ],
-        updateKind: UpdateKind.update,
       );
       await enqueue(
         entityType: entityType,
@@ -168,7 +169,7 @@ class SyncableDao {
           entityId: entityId,
           operation: operation,
           payload: jsonEncode(payload),
-          status: Value(SyncQueueStatuses.waiting),
+          status: const Value(SyncQueueStatuses.waiting),
           nextRetryAt: Value(nextRetryAt ?? DateTime.now().toUtc()),
         ));
   }
@@ -196,35 +197,29 @@ class SyncableDao {
     ];
   }
 
+  /// Tandai item outbox berhasil terkirim.
   Future<void> markQueueItemDone(String queueId) =>
-      _db.update(_db.syncQueue).replace(
-          (SyncQueueCompanion(status: const Value(SyncQueueStatuses.done)))
-              ..withWhere((_) => true));
+      (_db.update(_db.syncQueue)..where((q) => q.id.equals(queueId)))
+          .write(const SyncQueueCompanion(
+        status: Value(SyncQueueStatuses.done),
+      ));
 
   /// Tandai item gagal: naikkan retry_count, jadwalkan backoff eksponensial,
   /// atau tandai `failed` permanen bila melewati batas retry.
-  Future<void> markQueueItemFailed(String queueId, String error) async {
-    final item = await (_db.select(_db.syncQueue)
-          ..where((q) => q.id.equals(queueId)))
-        .getSingleOrNull();
-    if (item == null) return;
-    final retries = item.retryCount + 1;
-    final permanent = retries >= AppConstants.maxRetries;
-    final backoff = Duration(
-      seconds: AppConstants.backoffBaseSeconds * (1 << (retries - 1).clamp(0, 6)),
-    );
-    await _db.update(_db.syncQueue).replace(
+  Future<void> markQueueItemFailed(
+    String queueId,
+    String error,
+    DateTime nextRetryAt,
+    int attempt,
+  ) async {
+    final permanent = attempt >= AppConstants.maxSyncRetries;
+    await (_db.update(_db.syncQueue)..where((q) => q.id.equals(queueId))).write(
       SyncQueueCompanion(
-        id: Value(item.id),
-        entityType: Value(item.entityType),
-        entityId: Value(item.entityId),
-        operation: Value(item.operation),
-        payload: Value(item.payload),
-        createdAt: Value(item.createdAt),
-        retryCount: Value(retries),
+        retryCount: Value(attempt),
         lastError: Value(error.length > 200 ? error.substring(0, 200) : error),
-        status: Value(permanent ? SyncQueueStatuses.failed : SyncQueueStatuses.waiting),
-        nextRetryAt: Value(DateTime.now().toUtc().add(backoff)),
+        status:
+            Value(permanent ? SyncQueueStatuses.failed : SyncQueueStatuses.waiting),
+        nextRetryAt: Value(nextRetryAt),
       ),
     );
   }
@@ -235,7 +230,7 @@ class SyncableDao {
 
   /// Terapkan baris remote ke tabel lokal. Konflik diselesaikan LWW:
   /// remote hanya diterapkan bila `updated_at` remote lebih baru ATAU sama
-  /// tetapi versi remote >= versi lokal, DAN status lokal bukan pending
+  /// tetapi versi remote > versi lokal, DAN status lokal bukan pending
   /// (perubahan lokal yang belum terkirim selalu menang).
   ///
   /// Return `true` bila data lokal diubah.
@@ -247,63 +242,65 @@ class SyncableDao {
     final id = remoteRow['id']?.toString();
     if (id == null) return false;
 
-    final localUpdatedAt = await _readColumn(meta, id, 'updated_at');
-    final localVersion = await currentVersion(entityType, id);
-    final localStatus = await _readColumn(meta, id, 'sync_status');
-
+    final local = await _readLocalSnapshot(meta, id);
     final remoteUpdatedAt =
         DateTime.tryParse(remoteRow['updated_at']?.toString() ?? '')?.toUtc();
     final remoteVersion = (remoteRow['version'] as num?)?.toInt() ?? 1;
 
-    final exists = localUpdatedAt != null;
     var wins = false;
-    if (!exists) {
-      wins = true;
-    } else if (localStatus == SyncStatuses.pending) {
-      wins = false; // perubahan lokal tertunda selalu menang (outbox akan push)
-    } else if (remoteUpdatedAt != null &&
-        localUpdatedAt!.toUtc().isBefore(remoteUpdatedAt)) {
-      wins = true;
-    } else if (remoteUpdatedAt != null &&
-        localUpdatedAt!.toUtc().isAtSameMomentAs(remoteUpdatedAt) &&
-        remoteVersion >= localVersion) {
-      wins = remoteVersion > localVersion;
+    if (local == null) {
+      wins = true; // baris baru dari remote
+    } else {
+      final localStatus = local['sync_status']?.toString();
+      final localUpdatedAt = _parseLocalDate(local['updated_at']);
+      final localVersion = (local['version'] as num?)?.toInt() ?? 0;
+      if (localStatus == SyncStatuses.pending) {
+        wins = false; // perubahan lokal tertunda selalu menang (outbox push)
+      } else if (remoteUpdatedAt != null && localUpdatedAt != null) {
+        if (localUpdatedAt.isBefore(remoteUpdatedAt)) {
+          wins = true;
+        } else if (localUpdatedAt.isAtSameMomentAs(remoteUpdatedAt)) {
+          wins = remoteVersion > localVersion;
+        }
+      } else {
+        wins = true; // metadata lokal tidak lengkap — terima remote
+      }
     }
     if (!wins) return false;
 
-    await _db.transaction(() async {
-      await _typedUpsertFromJson(meta, remoteRow);
+    await meta.applyUpsert(_db.executor, {
+      ...remoteRow,
+      'sync_status': SyncStatuses.synced,
     });
     return true;
   }
 
-  Future<DateTime?> _readColumn(TableMeta meta, String id, String col) async {
-    final actual = meta.columns[col];
-    if (actual == null) return null;
+  /// Drift menyimpan DateTime sebagai integer ms-since-epoch (UTC) pada
+  /// SQLite; bacaan mentah customSelect mengembalikan bentuk tersebut.
+  DateTime? _parseLocalDate(Object? raw) {
+    if (raw == null) return null;
+    if (raw is int) return DateTime.fromMillisecondsSinceEpoch(raw, isUtc: true);
+    if (raw is DateTime) return raw.toUtc();
+    final s = raw.toString();
+    final asNum = int.tryParse(s);
+    if (asNum != null) {
+      return DateTime.fromMillisecondsSinceEpoch(asNum, isUtc: true);
+    }
+    return DateTime.tryParse(s)?.toUtc();
+  }
+
+  /// Baca snapshot metadata baris lokal sebagai map snake_case
+  /// (null bila baris tidak ada).
+  Future<Map<String, Object?>?> _readLocalSnapshot(
+      TableMeta meta, String id) async {
     final rows = await _db
         .customSelect(
-          'SELECT "$actual" AS v FROM "${meta.tableName}" WHERE "id" = ?',
+          'SELECT "id", "updated_at", "version", "sync_status" '
+          'FROM "${meta.tableName}" WHERE "id" = ?',
           variables: [Variable.withString(id)],
         )
         .get();
     if (rows.isEmpty) return null;
-    final raw = rows.first.data['v'];
-    if (raw == null) return null;
-    return DateTime.tryParse(raw.toString());
+    return rows.first.data;
   }
-
-  /// Bangun INSERT ... ON CONFLICT DO UPDATE generik dari JSON remote
-  /// memakai companion typed milik tabel (meta.toCompanion).
-  Future<void> _typedUpsertFromJson(
-      TableMeta meta, Map<String, dynamic> json) async {
-    final companion = meta.toCompanion(json);
-    final insertable = companion as Insertable<dynamic>;
-    // Simpan sebagai raw insert lewat API typed drift melalui callback khusus.
-    await meta.applyUpsert(_db, insertable);
-  }
-}
-
-// small helper extension agar replace() bisa dipakai tanpa where terpisah
-extension on SyncQueueCompanion {
-  SyncQueueCompanion withWhere(bool Function(dynamic) _) => this;
 }

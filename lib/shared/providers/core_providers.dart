@@ -68,7 +68,12 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) async* {
 });
 
 /// Trigger manual "Sinkronkan sekarang" dari UI.
-Future<void> runManualSync(Ref ref) => ref.read(syncEngineProvider).syncNow();
+/// Trigger manual "Sinkronkan sekarang" dari UI (berterima WidgetRef
+/// maupun Ref biasa karena keduanya meng-expose read()).
+Future<void> runManualSync(Object refHolder) {
+  final r = refHolder as dynamic;
+  return r.read(syncEngineProvider).syncNow() as Future<void>;
+}
 
 /// Pembaruan status koneksi global (dipanggil dari main.dart listener).
 void updateConnectivity(List<ConnectivityResult> results) {

@@ -14,7 +14,10 @@ Future<void> main() async {
 }
 
 class PosApp extends ConsumerWidget {
-  const PosApp({super.key});
+  const PosApp({super.key, this.themeModeOverride});
+
+  /// Override mode tema (dipakai pada pengujian agar deterministik).
+  final ThemeMode? themeModeOverride;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,7 +27,7 @@ class PosApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system,
+      themeMode: themeModeOverride ?? ThemeMode.system,
       routerConfig: router,
       locale: const Locale('id', 'ID'),
       supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],

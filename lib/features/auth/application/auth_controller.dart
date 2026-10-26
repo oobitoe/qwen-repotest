@@ -96,8 +96,9 @@ class AuthController extends Notifier<AuthState> {
   StreamSubscription<AuthState>? _sub;
 
   void _listen(SupabaseClient client) {
+    final stream = client.auth.onAuthStateChange;
     _sub?.cancel();
-    _sub = client.auth.onAuthStateChange.listen((data) {
+    _sub = stream.listen((data) {
       state = _fromSession(data.session);
     });
   }
@@ -132,10 +133,8 @@ class AuthController extends Notifier<AuthState> {
     await client.auth.signOut();
   }
 
-  @override
   void dispose() {
     _sub?.cancel();
-    super.dispose();
   }
 }
 

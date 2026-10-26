@@ -1,10 +1,5 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:uuid/uuid.dart';
-
-import 'sync_meta.dart';
 import 'tables.dart';
 
 export 'sync_meta.dart' show ConflictDecision, TableMeta, TransactionExecutor;

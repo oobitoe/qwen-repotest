@@ -30,33 +30,6 @@ typedef OutboxItem = ({
   int retryCount,
 });
 
-class OutboxItemData {
-  const OutboxItemData({
-    required this.id,
-    required this.entityType,
-    required this.entityId,
-    required this.operation,
-    required this.payload,
-    required this.retryCount,
-  });
-
-  final String id;
-  final String entityType;
-  final String entityId;
-  final String operation;
-  final Map<String, dynamic> payload;
-  final int retryCount;
-
-  OutboxItem toRecord() => (
-        id: id,
-        entityType: entityType,
-        entityId: entityId,
-        operation: operation,
-        payload: payload,
-        retryCount: retryCount,
-      );
-}
-
 /// Transport nyata berbasis Supabase (upsert per tabel via REST).
 class SupabaseSyncTransport implements SyncTransport {
   SupabaseSyncTransport(this._client);
@@ -294,7 +267,7 @@ class SyncEngine {
       if (items.isEmpty) return;
       for (final item in items) {
         try {
-          final accepted = await _transport.push([item.toRecord()]);
+          final accepted = await _transport.push([_toRecord(item)]);
           if (accepted.contains(item.id)) {
             await _dao.markQueueItemDone(item.id);
             await _markEntitySynced(item.entityType, item.entityId);
@@ -308,6 +281,15 @@ class SyncEngine {
       }
     }
   }
+
+  OutboxItem _toRecord(OutboxItemData d) => (
+        id: d.id,
+        entityType: d.entityType,
+        entityId: d.entityId,
+        operation: d.operation,
+        payload: d.payload,
+        retryCount: d.retryCount,
+      );
 
   Future<void> _scheduleRetry(OutboxItemData item, String error) async {
     final attempt = item.retryCount + 1;
@@ -363,20 +345,7 @@ class SyncEngine {
     }
   }
 
-  Future<List<OutboxItemData>> _dueItems() async {
-    final rows = await _dao.dueQueueItems();
-    return [
-      for (final r in rows)
-        OutboxItemData(
-          id: r.id,
-          entityType: r.entityType,
-          entityId: r.entityId,
-          operation: r.operation,
-          payload: jsonDecode(r.payload) as Map<String, dynamic>,
-          retryCount: r.retryCount,
-        ),
-    ];
-  }
+  Future<List<OutboxItemData>> _dueItems() => _dao.dueQueueItems();
 
   Future<int> _countPending() => _dao.countPendingQueue();
 

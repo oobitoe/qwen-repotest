@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/design_tokens.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../shared/providers/core_providers.dart';
 import '../application/auth_controller.dart';
 
 /// Halaman login Supabase. Bila Supabase tidak dikonfigurasi, aplikasi berada

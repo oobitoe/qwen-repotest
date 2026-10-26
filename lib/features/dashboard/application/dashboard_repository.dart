@@ -72,15 +72,16 @@ class DashboardRepository {
     Future<double> revenueBetween(DateTime from, DateTime to) async {
       final q = _db.selectOnly(_db.sales)
         ..addColumns([_db.sales.total.sum()])
-        ..where(_db.sales.createdAt.isBiggerOrEqualValue(from) &
-            _db.sales.createdAt.isSmallerThanValue(to) &
-            _db.sales.deletedAt.isNull() &
-            _db.sales.status.equals('completed'));
+        ..where((t) =>
+            t.createdAt.isBiggerOrEqualValue(from) &
+            t.createdAt.isSmallerThanValue(to) &
+            t.deletedAt.isNull() &
+            t.status.equals('completed'));
       final row = await q.getSingle();
       return row.read(_db.sales.total.sum()) ?? 0;
     }
 
-    final todayRevenue = await revenueBetween(todayStart, now.add(minutes: 1));
+    final todayRevenue = await revenueBetween(todayStart, now.add(const Duration(minutes: 1)));
     final ystRevenue = await revenueBetween(yesterdayStart, todayStart);
     final todayRevenueDelta = ystRevenue == 0
         ? (todayRevenue > 0 ? 100.0 : 0.0)
@@ -88,21 +89,21 @@ class DashboardRepository {
 
     final txQ = _db.selectOnly(_db.sales)
       ..addColumns([_db.sales.id.count()])
-      ..where(_db.sales.createdAt.isBiggerOrEqualValue(todayStart) &
-          _db.sales.deletedAt.isNull() &
-          _db.sales.status.equals('completed'));
+      ..where((t) =>
+          t.createdAt.isBiggerOrEqualValue(todayStart) &
+          t.deletedAt.isNull() &
+          t.status.equals('completed'));
     final todayTx = (await txQ.getSingle()).read(_db.sales.id.count()) ?? 0;
 
     // --- Laba kotor hari ini (penjualan - HPP item terjual) ------------
     final itemsToday = await (_db.select(_db.saleItems)
-          ..where(_db.saleItems.createdAt.isBiggerOrEqualValue(todayStart) &
-              _db.saleItems.deletedAt.isNull()))
+          ..where((t) => t.createdAt.isBiggerOrEqualValue(todayStart)))
         .get();
     var cogs = 0.0;
     if (itemsToday.isNotEmpty) {
+      final ids = itemsToday.map((i) => i.productId).toSet();
       final costRows = await (_db.select(_db.products)
-            ..where(_db.products.id.isIn(
-                itemsToday.map((i) => i.productId).toSet())))
+            ..where((t) => t.id.isIn(ids)))
           .get();
       final costById = {for (final p in costRows) p.id: p.costPrice};
       cogs = itemsToday.fold<double>(
@@ -113,8 +114,7 @@ class DashboardRepository {
     // --- Jumlah produk aktif --------------------------------------------
     final prodQ = _db.selectOnly(_db.products)
       ..addColumns([_db.products.id.count()])
-      ..where(_db.products.isActive.equals(true) &
-          _db.products.deletedAt.isNull());
+      ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
     final productCount =
         (await prodQ.getSingle()).read(_db.products.id.count()) ?? 0;
 
@@ -132,9 +132,10 @@ class DashboardRepository {
 
     // --- Deret penjualan 14 hari -------------------------------------------
     final recent = await (_db.select(_db.sales)
-          ..where(_db.sales.createdAt.isBiggerOrEqualValue(windowStart) &
-              _db.sales.deletedAt.isNull() &
-              _db.sales.status.equals('completed'))
+          ..where((t) =>
+              t.createdAt.isBiggerOrEqualValue(windowStart) &
+              t.deletedAt.isNull() &
+              t.status.equals('completed'))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .get();
     final byDay = <String, (double, int)>{};
@@ -155,11 +156,10 @@ class DashboardRepository {
 
     // --- Stok menipis --------------------------------------------------------
     final lowRows = await (_db.select(_db.products)
-          ..where((_db.products.stock.lowerOrEqual(_db.products.minStock) &
-                  _db.products.stock.isBiggerThanValue(0)) |
-              _db.products.stock.equals(0))
-          ..where(_db.products.isActive.equals(true) &
-              _db.products.deletedAt.isNull())
+          ..where((t) =>
+              ((t.stock <= t.minStock) & t.stock.isBiggerThanValue(0)) |
+              t.stock.equals(0))
+          ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.asc(t.stock)])
           ..limit(8))
         .get();
@@ -177,7 +177,7 @@ class DashboardRepository {
     // --- Aktivitas terbaru ----------------------------------------------------
     final activityEntries = <ActivityEntry>[];
     final saleActs = await (_db.select(_db.sales)
-          ..where(_db.sales.deletedAt.isNull())
+          ..where((t) => t.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(6))
         .get();
@@ -193,7 +193,7 @@ class DashboardRepository {
       ));
     }
     final expActs = await (_db.select(_db.expenses)
-          ..where(_db.expenses.deletedAt.isNull())
+          ..where((t) => t.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(3))
         .get();

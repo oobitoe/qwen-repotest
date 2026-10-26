@@ -114,15 +114,13 @@ class SyncableDao {
       'sync_status':
           markSynced ? SyncStatuses.synced : SyncStatuses.pending,
     };
-    await _db.transaction(() async {
-      await meta.applyUpsert(_db.executor, row);
-      await enqueue(
-        entityType: entityType,
-        entityId: id,
-        operation: SyncOperations.upsert,
-        payload: row,
-      );
-    });
+    await meta.applyUpsert(_db, row);
+    await enqueue(
+      entityType: entityType,
+      entityId: id,
+      operation: SyncOperations.upsert,
+      payload: row,
+    );
   }
 
   /// Soft delete (set deleted_at) + enqueue operasi delete.
@@ -268,7 +266,7 @@ class SyncableDao {
     }
     if (!wins) return false;
 
-    await meta.applyUpsert(_db.executor, {
+    await meta.applyUpsert(_db, {
       ...remoteRow,
       'sync_status': SyncStatuses.synced,
     });

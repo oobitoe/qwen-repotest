@@ -140,7 +140,7 @@ class _SidebarShell extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm),
                     child: NavigationRail(
@@ -200,7 +200,7 @@ class _SidebarShell extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
+            ),
           VerticalDivider(width: 1, thickness: 1,
               color: theme.colorScheme.outlineVariant),
           Expanded(child: child),

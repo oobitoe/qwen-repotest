@@ -22,6 +22,7 @@ class PosApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'POSku',
       debugShowCheckedModeBanner: false,
@@ -36,13 +37,23 @@ class PosApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) {
-        // Pantau koneksi untuk status engine sinkronisasi global.
-        ref.listen(connectivityStreamProvider, (_, next) {
-          updateConnectivity(next.value ?? const []);
-        });
-        return child ?? const SizedBox.shrink();
-      },
+      builder: (context, child) =>
+          _ConnectivityWatcher(child: child ?? const SizedBox.shrink()),
     );
+  }
+}
+
+/// Memantau perubahan koneksi di luar langkah build MaterialApp
+/// (Riverpod mengharuskan ref.listen berada dalam build method ConsumerWidget).
+class _ConnectivityWatcher extends ConsumerWidget {
+  const _ConnectivityWatcher({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(connectivityStreamProvider, (_, next) {
+      updateConnectivity(next.value ?? const []);
+    }, onError: (_, __) {});
+    return child;
   }
 }

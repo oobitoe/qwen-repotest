@@ -141,6 +141,7 @@ void main() {
               name: 'Produk $id',
               sellPrice: price,
               costPrice: const Value(500),
+              version: const Value(0),
               minStock: const Value(5),
               stock: const Value(20),
             ));

@@ -301,12 +301,12 @@ class _DashboardBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GridView.count(
-          crossAxisCount: wide ? 4 : 2,
+          crossAxisCount: context.isDesktop ? 4 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: AppSpacing.lg,
           crossAxisSpacing: AppSpacing.lg,
-          childAspectRatio: wide ? 1.75 : 1.35,
+          childAspectRatio: context.isDesktop ? 1.75 : 1.35,
           children: cards,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -419,7 +419,7 @@ class _StatCardState extends State<_StatCard> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [

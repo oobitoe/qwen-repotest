@@ -48,28 +48,66 @@ class TableMeta {
   /// Bangun INSERT ... ON CONFLICT(id) DO UPDATE secara generik dari baris
   /// JSON remote. Kolom yang tidak dikenal dibuang; nilai dikonversi sesuai
   /// tipe kolom drift (date/int/real/text/bool/blob).
-  Future<void> applyUpsert(QueryExecutor executor, Map<String, dynamic> row) async {
+  ///
+  /// INSERT harus mencakup semua kolom NOT NULL (tanpa default) supaya tidak
+  /// melanggar constraint — kolom yang tidak ada di [row] diisi dengan nilai
+  /// default berdasarkan tipe. UPDATE hanya menimpa kolom yang ada di [row].
+  ///
+  /// Menggunakan INSERT OR IGNORE + UPDATE terpisah untuk menghindari deadlock
+  /// pada NativeDatabase (Drift 2.21: runCustom di dalam transaction tidak
+  /// support re-entrant lock).
+  Future<void> applyUpsert(DatabaseConnectionUser db, Map<String, dynamic> row) async {
     final types = columnTypes;
-    final cols = <String>[];
-    final values = <Object?>[];
-    for (final entry in row.entries) {
-      final type = types[entry.key];
-      if (type == null) continue; // kolom lokal-only / tak dikenal
-      cols.add(entry.key);
-      values.add(_coerce(_driftType(type), entry.value));
+    final insertCols = <String>[];
+    final insertValues = <Object?>[];
+    final updateCols = <String>[];
+    final updateValues = <Object?>[];
+
+    for (final (colName, _) in columns) {
+      final type = types[colName];
+      if (type == null) continue;
+      final driftType = _driftType(type);
+      if (row.containsKey(colName)) {
+        final coerced = _coerce(driftType, row[colName]);
+        insertCols.add(colName);
+        insertValues.add(coerced);
+        if (colName != 'id') {
+          updateCols.add(colName);
+          updateValues.add(coerced);
+        }
+      } else {
+        insertCols.add(colName);
+        insertValues.add(_defaultForType(driftType));
+      }
     }
-    if (cols.isEmpty) return;
-    final placeholders = List.generate(cols.length, (_) => '?').join(', ');
-    final quoted = [for (final c in cols) '"$c"'].join(', ');
-    final updates = [
-      for (final c in cols)
-        if (c != 'id') '"$c" = excluded."$c"'
-    ].join(', ');
-    await executor.runCustom(
-      'INSERT INTO "$tableName" ($quoted) VALUES ($placeholders) '
-      'ON CONFLICT("id") DO UPDATE SET $updates',
-      values,
+    if (insertCols.isEmpty) return;
+
+    final placeholders = List.generate(insertCols.length, (_) => '?').join(', ');
+    final quotedInsert = [for (final c in insertCols) '"$c"'].join(', ');
+
+    await db.executor.runCustom(
+      'INSERT OR IGNORE INTO "$tableName" ($quotedInsert) VALUES ($placeholders)',
+      insertValues,
     );
+
+    if (updateCols.isNotEmpty) {
+      final updates = [for (final c in updateCols) '"$c" = ?'].join(', ');
+      await db.executor.runCustom(
+        'UPDATE "$tableName" SET $updates WHERE "id" = ?',
+        [...updateValues, row['id']],
+      );
+    }
+  }
+
+  /// Nilai default berdasarkan tipe drift untuk kolom yang tidak ada di row.
+  Object? _defaultForType(DriftSqlType<Object>? type) {
+    if (type == DriftSqlType.dateTime) return 0;
+    if (type == DriftSqlType.int) return 0;
+    if (type == DriftSqlType.double) return 0.0;
+    if (type == DriftSqlType.bool) return 0;
+    if (type == DriftSqlType.string) return '';
+    if (type == DriftSqlType.blob) return <int>[];
+    return null;
   }
 
   /// Konversi nilai JSON menjadi companion update parsial (hanya kolom yang
@@ -87,8 +125,8 @@ class TableMeta {
   Object? _coerce(DriftSqlType<Object>? type, Object? raw) {
     if (raw == null) return null;
     if (type == DriftSqlType.dateTime) {
-      if (raw is DateTime) return raw.toUtc();
-      return DateTime.parse(raw.toString()).toUtc();
+      if (raw is DateTime) return raw.toUtc().millisecondsSinceEpoch;
+      return DateTime.parse(raw.toString()).toUtc().millisecondsSinceEpoch;
     }
     if (type == DriftSqlType.int) {
       return raw is num ? raw.toInt() : int.tryParse(raw.toString()) ?? 0;

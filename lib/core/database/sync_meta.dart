@@ -28,17 +28,22 @@ class TableMeta {
   /// Nama tabel fisik (snake_case, sama dengan `actualTableName` drift).
   final String tableName;
 
-  /// Daftar (nama kolom snake_case, tipe drift) milik tabel ini.
-  final List<(String, DriftSqlType<Object>)> columns;
+  /// Daftar (nama kolom snake_case, BaseSqlType drift) milik tabel ini.
+  final List<(String, Object)> columns;
 
   /// Membangun companion typed dari snapshot JSON remote.
   final Insertable<dynamic> Function(Map<String, dynamic> json) toCompanion;
 
-  /// Peta cepat nama kolom -> tipe drift.
-  Map<String, DriftSqlType<Object>> get columnTypes =>
-      {for (final c in columns) c.$1: c.$2};
+  /// Peta cepat nama kolom -> BaseSqlType drift.
+  Map<String, Object> get columnTypes => {for (final c in columns) c.$1: c.$2};
 
   bool hasColumn(String name) => columnTypes.containsKey(name);
+
+  DriftSqlType<Object>? _driftType(Object? sqlType) {
+    if (sqlType is GeneratedColumn) return sqlType.type as DriftSqlType<Object>;
+    if (sqlType is DriftSqlType<Object>) return sqlType;
+    return null;
+  }
 
   /// Bangun INSERT ... ON CONFLICT(id) DO UPDATE secara generik dari baris
   /// JSON remote. Kolom yang tidak dikenal dibuang; nilai dikonversi sesuai
@@ -51,7 +56,7 @@ class TableMeta {
       final type = types[entry.key];
       if (type == null) continue; // kolom lokal-only / tak dikenal
       cols.add(entry.key);
-      values.add(_coerce(type, entry.value));
+      values.add(_coerce(_driftType(type), entry.value));
     }
     if (cols.isEmpty) return;
     final placeholders = List.generate(cols.length, (_) => '?').join(', ');
@@ -70,16 +75,16 @@ class TableMeta {
   /// Konversi nilai JSON menjadi companion update parsial (hanya kolom yang
   /// hadir di payload). Nilai datetime dinormalisasi ke UTC agar konsisten
   /// dengan penyimpanan drift (integer millisecondsSinceEpoch UTC).
-  UpdateCompanion<dynamic> toPartialCompanion(Map<String, dynamic> json) {
+  Map<String, Object?> toPartialValues(Map<String, dynamic> json) {
     final values = <String, Object?>{};
     for (final entry in json.entries) {
       if (!columnTypes.containsKey(entry.key)) continue;
-      values[entry.key] = _coerce(columnTypes[entry.key]!, entry.value);
+      values[entry.key] = _coerce(_driftType(columnTypes[entry.key]), entry.value);
     }
-    return _PartialCompanion(values);
+    return values;
   }
 
-  Object? _coerce(DriftSqlType<Object> type, Object? raw) {
+  Object? _coerce(DriftSqlType<Object>? type, Object? raw) {
     if (raw == null) return null;
     if (type == DriftSqlType.dateTime) {
       if (raw is DateTime) return raw.toUtc();
@@ -96,35 +101,5 @@ class TableMeta {
     }
     if (type == DriftSqlType.blob) return raw;
     return raw.toString();
-  }
-}
-
-/// Companion parsial berbasis map — dipakai SyncableDao untuk update kolom
-/// tertentu (mis. version/sync_status/deleted_at) tanpa mengenal tabel tujuan.
-class _PartialCompanion extends UpdateCompanion<dynamic> {
-  _PartialCompanion(this.values);
-
-  final Map<String, Object?> values;
-
-  @override
-  Map<String, Value> toColumns(bool nullToAbsent) {
-    final out = <String, Value>{};
-    for (final e in values.entries) {
-      final v = e.value;
-      if (v == null) {
-        out[e.key] = const Value(null);
-      } else if (v is DateTime) {
-        out[e.key] = Value(v);
-      } else if (v is int) {
-        out[e.key] = Value<int>(v);
-      } else if (v is double) {
-        out[e.key] = Value<double>(v);
-      } else if (v is bool) {
-        out[e.key] = Value<bool>(v);
-      } else {
-        out[e.key] = Value<String>(v.toString());
-      }
-    }
-    return out;
   }
 }

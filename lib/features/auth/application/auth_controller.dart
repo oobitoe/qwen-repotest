@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/network/supabase_config.dart';
+
+export 'package:supabase_flutter/supabase_flutter.dart' show User, Session;
 
 /// Role pengguna awal sesuai PRD.
 enum UserRole { owner, admin, manager, kasir, staffGudang }
@@ -70,7 +72,7 @@ class AuthSignedIn extends AuthState {
 }
 
 /// Pengguna lokal untuk mode offline-only (Supabase belum dikonfigurasi).
-final localDeviceUser = User(
+final localDeviceUser = sb.User(
   id: 'local-device-owner',
   appMetadata: const {},
   userMetadata: const {'role': 'owner'},
@@ -93,9 +95,9 @@ class AuthController extends Notifier<AuthState> {
     return _fromSession(client.auth.currentSession);
   }
 
-  StreamSubscription<AuthState>? _sub;
+  StreamSubscription<sb.AuthState>? _sub;
 
-  void _listen(SupabaseClient client) {
+  void _listen(sb.SupabaseClient client) {
     final stream = client.auth.onAuthStateChange;
     _sub?.cancel();
     _sub = stream.listen((data) {
@@ -103,7 +105,7 @@ class AuthController extends Notifier<AuthState> {
     });
   }
 
-  AuthState _fromSession(Session? session) {
+  AuthState _fromSession(sb.Session? session) {
     if (session == null) return const AuthSignedOut();
     final role = roleFromName(
       session.user.userMetadata?['role'] as String?,

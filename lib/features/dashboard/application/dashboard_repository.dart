@@ -69,16 +69,16 @@ class DashboardRepository {
     final windowStart = todayStart.subtract(const Duration(days: 13));
 
     // --- Pendapatan hari ini & kemarin ---------------------------------
+    final s = _db.sales;
     Future<double> revenueBetween(DateTime from, DateTime to) async {
-      final q = _db.selectOnly(_db.sales)
-        ..addColumns([_db.sales.total.sum()])
-        ..where((t) =>
-            t.createdAt.isBiggerOrEqualValue(from) &
-            t.createdAt.isSmallerThanValue(to) &
-            t.deletedAt.isNull() &
-            t.status.equals('completed'));
+      final q = _db.selectOnly(s)
+        ..addColumns([s.total.sum()])
+        ..where(s.createdAt.isBiggerOrEqualValue(from) &
+            s.createdAt.isSmallerThanValue(to) &
+            s.deletedAt.isNull() &
+            s.status.equals('completed'));
       final row = await q.getSingle();
-      return row.read(_db.sales.total.sum()) ?? 0;
+      return row.read(s.total.sum()) ?? 0;
     }
 
     final todayRevenue = await revenueBetween(todayStart, now.add(const Duration(minutes: 1)));
@@ -87,34 +87,35 @@ class DashboardRepository {
         ? (todayRevenue > 0 ? 100.0 : 0.0)
         : (todayRevenue - ystRevenue) / ystRevenue * 100.0;
 
-    final txQ = _db.selectOnly(_db.sales)
-      ..addColumns([_db.sales.id.count()])
-      ..where((t) =>
-          t.createdAt.isBiggerOrEqualValue(todayStart) &
-          t.deletedAt.isNull() &
-          t.status.equals('completed'));
-    final todayTx = (await txQ.getSingle()).read(_db.sales.id.count()) ?? 0;
+    final txQ = _db.selectOnly(s)
+      ..addColumns([s.id.count()])
+      ..where(s.createdAt.isBiggerOrEqualValue(todayStart) &
+          s.deletedAt.isNull() &
+          s.status.equals('completed'));
+    final todayTx = (await txQ.getSingle()).read(s.id.count()) ?? 0;
 
     // --- Laba kotor hari ini (penjualan - HPP item terjual) ------------
-    final itemsToday = await (_db.select(_db.saleItems)
-          ..where((t) => t.createdAt.isBiggerOrEqualValue(todayStart)))
+    final si = _db.saleItems;
+    final itemsToday = await (_db.select(si)
+          ..where(si.createdAt.isBiggerOrEqualValue(todayStart)))
         .get();
     var cogs = 0.0;
     if (itemsToday.isNotEmpty) {
+      final pr = _db.products;
       final ids = itemsToday.map((i) => i.productId).toSet();
-      final costRows = await (_db.select(_db.products)
-            ..where((t) => t.id.isIn(ids)))
+      final costRows = await (_db.select(pr)
+            ..where(pr.id.isIn(ids)))
           .get();
       final costById = {for (final p in costRows) p.id: p.costPrice};
       cogs = itemsToday.fold<double>(
-          0, (s, i) => s + i.quantity * (costById[i.productId] ?? 0));
+          0, (sum, i) => sum + i.quantity * (costById[i.productId] ?? 0));
     }
     final todayProfit = todayRevenue - cogs;
 
     // --- Jumlah produk aktif --------------------------------------------
     final prodQ = _db.selectOnly(_db.products)
       ..addColumns([_db.products.id.count()])
-      ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
+      ..where(_db.products.isActive.equals(true) & _db.products.deletedAt.isNull());
     final productCount =
         (await prodQ.getSingle()).read(_db.products.id.count()) ?? 0;
 
@@ -131,11 +132,10 @@ class DashboardRepository {
         (await failedQ.getSingle()).read(_db.syncQueue.id.count()) ?? 0;
 
     // --- Deret penjualan 14 hari -------------------------------------------
-    final recent = await (_db.select(_db.sales)
-          ..where((t) =>
-              t.createdAt.isBiggerOrEqualValue(windowStart) &
-              t.deletedAt.isNull() &
-              t.status.equals('completed'))
+    final recent = await (_db.select(s)
+          ..where(s.createdAt.isBiggerOrEqualValue(windowStart) &
+              s.deletedAt.isNull() &
+              s.status.equals('completed'))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .get();
     final byDay = <String, (double, int)>{};
@@ -155,11 +155,11 @@ class DashboardRepository {
     ];
 
     // --- Stok menipis --------------------------------------------------------
-    final lowRows = await (_db.select(_db.products)
-          ..where((t) =>
-              ((t.stock <= t.minStock) & t.stock.isBiggerThanValue(0)) |
-              t.stock.equals(0))
-          ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull())
+    final pr = _db.products;
+    final lowRows = await (_db.select(pr)
+          ..where((pr.stock - pr.minStock).isSmallerOrEqualValue(0) &
+              (pr.stock.equals(0) | pr.stock.isBiggerThanValue(0)))
+          ..where(pr.isActive.equals(true) & pr.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.asc(t.stock)])
           ..limit(8))
         .get();
@@ -176,24 +176,24 @@ class DashboardRepository {
 
     // --- Aktivitas terbaru ----------------------------------------------------
     final activityEntries = <ActivityEntry>[];
-    final saleActs = await (_db.select(_db.sales)
-          ..where((t) => t.deletedAt.isNull())
+    final saleActs = await (_db.select(s)
+          ..where(s.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(6))
         .get();
-    for (final s in saleActs) {
+    for (final sale in saleActs) {
       activityEntries.add((
-        at: s.createdAt,
-        title: s.invoiceNumber,
-        subtitle: s.customerNameSnapshot == null
-            ? 'Penjualan · ${s.paymentMethod}'
-            : 'Penjualan · ${s.customerNameSnapshot}',
-        amount: s.total,
+        at: sale.createdAt,
+        title: sale.invoiceNumber,
+        subtitle: sale.customerNameSnapshot == null
+            ? 'Penjualan · ${sale.paymentMethod}'
+            : 'Penjualan · ${sale.customerNameSnapshot}',
+        amount: sale.total,
         kind: ActivityKind.sale,
       ));
     }
     final expActs = await (_db.select(_db.expenses)
-          ..where((t) => t.deletedAt.isNull())
+          ..where(_db.expenses.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(3))
         .get();

@@ -41,7 +41,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(l10n.loginFailed.replaceAll('{error}', e.toString()))),
+              content: Text(l10n.loginFailed(e.toString()))),
         );
       }
     } finally {

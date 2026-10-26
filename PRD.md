@@ -35,6 +35,7 @@ Gunakan teknologi berikut:
 - **Dependency injection:** Riverpod providers atau pendekatan terstruktur yang setara.
 - **Charts:** `fl_chart`.
 - **Icons:** Material Symbols atau Material Icons.
+- **Localization (i18n):** Bahasa Indonesia dan Inggris menggunakan `flutter_localizations` (SDK Flutter), `intl`, dan file ARB di `lib/l10n/`. Konfigurasi di `l10n.yaml`.
 - **Animations:** Flutter implicit animations, `AnimationController`, `TweenAnimationBuilder`, dan `flutter_animate` jika diperlukan.
 - **Networking:** Supabase Flutter SDK.
 - **Connectivity:** `connectivity_plus`, disertai pemeriksaan koneksi nyata sebelum melakukan sinkronisasi.
@@ -881,5 +882,38 @@ Di setiap fase, pastikan hasilnya dapat dianalisis, diuji, dan dijalankan sebelu
 **Definition of Done:**
 
 Aplikasi dinyatakan selesai hanya jika alur produk → stok → penjualan → pembayaran → pencatatan keuangan → laporan berjalan konsisten, baik offline maupun online; sinkronisasi tidak menggandakan transaksi; izin pengguna diterapkan dengan benar; UI responsif; dan pengujian utama telah dijalankan.
+
+## 19. Aturan Tambahan
+
+### 19.1 Audit dan Pelacakan Transaksi
+
+Setiap transaksi (penjualan, pembelian, retur, pembayaran, penyesuaian stok, pengeluaran, pemasukan, dan lainnya) harus mencatat:
+
+- `created_by`: ID pengguna yang melakukan transaksi.
+- `created_at`: waktu transaksi terjadi dalam UTC.
+- `updated_by` dan `updated_at` untuk perubahan data.
+- Semua tabel transaksi harus memiliki kolom audit agar siapa dan kapan transaksi dilakukan dapat ditelusuki sepenuhnya.
+
+### 19.2 Izin Akses per Fitur
+
+Setiap fitur harus memiliki izin (permission) untuk dapat dilihat atau diakses. Izin ini harus:
+
+- Ditetapkan melalui tabel `roles` dan `permissions` yang sudah ada.
+- Dicek di sisi server (RLS/Supabase) dan di sisi klien sebelum menampilkan menu atau membuka halaman.
+- Tidak cukup hanya menyembunyikan menu; validasi otorisasi harus dilakukan sebelum setiap perubahan data.
+- Role awal (Owner, Admin, Manager, Kasir, Staff gudang) harus memiliki konfigurasi izin yang jelas per fitur.
+
+### 19.3 Manajemen Pelanggan (Tier dan Poin Reward)
+
+- Tambahkan `customer_tier` pada tabel pelanggan (misalnya: Regular, Silver, Gold, Platinum).
+- Tambahkan `reward_points` atau poin reward yang terkumpul pada setiap pelanggan.
+- Semua poin reward, batasan pembelian, dan aturan penarikan poin harus dapat diatur melalui halaman **Pengaturan** (settings), bukan hardcoded.
+- Poin dan batasan pembelian harus tersimpan dalam tabel konfigurasi yang bisa diubah oleh admin melalui UI settings.
+
+### 19.4 Manajemen Ikon Aplikasi
+
+- Semua ikon yang digunakan dalam aplikasi harus ditempatkan dalam satu file khusus (satu file ikon terpusat).
+- Dilarang hardcoded icon langsung di dalam widget (misalnya `Icons.home` atau `MaterialIcons.xxx` langsung di widget).
+- Buat satu file konstanta ikon yang berisi seluruh ikon aplikasi, lalu gunakan konstanta tersebut di seluruh widget.
 
 Mulai sekarang dengan menginspeksi proyek, menyusun checklist, dan mengimplementasikan Fase 1. Lanjutkan fase berikutnya secara bertahap, bukan berhenti setelah membuat dashboard atau tampilan awal.

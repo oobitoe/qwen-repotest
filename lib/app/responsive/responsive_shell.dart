@@ -254,7 +254,7 @@ class ComingSoonPage extends StatelessWidget {
             const Icon(AppIcons.constructionRounded,
                 size: 48, color: AppTheme.warning),
             const SizedBox(height: AppSpacing.md),
-            Text(l10n.comingSoon.replaceAll('{title}', title),
+            Text(l10n.comingSoon(title),
                 style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),

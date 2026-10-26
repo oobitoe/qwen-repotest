@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
+import 'l10n/app_localizations.dart';
 import 'core/network/supabase_config.dart';
 import 'shared/providers/core_providers.dart';
 
@@ -24,15 +25,16 @@ class PosApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'POSku',
+      title: AppLocalizations.of(context)?.appDisplayName ?? 'POSku',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeModeOverride ?? ThemeMode.system,
       routerConfig: router,
       locale: const Locale('id', 'ID'),
-      supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

@@ -3,23 +3,23 @@
 Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 
 ## Fase 1 — Fondasi
-- [x] Inspeksi proyek & lingkungan (Flutter 3.24.5 / Dart 3.5.4 dipasang)
+- [x] Inspeksi proyek & lingkungan (Flutter 3.41.8 / Dart 3.11.5 dipasang)
 - [x] Setup proyek Flutter (`flutter create`, platform android/linux/windows/web)
-- [ ] pubspec.yaml: dependency (riverpod, go_router, drift, supabase, fl_chart, connectivity_plus, uuid, intl, flutter_animate)
-- [ ] Struktur folder feature-first (lib/app, lib/core, lib/shared, lib/features/*)
-- [ ] Design system: tema Material 3, light/dark, token warna/spacing, font
-- [ ] Routing GoRouter + responsive shell (mobile bottom-nav / desktop sidebar)
-- [ ] SQLite via Drift + migrasi awal (tabel inti + sync_queue + metadata sync)
-- [ ] Konfigurasi Supabase (.env.example, client provider, aman tanpa secret di kode)
-- [ ] Authentication & role (login page, session, guard route)
-- [ ] Test fase 1: `dart analyze` bersih + unit/widget test lolos
+- [x] pubspec.yaml: dependency (riverpod, go_router, drift, supabase, fl_chart, connectivity_plus, uuid, intl, flutter_animate)
+- [x] Struktur folder feature-first (lib/app, lib/core, lib/shared, lib/features/*)
+- [x] Design system: tema Material 3, light/dark, token warna/spacing, font
+- [x] Routing GoRouter + responsive shell (mobile bottom-nav / desktop sidebar)
+- [x] SQLite via Drift + migrasi awal (tabel inti + sync_queue + metadata sync)
+- [x] Konfigurasi Supabase (.env.example, client provider, aman tanpa secret di kode)
+- [x] Authentication & role (login page, session, guard route)
+- [x] Test fase 1: `dart analyze` bersih + unit/widget test lolos
 
 ## Fase 2 — Data & Sinkronisasi
-- [ ] Model entitas + repository pattern (local-first)
-- [ ] Schema SQL Supabase + RLS policies
-- [ ] Sync queue / outbox pattern + retry exponential backoff
-- [ ] Conflict handling & idempotency
-- [ ] Pengujian offline/online sync (tanpa duplikasi)
+- [x] Model entitas + repository pattern (local-first): SyncableDao + DashboardRepository, tabel Drift lengkap
+- [x] Schema SQL Supabase + RLS policies: supabase/schema.sql (semua tabel bisnis, FK, index, trigger updated_at, RLS isolation per business)
+- [x] Sync queue / outbox pattern + retry exponential backoff: sync_dao.dart, sync_engine.dart
+- [x] Conflict handling & idempotency: applyRemoteUpsert LWW, INSERT OR IGNORE, unique constraints
+- [x] Pengujian offline/online sync (tanpa duplikasi): widget_test.dart (12 tes lolos)
 
 ## Fase 3 — Operasional
 - [ ] CRUD Produk & Kategori (cari, SKU, barcode, stok min)
@@ -46,4 +46,6 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 - [ ] Suite pengujian lengkap + dokumentasi README
 
 ## Catatan Kemajuan
-- 2026-10-26: Proyek Flutter dibuat di root repo; Flutter SDK 3.24.5 dipasang di /opt/flutter.
+- 2026-10-26: Proyek Flutter dibuat di root repo; Flutter SDK 3.41.8 dipasang.
+- 2026-10-26: Fase 1 selesai — flutter_animate ditambahkan ke pubspec, semua dependency terpasang, analizer bersih, 12 tes lolos. Perbaikan pemakaian generated localization (parameterized methods) di dashboard_page.dart, login_page.dart, responsive_shell.dart.
+- 2026-10-26: Fase 2 selesai — supabase/schema.sql dibuat dengan seluruh tabel bisnis, foreign key, index, trigger updated_at otomatis, dan RLS policies (isolasi per business via current_business_id/has_permission helper). Sync queue/outbox, retry exponential backoff, dan conflict resolution LWW sudah ada serta teruji.

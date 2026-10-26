@@ -173,22 +173,22 @@ class _SyncBanner extends ConsumerWidget {
             AppIcons.wifiOffRounded,
             AppTheme.warning,
             pending > 0
-                ? l10n.offlinePending.replaceAll('{pending}', pending.toString())
+                ?             l10n.offlinePending(pending.toString())
                 : l10n.offlineSaved),
         SyncPhase.syncing => (
             AppIcons.syncRounded,
             AppTheme.info,
-            l10n.syncing.replaceAll('{count}', (s.inFlight + s.pendingCount).toString())),
+            l10n.syncing((s.inFlight + s.pendingCount).toString())),
         SyncPhase.error => (
             AppIcons.errorOutlineRounded,
             AppTheme.error,
-            l10n.syncError.replaceAll('{message}', s.message ?? l10n.retry)),
+            l10n.syncError(s.message ?? l10n.retry)),
         SyncPhase.idle => (
             AppIcons.cloudDoneRounded,
             AppTheme.success,
             s.lastSyncAt == null
                 ? l10n.syncReady
-                : l10n.syncSynced.replaceAll('{ago}', _ago(l10n, s.lastSyncAt!))),
+                : l10n.syncSynced(_ago(l10n, s.lastSyncAt!))),
       },
     );
 
@@ -237,8 +237,8 @@ class _SyncBanner extends ConsumerWidget {
   String _ago(AppLocalizations l10n, DateTime t) {
     final diff = DateTime.now().difference(t);
     if (diff.inSeconds < 60) return l10n.agoJustNow;
-    if (diff.inMinutes < 60) return l10n.agoMinutes.replaceAll('{n}', diff.inMinutes.toString());
-    if (diff.inHours < 24) return l10n.agoHours.replaceAll('{n}', diff.inHours.toString());
+    if (diff.inMinutes < 60) return l10n.agoMinutes(diff.inMinutes.toString());
+    if (diff.inHours < 24) return l10n.agoHours(diff.inHours.toString());
     return DateFormat('d MMM, HH:mm').format(t.toLocal());
   }
 }
@@ -301,7 +301,7 @@ class _DashboardBody extends StatelessWidget {
         icon: AppIcons.inventory2Rounded,
         color: AppTheme.warning,
         subtitle: data.lowStock.isNotEmpty
-            ? l10n.lowStockCount.replaceAll('{count}', data.lowStock.length.toString())
+            ? l10n.lowStockCount(data.lowStock.length.toString())
             : l10n.stockSafe,
       ),
     ];
@@ -861,7 +861,7 @@ class _GreetingChip extends StatelessWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
-      child: Text(l10n.greetingRole.replaceAll('{greet}', greet).replaceAll('{role}', role),
+      child: Text(l10n.greetingRole(greet, role),
           style: Theme.of(context).textTheme.labelMedium),
     );
   }

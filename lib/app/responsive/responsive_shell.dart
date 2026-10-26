@@ -113,7 +113,7 @@ class _SidebarShell extends ConsumerWidget {
                           ]),
                           borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
-                        child: Icon(Icons.storefront_rounded,
+                        child: const Icon(Icons.storefront_rounded,
                             color: Colors.white, size: 22),
                       ),
                       Expanded(
@@ -152,7 +152,7 @@ class _SidebarShell extends ConsumerWidget {
                           ? NavigationRailLabelType.all
                           : null,
                       indicatorColor:
-                          theme.colorScheme.primary.withOpacity(0.15),
+                          theme.colorScheme.primary.withValues(alpha: 0.15),
                       destinations: [
                         for (final d in appNavItems)
                           NavigationRailDestination(
@@ -237,7 +237,7 @@ class ComingSoonPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.construction_rounded,
+            const Icon(Icons.construction_rounded,
                 size: 48, color: AppTheme.warning),
             const SizedBox(height: AppSpacing.md),
             Text('$title akan hadir di fase berikutnya.',

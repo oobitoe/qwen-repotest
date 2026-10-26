@@ -97,14 +97,14 @@ class DashboardRepository {
     // --- Laba kotor hari ini (penjualan - HPP item terjual) ------------
     final si = _db.saleItems;
     final itemsToday = await (_db.select(si)
-          ..where(si.createdAt.isBiggerOrEqualValue(todayStart)))
+          ..where((t) => t.createdAt.isBiggerOrEqualValue(todayStart)))
         .get();
     var cogs = 0.0;
     if (itemsToday.isNotEmpty) {
       final pr = _db.products;
       final ids = itemsToday.map((i) => i.productId).toSet();
       final costRows = await (_db.select(pr)
-            ..where(pr.id.isIn(ids)))
+              ..where((t) => t.id.isIn(ids)))
           .get();
       final costById = {for (final p in costRows) p.id: p.costPrice};
       cogs = itemsToday.fold<double>(
@@ -133,10 +133,10 @@ class DashboardRepository {
 
     // --- Deret penjualan 14 hari -------------------------------------------
     final recent = await (_db.select(s)
-          ..where(s.createdAt.isBiggerOrEqualValue(windowStart) &
-              s.deletedAt.isNull() &
-              s.status.equals('completed'))
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+            ..where((t) => t.createdAt.isBiggerOrEqualValue(windowStart) &
+                t.deletedAt.isNull() &
+                t.status.equals('completed'))
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .get();
     final byDay = <String, (double, int)>{};
     for (final r in recent) {
@@ -157,11 +157,11 @@ class DashboardRepository {
     // --- Stok menipis --------------------------------------------------------
     final pr = _db.products;
     final lowRows = await (_db.select(pr)
-          ..where((pr.stock - pr.minStock).isSmallerOrEqualValue(0) &
-              (pr.stock.equals(0) | pr.stock.isBiggerThanValue(0)))
-          ..where(pr.isActive.equals(true) & pr.deletedAt.isNull())
-          ..orderBy([(t) => OrderingTerm.asc(t.stock)])
-          ..limit(8))
+            ..where((t) => (t.stock - t.minStock).isSmallerOrEqualValue(0) &
+                (t.stock.equals(0) | t.stock.isBiggerThanValue(0)))
+            ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.stock)])
+            ..limit(8))
         .get();
     final lowStock = [
       for (final p in lowRows)
@@ -177,9 +177,9 @@ class DashboardRepository {
     // --- Aktivitas terbaru ----------------------------------------------------
     final activityEntries = <ActivityEntry>[];
     final saleActs = await (_db.select(s)
-          ..where(s.deletedAt.isNull())
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-          ..limit(6))
+            ..where((t) => t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+            ..limit(6))
         .get();
     for (final sale in saleActs) {
       activityEntries.add((
@@ -193,9 +193,9 @@ class DashboardRepository {
       ));
     }
     final expActs = await (_db.select(_db.expenses)
-          ..where(_db.expenses.deletedAt.isNull())
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-          ..limit(3))
+            ..where((t) => t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+            ..limit(3))
         .get();
     for (final e in expActs) {
       activityEntries.add((

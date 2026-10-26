@@ -198,9 +198,9 @@ class _SyncBanner extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg, vertical: AppSpacing.md),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
+            color: color.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: color.withOpacity(0.35)),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
           ),
           child: Row(
             children: [
@@ -399,17 +399,17 @@ class _StatCardState extends State<_StatCard> {
               0, _hover ? -3 : 0, 0),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest
-                .withOpacity(0.45),
+                .withValues(alpha: 0.45),
             borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(
               color: _hover
-                  ? widget.color.withOpacity(0.5)
+                  ? widget.color.withValues(alpha: 0.5)
                   : theme.colorScheme.outlineVariant,
             ),
             boxShadow: _hover
                 ? [
                     BoxShadow(
-                      color: widget.color.withOpacity(0.15),
+                      color: widget.color.withValues(alpha: 0.15),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -426,7 +426,7 @@ class _StatCardState extends State<_StatCard> {
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.15),
+                      color: widget.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Icon(widget.icon, color: widget.color, size: 20),
@@ -473,7 +473,7 @@ class _DeltaChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
@@ -596,8 +596,8 @@ class _SalesChartCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.25),
-                      theme.colorScheme.primary.withOpacity(0.02),
+                      theme.colorScheme.primary.withValues(alpha: 0.25),
+                      theme.colorScheme.primary.withValues(alpha: 0.02),
                     ],
                   ),
                 ),
@@ -622,7 +622,7 @@ class _LowStockCard extends StatelessWidget {
     return _SectionCard(
       title: 'Stok Menipis',
       subtitle: items.isEmpty ? null : '${items.length} produk',
-      trailing: Icon(Icons.warning_amber_rounded,
+      trailing: const Icon(Icons.warning_amber_rounded,
           color: AppTheme.warning),
       child: items.isEmpty
           ? Padding(
@@ -648,7 +648,7 @@ class _LowStockCard extends StatelessWidget {
                       backgroundColor: (it.stock == 0
                               ? AppTheme.error
                               : AppTheme.warning)
-                          .withOpacity(0.15),
+                          .withValues(alpha: 0.15),
                       child: Icon(
                         it.stock == 0
                             ? Icons.remove_shopping_cart_rounded
@@ -686,9 +686,9 @@ class _StockPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         out ? 'Habis' : '${stock.toInt()} / $min',
@@ -735,7 +735,7 @@ class _ActivityCard extends StatelessWidget {
                       backgroundColor: (a.kind == ActivityKind.sale
                               ? AppTheme.success
                               : AppTheme.error)
-                          .withOpacity(0.12),
+                          .withValues(alpha: 0.12),
                       child: Icon(
                         a.kind == ActivityKind.sale
                             ? Icons.shopping_bag_rounded
@@ -878,7 +878,7 @@ class _SyncBadge extends ConsumerWidget {
         height: 34,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: color.withOpacity(0.14),
+          color: color.withValues(alpha: 0.14),
         ),
         child: Icon(icon, size: 18, color: color),
       ),

@@ -67,7 +67,7 @@ class AuthSignedOut extends AuthState {
 
 class AuthSignedIn extends AuthState {
   const AuthSignedIn(this.user, this.role);
-  final User user;
+  final sb.User user;
   final UserRole role;
 }
 

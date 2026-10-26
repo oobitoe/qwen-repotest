@@ -34,7 +34,10 @@ class SupabaseConfig {
       );
       return false;
     }
-    await Supabase.initialize(url: instance.url, anonKey: instance.anonKey);
+    await Supabase.initialize(
+      url: instance.url,
+      publishableKey: instance.anonKey,
+    );
     _initialized = true;
     return true;
   }

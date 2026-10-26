@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,9 +18,9 @@ void main() {
   group('Smoke UI', () {
     testWidgets('aplikasi merender tanpa exception', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: PosApp(themeModeOverride: ThemeMode.light),
-        ),
+          const ProviderScope(
+            child: PosApp(themeModeOverride: ThemeMode.light),
+          ),
       );
       await tester.pump();
       expect(find.byType(MaterialApp), findsOneWidget);
@@ -48,10 +48,10 @@ void main() {
     }) {
       return db.into(db.products).insert(ProductsCompanion.insert(
             id: id,
-            businessId: 'biz-1',
+            businessId: const Value('biz-1'),
             sku: 'SKU-$id',
             name: 'Produk $id',
-            sellPrice: Value(sellPrice),
+            sellPrice: sellPrice,
             costPrice: Value(costPrice),
             minStock: Value(minStock),
             stock: Value(stock),
@@ -67,8 +67,8 @@ void main() {
       return db.into(db.sales).insert(SalesCompanion.insert(
             id: id,
             invoiceNumber: 'INV-$id',
-            subtotal: Value(total),
-            total: Value(total),
+            subtotal: total,
+            total: total,
             paid: Value(total),
             createdAt: Value(at ?? DateTime.now()),
           ));
@@ -136,10 +136,10 @@ void main() {
     Future<void> insertProduct(String id, {double price = 1000}) =>
         db.into(db.products).insert(ProductsCompanion.insert(
               id: id,
-              businessId: 'biz-1',
+              businessId: const Value('biz-1'),
               sku: 'SKU-$id',
               name: 'Produk $id',
-              sellPrice: Value(price),
+              sellPrice: price,
               costPrice: const Value(500),
               minStock: const Value(5),
               stock: const Value(20),

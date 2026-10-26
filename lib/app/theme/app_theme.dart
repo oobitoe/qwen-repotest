@@ -40,18 +40,19 @@ class AppTheme {
         titleTextStyle: base.textTheme.titleLarge
             ?.copyWith(fontWeight: FontWeight.w600),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          side: BorderSide(color: scheme.outlineVariant.withOpacity(0.5)),
+          side: BorderSide(
+              color: scheme.outlineVariant.withValues(alpha: 0.5)),
         ),
         clipBehavior: Clip.antiAlias,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHigh.withOpacity(0.4),
+        fillColor: scheme.surfaceContainerHigh.withValues(alpha: 0.4),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         border: OutlineInputBorder(
@@ -96,7 +97,7 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withOpacity(0.5),
+        color: scheme.outlineVariant.withValues(alpha: 0.5),
         space: AppSpacing.lg,
       ),
       textTheme: base.textTheme.apply(fontFamilyFallback: const ['Inter']),

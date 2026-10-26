@@ -4,17 +4,15 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:uuid/uuid.dart';
 
+import 'sync_meta.dart';
 import 'tables.dart';
 
+export 'sync_meta.dart' show ConflictDecision, TableMeta, TransactionExecutor;
 export 'tables.dart'
     show SyncStatuses, SyncOperations, SyncQueueStatuses;
 
 part 'app_database.g.dart';
 
-
-import 'sync_meta.dart';
-
-export 'sync_meta.dart' show ConflictDecision, TableMeta, TransactionExecutor;
 
 /// Database lokal SQLite (Drift). Sumber kebenaran utama untuk operasi harian.
 @DriftDatabase(

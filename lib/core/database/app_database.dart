@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:uuid/uuid.dart';
 
 import 'tables.dart';
 
@@ -7,6 +10,11 @@ export 'tables.dart'
     show SyncStatuses, SyncOperations, SyncQueueStatuses;
 
 part 'app_database.g.dart';
+
+
+import 'sync_meta.dart';
+
+export 'sync_meta.dart' show ConflictDecision, TableMeta, TransactionExecutor;
 
 /// Database lokal SQLite (Drift). Sumber kebenaran utama untuk operasi harian.
 @DriftDatabase(
@@ -41,7 +49,6 @@ class AppDatabase extends _$AppDatabase {
         onCreate: (migrator) async {
           await migrator.createAll();
         },
-        // Migrasi bertahap ditambahkan pada fase berikutnya bila schemaVersion naik.
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
         },

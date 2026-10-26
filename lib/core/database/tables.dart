@@ -95,6 +95,11 @@ class Units extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get abbreviation => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -237,6 +242,11 @@ class ExpenseCategories extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -263,6 +273,11 @@ class IncomeCategories extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
   Set<Column> get primaryKey => {id};

@@ -37,7 +37,7 @@ class SupabaseConfig {
   }
 
   static SupabaseClient? get client {
-    if (!instance.isValid || !Supabase.isInitialized) return null;
+    if (!instance.isValid || !Supabase.instance.isInitialized) return null;
     return Supabase.instance.client;
   }
 }

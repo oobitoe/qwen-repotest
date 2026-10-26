@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,66 +8,43 @@ import '../../../core/network/supabase_config.dart';
 /// Role pengguna awal sesuai PRD.
 enum UserRole { owner, admin, manager, kasir, staffGudang }
 
-UserRole roleFromName(String? name) {
-  switch (name) {
-    case 'owner':
-      return UserRole.owner;
-    case 'admin':
-      return UserRole.admin;
-    case 'manager':
-      return UserRole.manager;
-    case 'kasir':
-      return UserRole.kasir;
-    case 'staff_gudang':
-      return UserRole.staffGudang;
-    default:
-      return UserRole.kasir;
-  }
-}
+UserRole roleFromName(String? name) => switch (name) {
+      'owner' => UserRole.owner,
+      'admin' => UserRole.admin,
+      'manager' => UserRole.manager,
+      'kasir' => UserRole.kasir,
+      'staff_gudang' => UserRole.staffGudang,
+      _ => UserRole.kasir,
+    };
 
-/// Permission granular.
-class Permission {
-  const Permission._();
+String roleName(UserRole role) => switch (role) {
+      UserRole.owner => 'owner',
+      UserRole.admin => 'admin',
+      UserRole.manager => 'manager',
+      UserRole.kasir => 'kasir',
+      UserRole.staffGudang => 'staff_gudang',
+    };
 
-  static const viewReports = 'view_reports';
-  static const editPrice = 'edit_price';
-  static const manageStock = 'manage_stock';
-  static const deleteData = 'delete_data';
-  static const manageUsers = 'manage_users';
-  static const doRefund = 'do_refund';
-  static const manageFinance = 'manage_finance';
-}
-
-/// Matriks permission per role (validasi UI). Validasi sebenarnya juga
-/// harus terjadi di server lewat RLS — lihat supabase/migrations.
+/// Matriks hak akses per role (PRD: guard navigasi adaptif).
 const Map<UserRole, Set<String>> rolePermissions = {
   UserRole.owner: {
-    Permission.viewReports,
-    Permission.editPrice,
-    Permission.manageStock,
-    Permission.deleteData,
-    Permission.manageUsers,
-    Permission.doRefund,
-    Permission.manageFinance,
+    'dashboard.view', 'products.view', 'products.manage', 'stock.manage',
+    'pos.use', 'sales.view', 'expenses.manage', 'income.manage',
+    'reports.view', 'users.manage', 'settings.manage',
   },
   UserRole.admin: {
-    Permission.viewReports,
-    Permission.editPrice,
-    Permission.manageStock,
-    Permission.deleteData,
-    Permission.manageUsers,
-    Permission.doRefund,
-    Permission.manageFinance,
+    'dashboard.view', 'products.view', 'products.manage', 'stock.manage',
+    'pos.use', 'sales.view', 'expenses.manage', 'income.manage',
+    'reports.view', 'users.manage',
   },
   UserRole.manager: {
-    Permission.viewReports,
-    Permission.editPrice,
-    Permission.manageStock,
-    Permission.doRefund,
-    Permission.manageFinance,
+    'dashboard.view', 'products.view', 'products.manage', 'stock.manage',
+    'pos.use', 'sales.view', 'expenses.manage', 'reports.view',
   },
-  UserRole.kasir: {},
-  UserRole.staffGudang: {Permission.manageStock},
+  UserRole.kasir: {'dashboard.view', 'products.view', 'pos.use', 'sales.view'},
+  UserRole.staffGudang: {
+    'dashboard.view', 'products.view', 'stock.manage',
+  },
 };
 
 bool roleHasPermission(UserRole role, String permission) =>
@@ -91,18 +70,17 @@ class AuthSignedIn extends AuthState {
 }
 
 /// Pengguna lokal untuk mode offline-only (Supabase belum dikonfigurasi).
-class LocalDeviceUser implements User {
-  const LocalDeviceUser();
-
-  @override
-  String get id => 'local-device-owner';
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
+final localDeviceUser = User(
+  id: 'local-device-owner',
+  appMetadata: const {},
+  userMetadata: const {'role': 'owner'},
+  aud: 'authenticated',
+  createdAt: DateTime.utc(2024).toIso8601String(),
+  email: null,
+);
 
 /// Mode offline-only: aplikasi tetap dapat dipakai penuh sebagai owner lokal.
-const localOfflineUser = AuthSignedIn(LocalDeviceUser(), UserRole.owner);
+final localOfflineUser = AuthSignedIn(localDeviceUser, UserRole.owner);
 
 class AuthController extends Notifier<AuthState> {
   @override
@@ -112,7 +90,7 @@ class AuthController extends Notifier<AuthState> {
       return localOfflineUser;
     }
     _listen(client);
-    return _fromSession(client.currentSession);
+    return _fromSession(client.auth.currentSession);
   }
 
   StreamSubscription<AuthState>? _sub;
@@ -152,6 +130,12 @@ class AuthController extends Notifier<AuthState> {
     final client = SupabaseConfig.client;
     if (client == null) return;
     await client.auth.signOut();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }
 

@@ -22,7 +22,28 @@ class SyncableDao {
 
   static TableMeta? metaFor(String entityType) => _registry[entityType];
 
+  /// Snapshot seluruh metadata tabel yang sudah terdaftar.
+  static List<TableMeta> get knownMetas => List.unmodifiable(_registry.values);
+
   Iterable<TableMeta> get registeredMetas => _registry.values;
+
+  /// Jumlah operasi outbox yang masih menunggu (waiting/failed).
+  Future<int> countPendingQueue() async {
+    final count = await (_db.selectOnly(_db.syncQueue)
+          ..addColumns([_db.syncQueue.id.count()])
+          ..where(_db.syncQueue.status.isNotIn(
+              [SyncQueueStatuses.done])))
+        .getSingle();
+    return count.read(_db.syncQueue.id.count()) ?? 0;
+  }
+
+  /// Jumlah operasi yang gagal permanen (melebihi batas retry).
+  Future<int> countFailedQueue() =>
+      (_db.selectOnly(_db.syncQueue)
+            ..addColumns([_db.syncQueue.id.count()])
+            ..where(_db.syncQueue.status.equals(SyncQueueStatuses.failed)))
+          .getSingle()
+          .then((row) => row.read(_db.syncQueue.id.count()) ?? 0);
 
   /// Versi baris saat ini (0 bila belum ada).
   Future<int> currentVersion(String entityType, String id) async {
@@ -62,18 +83,35 @@ class SyncableDao {
     return newVersion;
   }
 
-  /// INSERT ... ON CONFLICT DO UPDATE memakai SQL yang dibangun dari
-  /// companion typed milik masing-masing tabel (didaftarkan lewat [register]).
-  Future<void> _typedUpsert(TableMeta meta, Insertable<dynamic> row) async {
-    // ignore: avoid_dynamic_calls
-    final ctx = (_db as dynamic).dao(meta.tableName).createContext(
-          row,
-          InsertMode.insert,
-          onConflict: DoUpdate((_) => row),
-        );
-    await _db.customUpdate(ctx.sql as String,
-        variables: (ctx.boundVariables as List<Object?>).cast<Variable>(),
-        updateKind: UpdateKind.insert);
+  /// INSERT ... ON CONFLICT(id) DO UPDATE memakai SQL bawaan drift.
+  /// Semua kolom ikut di-update, metadata sync di-set `synced` bila [markSynced].
+  Future<void> _typedUpsert(TableMeta meta, Insertable<dynamic> row,
+      {bool markSynced = false}) async {
+    final table = _tableByName(meta.tableName);
+    final ctx = table.createContext(
+      row,
+      InsertMode.insert,
+      onConflict: DoUpdate(
+        (_) => row,
+        target: [table.columnByName('id')!],
+      ),
+    );
+    var sql = ctx.sql;
+    if (markSynced) {
+      sql += ', "sync_status" = ?';
+    }
+    final vars = <Variable>[...ctx.boundVariables];
+    if (markSynced) {
+      vars.add(Variable.withString(SyncStatuses.synced));
+    }
+    await _db.customUpdate(sql, variables: vars, updateKind: UpdateKind.insert);
+  }
+
+  TableInfo<Table, dynamic> _tableByName(String tableName) {
+    for (final t in _db.allTables) {
+      if (t.actualTableName == tableName) return t;
+    }
+    throw ArgumentError.value(tableName, 'tableName', 'tabel tidak dikenal');
   }
 
   /// Soft delete (set deleted_at) + enqueue operasi delete.
@@ -215,15 +253,7 @@ class SyncableDao {
 
     if (decision != ConflictDecision.applyRemote) return false;
 
-    await _typedUpsert(meta, meta.toCompanion(json));
-    // Tandai synced karena sumbernya memang server.
-    await _db.customUpdate(
-      'UPDATE "${meta.tableName}" SET "sync_status" = ?1 WHERE "id" = ?2',
-      variables: [
-        Variable.withString(SyncStatuses.synced),
-        Variable.withString(id),
-      ],
-    );
+    await _typedUpsert(meta, meta.toCompanion(json), markSynced: true);
     return true;
   }
 

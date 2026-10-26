@@ -11,8 +11,8 @@ class TableMeta {
   const TableMeta({
     required this.entityType,
     required this.tableName,
+    required this.columns,
     required this.toCompanion,
-    required this.buildUpsertSql,
   });
 
   /// Nama tipe entitas logis, mis. `product`, `sale`.
@@ -21,18 +21,9 @@ class TableMeta {
   /// Nama tabel fisik (snake_case, sama dengan `actualTableName` drift).
   final String tableName;
 
+  /// Daftar (nama kolom snake_case, tipe drift) milik tabel ini.
+  final List<(String, DriftSqlType)> columns;
+
   /// Membangun companion insert/upsert dari snapshot JSON remote.
   final Insertable<dynamic> Function(Map<String, dynamic> json) toCompanion;
-
-  /// Membangun SQL `INSERT ... ON CONFLICT(id) DO UPDATE` lengkap beserta
-  /// variabel terikat, dari sebuah companion milik tabel yang sama.
-  /// Diisi oleh registrasi per-tabel agar tetap bertipe kuat (typed).
-  final UpsertStatement Function(Insertable<dynamic> row) buildUpsertSql;
-}
-
-/// Pernyataan upert siap eksekusi: SQL + variabel terikatnya.
-class UpsertStatement {
-  const UpsertStatement(this.sql, this.variables);
-  final String sql;
-  final List<Variable<Object?>?> variables;
 }

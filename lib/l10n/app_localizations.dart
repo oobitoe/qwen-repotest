@@ -356,6 +356,42 @@ abstract class AppLocalizations {
   /// **'Access'**
   String get access;
 
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get stock;
+
+  /// No description provided for @stockMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Movements'**
+  String get stockMovements;
+
+  /// No description provided for @adjustStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust Stock'**
+  String get adjustStock;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// No description provided for @inactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get inactive;
+
   /// No description provided for @offline.
   ///
   /// In en, this message translates to:
@@ -715,6 +751,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transactions Today'**
   String get transactionsToday;
+
+  /// No description provided for @subtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotal;
+
+  /// No description provided for @diskon.
+  ///
+  /// In en, this message translates to:
+  /// **'Diskon'**
+  String get diskon;
+
+  /// No description provided for @pajak.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get pajak;
+
+  /// No description provided for @keranjang.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get keranjang;
+
+  /// No description provided for @keranjangKosong.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart Empty'**
+  String get keranjangKosong;
+
+  /// No description provided for @pembayaran.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get pembayaran;
+
+  /// No description provided for @metodePembayaran.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method'**
+  String get metodePembayaran;
+
+  /// No description provided for @checkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get checkout;
+
+  /// No description provided for @batal.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get batal;
+
+  /// No description provided for @cashRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Register'**
+  String get cashRegister;
+
+  /// No description provided for @openSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Session'**
+  String get openSession;
+
+  /// No description provided for @activeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Session'**
+  String get activeSession;
+
+  /// No description provided for @openedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened by'**
+  String get openedBy;
+
+  /// No description provided for @openingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Balance'**
+  String get openingBalance;
+
+  /// No description provided for @closeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Session'**
+  String get closeSession;
+
+  /// No description provided for @actualBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual Balance'**
+  String get actualBalance;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
 }
 
 class _AppLocalizationsDelegate

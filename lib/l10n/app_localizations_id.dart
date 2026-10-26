@@ -138,6 +138,24 @@ class AppLocalizationsId extends AppLocalizations {
   String get access => 'Akses';
 
   @override
+  String get name => 'Nama';
+
+  @override
+  String get stock => 'Stok';
+
+  @override
+  String get stockMovements => 'Pergerakan Stok';
+
+  @override
+  String get adjustStock => 'Sesuaikan Stok';
+
+  @override
+  String get active => 'Aktif';
+
+  @override
+  String get inactive => 'Tidak Aktif';
+
+  @override
   String get offline => 'Offline';
 
   @override
@@ -337,4 +355,61 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get transactionsToday => 'Transaksi Hari Ini';
+
+  @override
+  String get subtotal => 'Subtotal';
+
+  @override
+  String get diskon => 'Diskon';
+
+  @override
+  String get pajak => 'Pajak';
+
+  @override
+  String get keranjang => 'Keranjang';
+
+  @override
+  String get keranjangKosong => 'Keranjang Kosong';
+
+  @override
+  String get pembayaran => 'Pembayaran';
+
+  @override
+  String get metodePembayaran => 'Metode Pembayaran';
+
+  @override
+  String get checkout => 'Checkout';
+
+  @override
+  String get batal => 'Batal';
+
+  @override
+  String get cashRegister => 'Register Kasir';
+
+  @override
+  String get openSession => 'Buka Sesi';
+
+  @override
+  String get activeSession => 'Sesi Aktif';
+
+  @override
+  String get openedBy => 'Dibuka oleh';
+
+  @override
+  String get openingBalance => 'Saldo Awal';
+
+  @override
+  String get closeSession => 'Tutup Sesi';
+
+  @override
+  String get actualBalance => 'Saldo Aktual';
+
+  @override
+  String get close => 'Tutup';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get open => 'Buka';
 }

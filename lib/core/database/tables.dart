@@ -178,12 +178,65 @@ class Customers extends Table {
   TextColumn get email => text().nullable()();
   TextColumn get address => text().nullable()();
   TextColumn get notes => text().nullable()();
+  TextColumn get tier => text().withDefault(const Constant('Regular'))();
+  IntColumn get rewardPoints => integer().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Inventaris: penyesuaian dan opname ----------
+
+class StockAdjustments extends Table {
+  TextColumn get id => text()();
+  TextColumn get referenceNumber => text()();
+  TextColumn get note => text().nullable()();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StockAdjustmentItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get adjustmentId => text().references(StockAdjustments, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  RealColumn get quantityBefore => real()();
+  RealColumn get quantityAfter => real()();
+  TextColumn get reason => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StockOpnames extends Table {
+  TextColumn get id => text()();
+  TextColumn get referenceNumber => text()();
+  TextColumn get status => text().withDefault(const Constant('draft'))();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get approvedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StockOpnameItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get opnameId => text().references(StockOpnames, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  RealColumn get systemStock => real()();
+  RealColumn get countedStock => real()();
 
   @override
   Set<Column> get primaryKey => {id};

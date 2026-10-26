@@ -13,6 +13,15 @@ class AppIcons {
   static const IconData lockOutline = Icons.lock_outline;
   static const IconData sync = Icons.sync;
   static const IconData logout = Icons.logout;
+  static const IconData add = Icons.add;
+  static const IconData search = Icons.search;
+  static const IconData categoryRounded = Icons.category_rounded;
+  static const IconData shoppingCartRounded = Icons.shopping_cart_rounded;
+  static const IconData discountRounded = Icons.discount_rounded;
+  static const IconData taxRounded = Icons.receipt_long_rounded;
+  static const IconData paymentRounded = Icons.payment_rounded;
+  static const IconData checkoutRounded = Icons.point_of_sale;
+  static const IconData receiptLongRounded = Icons.receipt_long_rounded;
   static const IconData pointOfSaleRounded = Icons.point_of_sale_rounded;
   static const IconData cloudUploadOutlined = Icons.cloud_upload_outlined;
   static const IconData cloudOffRounded = Icons.cloud_off_rounded;
@@ -21,7 +30,6 @@ class AppIcons {
   static const IconData errorOutlineRounded = Icons.error_outline_rounded;
   static const IconData cloudDoneRounded = Icons.cloud_done_rounded;
   static const IconData paymentsRounded = Icons.payments_rounded;
-  static const IconData receiptLongRounded = Icons.receipt_long_rounded;
   static const IconData trendingUpRounded = Icons.trending_up_rounded;
   static const IconData inventory2Rounded = Icons.inventory_2_rounded;
   static const IconData arrowUpward = Icons.arrow_upward;
@@ -35,5 +43,7 @@ class AppIcons {
   static const IconData shoppingBagRounded = Icons.shopping_bag_rounded;
   static const IconData savingsRounded = Icons.savings_rounded;
   static const IconData bugReportOutlined = Icons.bug_report_outlined;
+  static const IconData registerRounded = Icons.point_of_sale;
+  static const IconData accountBalanceRounded = Icons.account_balance_rounded;
   static const IconData refresh = Icons.refresh;
 }

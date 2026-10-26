@@ -4,7 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/login_page.dart';
+import '../../features/categories/presentation/category_page.dart';
+import '../../features/customers/presentation/customer_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
+import '../../features/inventory/presentation/inventory_page.dart';
+import '../../features/products/presentation/product_page.dart';
+import '../../features/cash/presentation/cash_page.dart';
+import '../../features/sales/presentation/sale_page.dart';
+import '../../features/pos/presentation/pos_page.dart';
+import '../../features/purchases/presentation/purchase_page.dart';
+import '../../features/suppliers/presentation/supplier_page.dart';
 import '../responsive/responsive_shell.dart';
 
 /// Rute utama aplikasi.
@@ -12,6 +21,15 @@ class AppRoutes {
   const AppRoutes._();
   static const login = '/login';
   static const dashboard = '/dashboard';
+  static const products = '/products';
+  static const categories = '/categories';
+  static const suppliers = '/suppliers';
+  static const customers = '/customers';
+  static const inventory = '/inventory';
+  static const purchases = '/purchases';
+  static const pos = '/pos';
+  static const sales = '/sales';
+  static const cash = '/cash';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -51,6 +69,42 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.dashboard,
             builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.products,
+            builder: (context, state) => const ProductsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.categories,
+            builder: (context, state) => const CategoriesPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.suppliers,
+            builder: (context, state) => const SuppliersPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.customers,
+            builder: (context, state) => const CustomersPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.inventory,
+            builder: (context, state) => const InventoryPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchases,
+            builder: (context, state) => const PurchasesPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.pos,
+            builder: (context, state) => const PosPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.sales,
+            builder: (context, state) => const SalesPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.cash,
+            builder: (context, state) => const CashPage(),
           ),
         ],
       ),

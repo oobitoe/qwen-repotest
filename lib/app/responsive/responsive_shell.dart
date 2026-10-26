@@ -31,11 +31,37 @@ class NavItem {
 const appNavItems = <NavItem>[
   NavItem('/dashboard', 'dashboard', AppIcons.dashboardOutlined,
       AppIcons.dashboardRounded),
+  NavItem('/products', 'products', AppIcons.inventory2Rounded,
+      AppIcons.inventory2Rounded),
+  NavItem('/categories', 'categories', AppIcons.categoryRounded,
+      AppIcons.categoryRounded),
+  NavItem('/suppliers', 'suppliers', AppIcons.storefrontRounded,
+      AppIcons.storefrontRounded),
+  NavItem('/customers', 'customers', AppIcons.shoppingBagRounded,
+      AppIcons.shoppingBagRounded),
+  NavItem('/inventory', 'inventory', AppIcons.inventory2Rounded,
+      AppIcons.inventory2Rounded),
+  NavItem('/purchases', 'purchases', AppIcons.shoppingCartRounded,
+      AppIcons.shoppingCartRounded),
+  NavItem('/pos', 'pos', AppIcons.checkoutRounded, AppIcons.checkoutRounded),
+  NavItem('/sales', 'sales', AppIcons.receiptLongRounded,
+      AppIcons.receiptLongRounded),
+  NavItem('/cash', 'cash', AppIcons.accountBalanceRounded,
+      AppIcons.accountBalanceRounded),
 ];
 
 /// Resolve label tujuan navigasi ke string terlokalisasi.
 String _navLabel(AppLocalizations l10n, String key) => switch (key) {
       'dashboard' => l10n.dashboard,
+      'products' => l10n.products,
+      'categories' => l10n.categories,
+      'suppliers' => l10n.suppliers,
+      'customers' => l10n.customers,
+      'inventory' => l10n.inventory,
+      'purchases' => l10n.purchases,
+      'pos' => l10n.pos,
+      'sales' => l10n.sales,
+      'cash' => l10n.cashRegister,
       _ => key,
     };
 

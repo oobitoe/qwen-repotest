@@ -200,8 +200,7 @@ class _SidebarShell extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm),
-                    child: SingleChildScrollView(
-                      child: NavigationRail(
+                    child: NavigationRail(
                         extended: !collapsed,
                         selectedIndex: currentIndex,
                         onDestinationSelected: (i) =>
@@ -226,7 +225,6 @@ class _SidebarShell extends ConsumerWidget {
                             ),
                         ],
                       ),
-                    ),
                   ),
                 ),
                 const Divider(height: 1),

@@ -336,6 +336,34 @@ void registerAllSyncMetas() {
         version: Value(i(j['version'])),
         syncStatus: const Value(SyncStatuses.synced),
       )));
+
+  SyncableDao.register(_meta('debt', db.debts,
+      (j) => DebtsCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
+        supplierId: Value(sn(j['supplier_id'])),
+        customerId: Value(sn(j['customer_id'])),
+        type: Value(s(j['type'])),
+        amount: Value(d(j['amount'])),
+        paidAmount: Value(d(j['paid_amount'])),
+        status: Value(sn(j['status']) ?? 'open'),
+        dueDate: Value(dt(j['due_date'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('debt_payment', db.debtPayments,
+      (j) => DebtPaymentsCompanion(
+        id: Value(s(j['id'])),
+        debtId: Value(s(j['debt_id'])),
+        amount: Value(d(j['amount'])),
+        paidAt: Value(dt(j['paid_at']) ?? DateTime.now().toUtc()),
+        createdBy: Value(sn(j['created_by'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
 }
 
 /// Executor sementara hanya untuk membaca metadata kolom saat registrasi

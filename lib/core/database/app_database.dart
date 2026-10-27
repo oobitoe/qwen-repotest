@@ -36,6 +36,8 @@ part 'app_database.g.dart';
     CashMovements,
     Accounts,
     AccountTransactions,
+    Debts,
+    DebtPayments,
     SyncQueue,
     SyncMetadata,
   ],

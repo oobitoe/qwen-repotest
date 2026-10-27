@@ -440,6 +440,40 @@ class AccountTransactions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ---------- Hutang & Piutang ----------
+
+class Debts extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get supplierId => text().nullable().references(Suppliers, #id)();
+  TextColumn get customerId => text().nullable().references(Customers, #id)();
+  TextColumn get type => text()(); // payable | receivable
+  RealColumn get amount => real().withDefault(const Constant(0))();
+  RealColumn get paidAmount => real().withDefault(const Constant(0))();
+  TextColumn get status => text().withDefault(const Constant('open'))(); // open | partially_paid | paid
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class DebtPayments extends Table {
+  TextColumn get id => text()();
+  TextColumn get debtId => text().references(Debts, #id)();
+  RealColumn get amount => real()();
+  DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get createdBy => text().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ---------- Antrean Sinkronisasi (outbox) ----------
 
 class SyncQueue extends Table {

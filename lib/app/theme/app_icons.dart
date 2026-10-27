@@ -48,4 +48,6 @@ class AppIcons {
   static const IconData refresh = Icons.refresh;
   static const IconData delete = Icons.delete_rounded;
   static const IconData remove = Icons.remove_circle_rounded;
+  static const IconData calendarMonthRounded = Icons.calendar_month_rounded;
+  static const IconData closeRounded = Icons.close_rounded;
 }

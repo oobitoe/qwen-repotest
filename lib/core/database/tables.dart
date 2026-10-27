@@ -474,6 +474,25 @@ class DebtPayments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ---------- Audit Log ----------
+class AuditLogs extends Table {
+  TextColumn get id => text()();
+  TextColumn get userId => text()();
+  TextColumn get userName => text()();
+  TextColumn get action => text()(); // create | update | delete | login | logout | payment | refund | stockAdjustment | priceChange | permissionChange | settingsChange | dataExport | dataImport | sync
+  TextColumn get entityType => text()(); // products | sales | expenses | users | etc
+  TextColumn get entityId => text()();
+  TextColumn get description => text()();
+  TextColumn get oldValue => text().nullable()();
+  TextColumn get newValue => text().nullable()();
+  TextColumn get ipAddress => text().nullable()();
+  TextColumn get deviceInfo => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ---------- Antrean Sinkronisasi (outbox) ----------
 
 class SyncQueue extends Table {

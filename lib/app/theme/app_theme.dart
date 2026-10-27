@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'design_tokens.dart';
+import 'theme_presets.dart';
 
-/// Design system POS: Material 3, palet indigo/teal, light & dark mode.
+/// Design system POS: Material 3, palet dinamis dari preset, light & dark mode.
 class AppTheme {
   const AppTheme._();
 
@@ -12,16 +14,12 @@ class AppTheme {
   static const Color error = Color(0xFFDC2626);
   static const Color info = Color(0xFF0EA5E9);
 
-  static ThemeData light() => _build(Brightness.light);
-  static ThemeData dark() => _build(Brightness.dark);
-
-  static ThemeData _build(Brightness brightness) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF4F46E5), // indigo modern
-      brightness: brightness,
-      secondary: const Color(0xFF0D9488), // teal
-      error: error,
-    );
+  /// Membangun ThemeData untuk preset tertentu.
+  static ThemeData build({
+    required ThemePreset preset,
+    required Brightness brightness,
+  }) {
+    final scheme = _colorScheme(preset, brightness);
 
     final base = ThemeData(
       useMaterial3: true,
@@ -103,7 +101,51 @@ class AppTheme {
       textTheme: base.textTheme.apply(fontFamilyFallback: const ['Inter']),
     );
   }
+
+  /// Membangun ColorScheme dari preset tema.
+  static ColorScheme _colorScheme(ThemePreset preset, Brightness brightness) {
+    // Untuk preset yang default-nya dark (seperti midnight), kita tetap generate
+    // light/dark scheme berdasarkan brightness yang diminta.
+    return ColorScheme.fromSeed(
+      seedColor: preset.seedColor,
+      brightness: brightness,
+      secondary: preset.secondary,
+      tertiary: preset.tertiary,
+      // Error color konsisten di semua preset
+      error: error,
+      // Surface tint dari preset
+      surfaceTint: brightness == Brightness.light
+          ? preset.surfaceTint
+          : preset.surfaceTint.withValues(alpha: 0.12),
+    );
+  }
+
+  /// Legacy: build light theme dengan preset default (forest).
+  static ThemeData light() => build(preset: AppThemePresets.defaultPreset, brightness: Brightness.light);
+
+  /// Legacy: build dark theme dengan preset default (forest).
+  static ThemeData dark() => build(preset: AppThemePresets.defaultPreset, brightness: Brightness.dark);
 }
+
+/// Provider untuk preset tema aktif (Riverpod).
+final themePresetProvider = StateProvider<ThemePreset>((ref) {
+  return AppThemePresets.defaultPreset;
+});
+
+/// Provider untuk ThemeData light berdasarkan preset aktif.
+final lightThemeProvider = Provider<ThemeData>((ref) {
+  final preset = ref.watch(themePresetProvider);
+  return AppTheme.build(preset: preset, brightness: Brightness.light);
+});
+
+/// Provider untuk ThemeData dark berdasarkan preset aktif.
+final darkThemeProvider = Provider<ThemeData>((ref) {
+  final preset = ref.watch(themePresetProvider);
+  return AppTheme.build(preset: preset, brightness: Brightness.dark);
+});
+
+/// Provider untuk ThemeMode (system/light/dark).
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 
 /// Ekstensi warna semantik agar widget tidak hardcode warna.
 extension SemanticColors on ColorScheme {

@@ -165,7 +165,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get syncStatus => 'Status Sinkronisasi';
 
   @override
-  String get syncQueue => 'Antrian Sinkronisasi';
+  String get syncQueue => 'Antrian Sinkron';
 
   @override
   String get error => 'Error';
@@ -478,4 +478,239 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get paymentMethodOther => 'Lainnya';
+
+  @override
+  String get themePreset => 'Preset Tema';
+
+  @override
+  String get themePresetSubtitle => 'Pilih tema warna favorit Anda';
+
+  @override
+  String get themeMode => 'Mode Tema';
+
+  @override
+  String get themeModeSubtitle => 'Pilih terang, gelap, atau default sistem';
+
+  @override
+  String get themeLight => 'Terang';
+
+  @override
+  String get themeDark => 'Gelap';
+
+  @override
+  String get themeSystem => 'Sistem';
+
+  @override
+  String get languageSubtitle => 'Pilih bahasa aplikasi';
+
+  @override
+  String languageChanged(Object language) {
+    return 'Bahasa diubah ke $language';
+  }
+
+  @override
+  String get sync => 'Sinkronisasi';
+
+  @override
+  String get syncSubtitle => 'Kelola sinkronisasi data';
+
+  @override
+  String get manualSync => 'Sinkron Manual';
+
+  @override
+  String get manualSyncDesc => 'Picu sinkronisasi ke server sekarang';
+
+  @override
+  String get syncQueueDesc => 'Lihat operasi sinkron tertunda';
+
+  @override
+  String get about => 'Tentang';
+
+  @override
+  String get aboutSubtitle => 'Informasi aplikasi';
+
+  @override
+  String version(Object version) {
+    return 'Versi $version';
+  }
+
+  @override
+  String get aboutDescription =>
+      'Sistem POS offline-first modern dibangun dengan Flutter, Drift, Riverpod, dan Supabase.';
+
+  @override
+  String get techStack => 'Teknologi';
+
+  @override
+  String get startDate => 'Tanggal Mulai';
+
+  @override
+  String get endDate => 'Tanggal Akhir';
+
+  @override
+  String get apply => 'Terapkan';
+
+  @override
+  String get exportCSV => 'Ekspor CSV';
+
+  @override
+  String get exportPDF => 'Ekspor PDF';
+
+  @override
+  String get financial => 'Keuangan';
+
+  @override
+  String get totalSales => 'Total Penjualan';
+
+  @override
+  String get transactions => 'Transaksi';
+
+  @override
+  String get grossProfit => 'Laba Kotor';
+
+  @override
+  String get salesChart => 'Grafik Penjualan';
+
+  @override
+  String get detail => 'Detail';
+
+  @override
+  String get period => 'Periode';
+
+  @override
+  String get revenue => 'Pendapatan';
+
+  @override
+  String get avgTransaction => 'Rata-rata Transaksi';
+
+  @override
+  String get topProducts => 'Produk Terlaris';
+
+  @override
+  String get product => 'Produk';
+
+  @override
+  String get category => 'Kategori';
+
+  @override
+  String get qtySold => 'Terjual';
+
+  @override
+  String get profit => 'Laba';
+
+  @override
+  String get totalStockValue => 'Total Nilai Stok';
+
+  @override
+  String get lowStockItems => 'Stok Menipis';
+
+  @override
+  String get totalProducts => 'Total Produk';
+
+  @override
+  String get stockDetail => 'Detail Stok';
+
+  @override
+  String get minStock => 'Stok Min';
+
+  @override
+  String get stockValue => 'Nilai Stok';
+
+  @override
+  String get profitLoss => 'Laba Rugi';
+
+  @override
+  String get cashFlow => 'Arus Kas';
+
+  @override
+  String get oopsSomethingWrong => 'Ups! Terjadi kesalahan';
+
+  @override
+  String noResultsFound(Object query) {
+    return 'Tidak ada hasil untuk \"$query\"';
+  }
+
+  @override
+  String get tryDifferentSearch => 'Coba kata kunci atau filter lain';
+
+  @override
+  String get clearSearch => 'Hapus pencarian';
+
+  @override
+  String get connectionError => 'Tidak dapat terhubung ke server';
+
+  @override
+  String get retryConnection => 'Coba sambungkan lagi';
+
+  @override
+  String get goOnline => 'Buat online';
+
+  @override
+  String get sessionExpired =>
+      'Sesi Anda telah berakhir. Silakan masuk kembali.';
+
+  @override
+  String get resourceNotFound => 'Sumber daya yang diminta tidak ditemukan';
+
+  @override
+  String get serverError => 'Galat server. Silakan coba lagi nanti.';
+
+  @override
+  String serverErrorCode(Object code) {
+    return 'Galat server (kode: $code)';
+  }
+
+  @override
+  String get auditLog => 'Log Audit';
+
+  @override
+  String get user => 'Pengguna';
+
+  @override
+  String get action => 'Aksi';
+
+  @override
+  String get entityType => 'Tipe Entitas';
+
+  @override
+  String get entityId => 'ID Entitas';
+
+  @override
+  String get timestamp => 'Waktu';
+
+  @override
+  String get oldValue => 'Nilai Lama';
+
+  @override
+  String get newValue => 'Nilai Baru';
+
+  @override
+  String get changes => 'Perubahan';
+
+  @override
+  String get viewDetail => 'Lihat Detail';
+
+  @override
+  String get viewChanges => 'Lihat Perubahan';
+
+  @override
+  String get clearFilters => 'Hapus Filter';
+
+  @override
+  String get selectDate => 'Pilih Tanggal';
+
+  @override
+  String get noAuditLogs => 'Tidak ada log audit';
+
+  @override
+  String get auditLogTitle => 'Log Audit';
+
+  @override
+  String get auditLogSubtitle => 'Lacak semua aktivitas sistem';
+
+  @override
+  String get previousPage => 'Halaman Sebelumnya';
+
+  @override
+  String get nextPage => 'Halaman Selanjutnya';
 }

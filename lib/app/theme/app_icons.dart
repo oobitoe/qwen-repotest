@@ -12,7 +12,7 @@ class AppIcons {
   static const IconData mailOutline = Icons.mail_outline;
   static const IconData lockOutline = Icons.lock_outline;
   static const IconData sync = Icons.sync;
-  static const IconData logout = Icons.logout;
+  static const IconData logout = Icons.logout_rounded;
   static const IconData add = Icons.add;
   static const IconData search = Icons.search;
   static const IconData categoryRounded = Icons.category_rounded;
@@ -50,4 +50,30 @@ class AppIcons {
   static const IconData remove = Icons.remove_circle_rounded;
   static const IconData calendarMonthRounded = Icons.calendar_month_rounded;
   static const IconData closeRounded = Icons.close_rounded;
+
+  // Settings icons
+  static const IconData wbSunnyRounded = Icons.wb_sunny_rounded;
+  static const IconData nightlightRoundRounded = Icons.nightlight_round_rounded;
+  static const IconData settingsSystemDaydreamRounded = Icons.settings_system_daydream_rounded;
+  static const IconData languageRounded = Icons.language_rounded;
+  static const IconData checkRounded = Icons.check_rounded;
+  static const IconData chevronRightRounded = Icons.chevron_right_rounded;
+  static const IconData queueRounded = Icons.queue_rounded;
+  static const IconData descriptionRounded = Icons.description_rounded;
+  static const IconData infoRounded = Icons.info_rounded;
+  static const IconData settingsRounded = Icons.settings_rounded;
+  static const IconData analyticsRounded = Icons.analytics_rounded;
+  static const IconData searchOffRounded = Icons.search_off_rounded;
+  static const IconData serverRounded = Icons.dns_rounded;
+  static const IconData downloadRounded = Icons.download_rounded;
+  static const IconData pictureAsPdfRounded = Icons.picture_as_pdf_rounded;
+  static const IconData login = Icons.login_rounded;
+  static const IconData moneyOffRounded = Icons.money_off_rounded;
+  static const IconData attachMoneyRounded = Icons.attach_money_rounded;
+  static const IconData filterListRounded = Icons.filter_list_rounded;
+  static const IconData compareRounded = Icons.compare_arrows_rounded;
+  static const IconData visibilityRounded = Icons.visibility_rounded;
+  static const IconData uploadRounded = Icons.upload_rounded;
+  static const IconData edit = Icons.edit_rounded;
+  static const IconData clearRounded = Icons.clear_rounded;
 }

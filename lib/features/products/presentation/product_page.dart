@@ -23,6 +23,9 @@ class ProductsPage extends ConsumerStatefulWidget {
 class _ProductsPageState extends ConsumerState<ProductsPage> {
   final _searchController = TextEditingController();
   String _query = '';
+  int _currentPage = 1;
+  final int _pageSize = 20;
+  String? _selectedCategoryId;
 
   @override
   void dispose() {
@@ -34,66 +37,77 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final products = ref.watch(productsProvider);
+    final productsAsync = ref.watch(paginatedProductsProvider((
+      page: _currentPage,
+      pageSize: _pageSize,
+      query: _query,
+      categoryId: _selectedCategoryId,
+    )));
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.products)),
       body: Column(
         children: [
-          _SearchBar(
-            controller: _searchController,
-            onChanged: (v) => setState(() => _query = v),
+          _SearchAndFilterBar(
+            searchController: _searchController,
+            onSearchChanged: (v) => setState(() {
+              _query = v;
+              _currentPage = 1;
+            }),
+            selectedCategoryId: _selectedCategoryId,
+            onCategoryChanged: (v) => setState(() {
+              _selectedCategoryId = v;
+              _currentPage = 1;
+            }),
             l10n: l10n,
           ),
           Expanded(
-            child: products.when(
-              data: (items) {
-                final filtered = _query.isEmpty
-                    ? items
-                    : items.where((p) {
-                          final q = _query.toLowerCase();
-                          return p.name.toLowerCase().contains(q) ||
-                              p.sku.toLowerCase().contains(q) ||
-                              (p.barcode ?? '').toLowerCase().contains(q);
-                        }).toList();
-                if (filtered.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(AppIcons.inventory2Rounded,
-                            size: 48, color: theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(l10n.noData,
-                            style: theme.textTheme.bodyMedium),
-                      ],
-                    ),
+            child: productsAsync.when(
+              data: (result) {
+                if (result.items.isEmpty) {
+                  return _EmptyState(
+                    icon: AppIcons.inventory2Rounded,
+                    message: l10n.noData,
                   );
                 }
-                return ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (_, i) {
-                    final p = filtered[i];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(p.sku.substring(0, 1).toUpperCase()),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: result.items.length,
+                        itemBuilder: (_, i) {
+                          final p = result.items[i];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              child: Text(p.sku.substring(0, 1).toUpperCase()),
+                            ),
+                            title: Text(p.name,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600)),
+                            subtitle: Text('${p.sku}  ·  ${l10n.stock}: ${p.stock.toInt()}',
+                                style: theme.textTheme.bodySmall),
+                            trailing: Text(
+                              _idr(p.sellPrice),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: p.stock <= p.minStock
+                                    ? AppTheme.error
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      title: Text(p.name,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600)),
-                      subtitle: Text('${p.sku}  ·  ${l10n.stock}: ${p.stock.toInt()}',
-                          style: theme.textTheme.bodySmall),
-                      trailing: Text(
-                        _idr(p.sellPrice),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: p.stock <= p.minStock
-                              ? AppTheme.error
-                              : theme.colorScheme.onSurface,
-                        ),
+                    ),
+                    // Pagination controls
+                    if (result.totalPages > 1)
+                      _PaginationControls(
+                        currentPage: _currentPage,
+                        totalPages: result.totalPages,
+                        onPageChanged: (page) => setState(() => _currentPage = page),
+                        l10n: l10n,
                       ),
-                    );
-                  },
+                  ],
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -117,7 +131,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
       isScrollControlled: true,
       builder: (_) => const _ProductForm(),
     );
-    ref.invalidate(productsProvider);
+    ref.invalidate(paginatedProductsProvider);
   }
 
   static String _idr(double v) {
@@ -127,34 +141,135 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   }
 }
 
-class _SearchBar extends ConsumerWidget {
-  const _SearchBar({
-    required this.controller,
-    required this.onChanged,
+class _SearchAndFilterBar extends ConsumerWidget {
+  const _SearchAndFilterBar({
+    required this.searchController,
+    required this.onSearchChanged,
+    required this.selectedCategoryId,
+    required this.onCategoryChanged,
     required this.l10n,
   });
 
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
+  final TextEditingController searchController;
+  final ValueChanged<String> onSearchChanged;
+  final String? selectedCategoryId;
+  final ValueChanged<String?> onCategoryChanged;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: l10n.search,
-          prefixIcon: const Icon(AppIcons.search),
-          filled: true,
-          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            borderSide: BorderSide.none,
+    final theme = Theme.of(context);
+    final categories = ref.watch(categoriesProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        children: [
+          TextField(
+            controller: searchController,
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              hintText: l10n.search,
+              prefixIcon: const Icon(AppIcons.search),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderSide: BorderSide.none,
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: AppSpacing.md),
+          categories.when(
+            data: (cats) => DropdownButtonFormField<String>(
+              value: selectedCategoryId,
+              decoration: InputDecoration(
+                labelText: l10n.category,
+                prefixIcon: const Icon(AppIcons.categoryRounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('Semua Kategori'),
+                ),
+                for (final c in cats.where((c) => c.isActive))
+                  DropdownMenuItem(value: c.id, child: Text(c.name)),
+              ],
+              onChanged: onCategoryChanged,
+            ),
+            loading: () => const SizedBox.shrink(),
+            error: (e, st) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaginationControls extends StatelessWidget {
+  const _PaginationControls({
+    required this.currentPage,
+    required this.totalPages,
+    required this.onPageChanged,
+    required this.l10n,
+  });
+
+  final int currentPage;
+  final int totalPages;
+  final ValueChanged<int> onPageChanged;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(AppIcons.chevronLeftRounded),
+            onPressed: currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
+            tooltip: l10n.previousPage,
+          ),
+          Text('$currentPage / $totalPages',
+              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          IconButton(
+            icon: const Icon(AppIcons.chevronRightRounded),
+            onPressed: currentPage < totalPages ? () => onPageChanged(currentPage + 1) : null,
+            tooltip: l10n.nextPage,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(height: AppSpacing.md),
+          Text(message, style: theme.textTheme.bodyMedium),
+        ],
       ),
     );
   }

@@ -12,10 +12,10 @@ import 'shared/providers/core_providers.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.initialize();
-  
+
   // Register sync metas once at app startup
   registerAllSyncMetas();
-  
+
   runApp(const ProviderScope(child: PosApp()));
 }
 
@@ -28,13 +28,16 @@ class PosApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final lightTheme = ref.watch(lightThemeProvider);
+    final darkTheme = ref.watch(darkThemeProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: AppLocalizations.of(context)?.appDisplayName ?? 'POSku',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: themeModeOverride ?? ThemeMode.system,
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeModeOverride ?? themeMode,
       routerConfig: router,
       locale: const Locale('id', 'ID'),
       supportedLocales: AppLocalizations.supportedLocales,

@@ -997,6 +997,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get paymentMethodOther;
+
+  /// No description provided for @themePreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Preset'**
+  String get themePreset;
+
+  /// No description provided for @themePresetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred color theme'**
+  String get themePresetSubtitle;
+
+  /// No description provided for @themeMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Mode'**
+  String get themeMode;
+
+  /// No description provided for @themeModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select light, dark, or system default'**
+  String get themeModeSubtitle;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @languageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select application language'**
+  String get languageSubtitle;
+
+  /// No description provided for @languageChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed to {language}'**
+  String languageChanged(Object language);
+
+  /// No description provided for @sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get sync;
+
+  /// No description provided for @syncSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage data synchronization'**
+  String get syncSubtitle;
+
+  /// No description provided for @manualSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Sync'**
+  String get manualSync;
+
+  /// No description provided for @manualSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Trigger synchronization with server now'**
+  String get manualSyncDesc;
+
+  /// No description provided for @syncQueueDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View pending sync operations'**
+  String get syncQueueDesc;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @aboutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Application information'**
+  String get aboutSubtitle;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String version(Object version);
+
+  /// No description provided for @aboutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern offline-first POS system built with Flutter, Drift, Riverpod, and Supabase.'**
+  String get aboutDescription;
+
+  /// No description provided for @techStack.
+  ///
+  /// In en, this message translates to:
+  /// **'Tech Stack'**
+  String get techStack;
+
+  /// No description provided for @startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date'**
+  String get startDate;
+
+  /// No description provided for @endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date'**
+  String get endDate;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @exportCSV.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportCSV;
+
+  /// No description provided for @exportPDF.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get exportPDF;
+
+  /// No description provided for @financial.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial'**
+  String get financial;
+
+  /// No description provided for @totalSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Sales'**
+  String get totalSales;
+
+  /// No description provided for @transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions;
+
+  /// No description provided for @grossProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross Profit'**
+  String get grossProfit;
+
+  /// No description provided for @salesChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Chart'**
+  String get salesChart;
+
+  /// No description provided for @detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Detail'**
+  String get detail;
+
+  /// No description provided for @period.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get period;
+
+  /// No description provided for @revenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue'**
+  String get revenue;
+
+  /// No description provided for @avgTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Transaction'**
+  String get avgTransaction;
+
+  /// No description provided for @topProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Products'**
+  String get topProducts;
+
+  /// No description provided for @product.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get product;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @qtySold.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty Sold'**
+  String get qtySold;
+
+  /// No description provided for @profit.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get profit;
+
+  /// No description provided for @totalStockValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Stock Value'**
+  String get totalStockValue;
+
+  /// No description provided for @lowStockItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock Items'**
+  String get lowStockItems;
+
+  /// No description provided for @totalProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Products'**
+  String get totalProducts;
+
+  /// No description provided for @stockDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Detail'**
+  String get stockDetail;
+
+  /// No description provided for @minStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Min Stock'**
+  String get minStock;
+
+  /// No description provided for @stockValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Value'**
+  String get stockValue;
+
+  /// No description provided for @profitLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit & Loss'**
+  String get profitLoss;
+
+  /// No description provided for @cashFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Flow'**
+  String get cashFlow;
+
+  /// No description provided for @oopsSomethingWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Oops! Something went wrong'**
+  String get oopsSomethingWrong;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found for \"{query}\"'**
+  String noResultsFound(Object query);
+
+  /// No description provided for @tryDifferentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try different keywords or filters'**
+  String get tryDifferentSearch;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @connectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to server'**
+  String get connectionError;
+
+  /// No description provided for @retryConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry connection'**
+  String get retryConnection;
+
+  /// No description provided for @goOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Go online'**
+  String get goOnline;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please log in again.'**
+  String get sessionExpired;
+
+  /// No description provided for @resourceNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The requested resource was not found'**
+  String get resourceNotFound;
+
+  /// No description provided for @serverError.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error. Please try again later.'**
+  String get serverError;
+
+  /// No description provided for @serverErrorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error (code: {code})'**
+  String serverErrorCode(Object code);
+
+  /// No description provided for @auditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit Log'**
+  String get auditLog;
+
+  /// No description provided for @user.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get user;
+
+  /// No description provided for @action.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get action;
+
+  /// No description provided for @entityType.
+  ///
+  /// In en, this message translates to:
+  /// **'Entity Type'**
+  String get entityType;
+
+  /// No description provided for @entityId.
+  ///
+  /// In en, this message translates to:
+  /// **'Entity ID'**
+  String get entityId;
+
+  /// No description provided for @timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp'**
+  String get timestamp;
+
+  /// No description provided for @oldValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Old Value'**
+  String get oldValue;
+
+  /// No description provided for @newValue.
+  ///
+  /// In en, this message translates to:
+  /// **'New Value'**
+  String get newValue;
+
+  /// No description provided for @changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get changes;
+
+  /// No description provided for @viewDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'View Detail'**
+  String get viewDetail;
+
+  /// No description provided for @viewChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'View Changes'**
+  String get viewChanges;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filters'**
+  String get clearFilters;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectDate;
+
+  /// No description provided for @noAuditLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit logs found'**
+  String get noAuditLogs;
+
+  /// No description provided for @auditLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit Log'**
+  String get auditLogTitle;
+
+  /// No description provided for @auditLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track all system activities'**
+  String get auditLogSubtitle;
+
+  /// No description provided for @previousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Page'**
+  String get previousPage;
+
+  /// No description provided for @nextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Page'**
+  String get nextPage;
 }
 
 class _AppLocalizationsDelegate

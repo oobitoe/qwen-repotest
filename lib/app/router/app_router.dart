@@ -17,6 +17,9 @@ import '../../features/suppliers/presentation/supplier_page.dart';
 import '../../features/expenses/presentation/expenses_page.dart';
 import '../../features/income/presentation/income_page.dart';
 import '../../features/debts/presentation/debts_page.dart';
+import '../../features/settings/presentation/settings_page.dart';
+import '../../features/reports/presentation/reports_page.dart';
+import '../../features/audit/presentation/audit_log_page.dart';
 import '../responsive/responsive_shell.dart';
 
 /// Rute utama aplikasi.
@@ -36,6 +39,9 @@ class AppRoutes {
   static const expenses = '/expenses';
   static const income = '/income';
   static const debts = '/debts';
+  static const reports = '/reports';
+  static const auditLog = '/audit-log';
+  static const settings = '/settings';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -123,6 +129,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.debts,
             builder: (context, state) => const DebtsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.reports,
+            builder: (context, state) => const ReportsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.auditLog,
+            builder: (context, state) => const AuditLogPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.settings,
+            builder: (context, state) => const SettingsPage(),
           ),
         ],
       ),

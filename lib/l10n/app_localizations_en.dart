@@ -478,4 +478,238 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentMethodOther => 'Other';
+
+  @override
+  String get themePreset => 'Theme Preset';
+
+  @override
+  String get themePresetSubtitle => 'Choose your preferred color theme';
+
+  @override
+  String get themeMode => 'Theme Mode';
+
+  @override
+  String get themeModeSubtitle => 'Select light, dark, or system default';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get languageSubtitle => 'Select application language';
+
+  @override
+  String languageChanged(Object language) {
+    return 'Language changed to $language';
+  }
+
+  @override
+  String get sync => 'Sync';
+
+  @override
+  String get syncSubtitle => 'Manage data synchronization';
+
+  @override
+  String get manualSync => 'Manual Sync';
+
+  @override
+  String get manualSyncDesc => 'Trigger synchronization with server now';
+
+  @override
+  String get syncQueueDesc => 'View pending sync operations';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get aboutSubtitle => 'Application information';
+
+  @override
+  String version(Object version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get aboutDescription =>
+      'Modern offline-first POS system built with Flutter, Drift, Riverpod, and Supabase.';
+
+  @override
+  String get techStack => 'Tech Stack';
+
+  @override
+  String get startDate => 'Start Date';
+
+  @override
+  String get endDate => 'End Date';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get exportCSV => 'Export CSV';
+
+  @override
+  String get exportPDF => 'Export PDF';
+
+  @override
+  String get financial => 'Financial';
+
+  @override
+  String get totalSales => 'Total Sales';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get grossProfit => 'Gross Profit';
+
+  @override
+  String get salesChart => 'Sales Chart';
+
+  @override
+  String get detail => 'Detail';
+
+  @override
+  String get period => 'Period';
+
+  @override
+  String get revenue => 'Revenue';
+
+  @override
+  String get avgTransaction => 'Avg Transaction';
+
+  @override
+  String get topProducts => 'Top Products';
+
+  @override
+  String get product => 'Product';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get qtySold => 'Qty Sold';
+
+  @override
+  String get profit => 'Profit';
+
+  @override
+  String get totalStockValue => 'Total Stock Value';
+
+  @override
+  String get lowStockItems => 'Low Stock Items';
+
+  @override
+  String get totalProducts => 'Total Products';
+
+  @override
+  String get stockDetail => 'Stock Detail';
+
+  @override
+  String get minStock => 'Min Stock';
+
+  @override
+  String get stockValue => 'Stock Value';
+
+  @override
+  String get profitLoss => 'Profit & Loss';
+
+  @override
+  String get cashFlow => 'Cash Flow';
+
+  @override
+  String get oopsSomethingWrong => 'Oops! Something went wrong';
+
+  @override
+  String noResultsFound(Object query) {
+    return 'No results found for \"$query\"';
+  }
+
+  @override
+  String get tryDifferentSearch => 'Try different keywords or filters';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get connectionError => 'Unable to connect to server';
+
+  @override
+  String get retryConnection => 'Retry connection';
+
+  @override
+  String get goOnline => 'Go online';
+
+  @override
+  String get sessionExpired => 'Your session has expired. Please log in again.';
+
+  @override
+  String get resourceNotFound => 'The requested resource was not found';
+
+  @override
+  String get serverError => 'Server error. Please try again later.';
+
+  @override
+  String serverErrorCode(Object code) {
+    return 'Server error (code: $code)';
+  }
+
+  @override
+  String get auditLog => 'Audit Log';
+
+  @override
+  String get user => 'User';
+
+  @override
+  String get action => 'Action';
+
+  @override
+  String get entityType => 'Entity Type';
+
+  @override
+  String get entityId => 'Entity ID';
+
+  @override
+  String get timestamp => 'Timestamp';
+
+  @override
+  String get oldValue => 'Old Value';
+
+  @override
+  String get newValue => 'New Value';
+
+  @override
+  String get changes => 'Changes';
+
+  @override
+  String get viewDetail => 'View Detail';
+
+  @override
+  String get viewChanges => 'View Changes';
+
+  @override
+  String get clearFilters => 'Clear Filters';
+
+  @override
+  String get selectDate => 'Select Date';
+
+  @override
+  String get noAuditLogs => 'No audit logs found';
+
+  @override
+  String get auditLogTitle => 'Audit Log';
+
+  @override
+  String get auditLogSubtitle => 'Track all system activities';
+
+  @override
+  String get previousPage => 'Previous Page';
+
+  @override
+  String get nextPage => 'Next Page';
 }

@@ -7,6 +7,7 @@
       "name": "PrimePOS",
       "version": "0.1.0+1",
       "dependencies": [
+        "async",
         "collection",
         "connectivity_plus",
         "drift",
@@ -126,6 +127,14 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "async",
+      "version": "2.11.0",
+      "dependencies": [
+        "collection",
+        "meta"
       ]
     },
     {
@@ -585,14 +594,6 @@
         "meta",
         "package_config",
         "path"
-      ]
-    },
-    {
-      "name": "async",
-      "version": "2.11.0",
-      "dependencies": [
-        "collection",
-        "meta"
       ]
     },
     {

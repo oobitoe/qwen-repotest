@@ -37,7 +37,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final productsAsync = ref.watch(paginatedProductsProvider((
+    final productsAsync = ref.watch(paginatedProductsStreamProvider((
       page: _currentPage,
       pageSize: _pageSize,
       query: _query,

@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/sync_dao.dart';
 import '../../core/database/sync_engine.dart';
-import '../../core/database/sync_registry.dart';
 import '../../core/network/supabase_config.dart';
 
 /// Dependency injection terpusat berbasis Riverpod.

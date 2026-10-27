@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:async/async.dart'; // for StreamZip
 
 import '../../../core/database/app_database.dart';
 import '../../../core/database/sync_dao.dart';
@@ -228,6 +229,93 @@ class ProductRepository {
   Future<void> deleteProduct(String id) async {
     await _dao.softDeleteAndEnqueue('product', id);
   }
+
+  /// Stream produk dengan pagination + filter (real-time auto-update).
+  Stream<PaginatedResult<ProductEntity>> watchProductsPaginated({
+    required int page,
+    required int pageSize,
+    String? query,
+    String? categoryId,
+    bool onlyActive = true,
+  }) {
+    // Base query builder
+    buildQuery() {
+      var q = _db.select(_db.products);
+      if (onlyActive) {
+        q.where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
+      }
+      if (categoryId != null) {
+        q.where((t) => t.categoryId.equals(categoryId));
+      }
+      if (query != null && query.isNotEmpty) {
+        final searchTerm = '%$query%';
+        q.where((t) =>
+            t.name.like(searchTerm) |
+            t.sku.like(searchTerm) |
+            t.barcode.like(searchTerm));
+      }
+      q.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
+      q.limit(pageSize, offset: (page - 1) * pageSize);
+      return q;
+    }
+
+    // Count query
+    final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()]);
+    if (onlyActive) {
+      countQuery.where(_db.products.isActive.equals(true) & _db.products.deletedAt.isNull());
+    }
+    if (categoryId != null) {
+      countQuery.where(_db.products.categoryId.equals(categoryId));
+    }
+    if (query != null && query.isNotEmpty) {
+      final searchTerm = '%$query%';
+      countQuery.where(
+          _db.products.name.lower().like(searchTerm) |
+          _db.products.sku.lower().like(searchTerm) |
+          _db.products.barcode.lower().like(searchTerm));
+    }
+
+    // Stream count
+    final countStream = countQuery.watchSingleOrNull().map(
+      (result) => result?.read(_db.products.id.count()) ?? 0,
+    );
+
+    // Stream items
+    final itemsStream = buildQuery().watch().map((rows) {
+      return [
+        for (final r in rows)
+          ProductEntity(
+            id: r.id,
+            sku: r.sku,
+            barcode: r.barcode,
+            name: r.name,
+            description: r.description,
+            categoryId: r.categoryId,
+            unitId: r.unitId,
+            costPrice: r.costPrice,
+            sellPrice: r.sellPrice,
+            wholesalePrice: r.wholesalePrice,
+            minStock: r.minStock,
+            stock: r.stock,
+            isActive: r.isActive,
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt,
+          ),
+      ];
+    });
+
+    // Combine streams
+    return StreamZip([countStream, itemsStream]).map((results) {
+      final totalCount = results[0] as int;
+      final items = results[1] as List<ProductEntity>;
+      return PaginatedResult(
+        items: items,
+        totalCount: totalCount,
+        page: page,
+        pageSize: pageSize,
+      );
+    });
+  }
 }
 
 /// Provider repository produk.
@@ -259,7 +347,22 @@ final productsProvider = StreamProvider<List<ProductEntity>>((ref) {
 });
 
 /// Stream produk menipis stok.
-final lowStockProductsProvider = StreamProvider<List<ProductEntity>>((ref) {
+final lowStockProductsStreamProvider = StreamProvider<List<ProductEntity>>((ref) {
   final repo = ref.watch(productRepositoryProvider);
   return repo.watchProducts().asyncMap((_) => repo.lowStockProducts());
 });
+
+/// Stream produk dengan pagination + filter (real-time auto-update).
+final paginatedProductsStreamProvider = StreamProvider.family<
+    PaginatedResult<ProductEntity>,
+    ({int page, int pageSize, String? query, String? categoryId})>(
+  (ref, params) {
+    final repo = ref.watch(productRepositoryProvider);
+    return repo.watchProductsPaginated(
+      page: params.page,
+      pageSize: params.pageSize,
+      query: params.query,
+      categoryId: params.categoryId,
+    );
+  },
+);

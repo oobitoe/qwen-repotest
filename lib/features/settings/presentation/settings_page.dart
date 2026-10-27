@@ -263,7 +263,6 @@ class _ThemeModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
     return SegmentedButton<ThemeMode>(
@@ -302,7 +301,6 @@ class _LanguageSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     // TODO: Implement language provider
     const currentLocale = 'id';
 

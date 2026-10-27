@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 import 'package:intl/intl.dart';
 
 /// Entity pemasukan (income) untuk layer domain/presentation.

@@ -183,12 +183,12 @@ class _SidebarShell extends ConsumerWidget {
                               : Padding(
                                   padding: const EdgeInsets.only(
                                       left: AppSpacing.md),
-                      child: Text(
-                        l10n.appDisplayName,
-                        overflow: TextOverflow.clip,
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
+                              child: Text(
+                                l10n.appDisplayName,
+                                overflow: TextOverflow.clip,
+                                style: theme.textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
                                 ),
                         ),
                       ),
@@ -200,30 +200,32 @@ class _SidebarShell extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm),
-                    child: NavigationRail(
-                      extended: !collapsed,
-                      selectedIndex: currentIndex,
-                      onDestinationSelected: (i) =>
-                          context.go(appNavItems[i].path),
-                      labelType: collapsed
-                          ? NavigationRailLabelType.all
-                          : null,
-                      indicatorColor:
-                          theme.colorScheme.primary.withValues(alpha: 0.15),
-                      destinations: [
-                        for (final d in appNavItems)
-                          NavigationRailDestination(
-                            icon: _AnimIcon(
-                              icon: collapsed ? d.selectedIcon : d.icon,
-                              color: theme.colorScheme.onSurfaceVariant,
+                    child: SingleChildScrollView(
+                      child: NavigationRail(
+                        extended: !collapsed,
+                        selectedIndex: currentIndex,
+                        onDestinationSelected: (i) =>
+                            context.go(appNavItems[i].path),
+                        labelType: collapsed
+                            ? NavigationRailLabelType.all
+                            : null,
+                        indicatorColor:
+                            theme.colorScheme.primary.withValues(alpha: 0.15),
+                        destinations: [
+                          for (final d in appNavItems)
+                            NavigationRailDestination(
+                              icon: _AnimIcon(
+                                icon: collapsed ? d.selectedIcon : d.icon,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              selectedIcon: _AnimIcon(
+                                icon: d.selectedIcon,
+                                color: theme.colorScheme.primary,
+                              ),
+                              label: Text(_navLabel(l10n, d.label)),
                             ),
-                            selectedIcon: _AnimIcon(
-                              icon: d.selectedIcon,
-                              color: theme.colorScheme.primary,
-                            ),
-                            label: Text(_navLabel(l10n, d.label)),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -257,7 +259,7 @@ class _SidebarShell extends ConsumerWidget {
                 ),
               ],
             ),
-            ),
+          ),
           VerticalDivider(width: 1, thickness: 1,
               color: theme.colorScheme.outlineVariant),
           Expanded(child: child),

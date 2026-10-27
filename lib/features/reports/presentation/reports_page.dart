@@ -7,7 +7,6 @@ import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../auth/application/auth_controller.dart';
 import '../data/reports_repository.dart';
 
 /// Halaman laporan keuangan dan operasional.
@@ -25,7 +24,6 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
   final _endDateCtrl = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
-  ReportType _selectedReport = ReportType.sales;
 
   @override
   void initState() {
@@ -80,7 +78,6 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -229,7 +226,6 @@ class _SalesReportTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final reportAsync = ref.watch(_salesReportProvider(filter));
 
     return reportAsync.when(
@@ -382,7 +378,6 @@ class _ProductsReportTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final reportAsync = ref.watch(_topProductsProvider(filter));
 
     return reportAsync.when(
@@ -408,7 +403,6 @@ class _ProductsReportContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
     if (data.isEmpty) {
@@ -447,7 +441,6 @@ class _InventoryReportTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final reportAsync = ref.watch(_stockReportProvider(filter));
 
     return reportAsync.when(
@@ -473,7 +466,6 @@ class _InventoryReportContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
     if (data.isEmpty) {
@@ -530,7 +522,6 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     Color color;
     String label;
     switch (status) {

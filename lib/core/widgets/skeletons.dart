@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../app/theme/app_theme.dart';
 import '../../app/theme/design_tokens.dart';
 
 /// Reusable loading skeleton untuk list/item cards.
@@ -306,11 +305,10 @@ class SkeletonTable extends StatelessWidget {
 
 /// Basic skeleton line.
 class _SkeletonLine extends StatelessWidget {
-  const _SkeletonLine({this.width, this.height, this.borderRadius});
+  const _SkeletonLine({this.width, this.height});
 
   final double? width;
   final double? height;
-  final double? borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +318,7 @@ class _SkeletonLine extends StatelessWidget {
       height: height ?? 16,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.sm),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
     );
   }

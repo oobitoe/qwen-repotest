@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
 import 'tables.dart';
+import 'seeds/seed_data.dart';
 
 export 'sync_meta.dart' show ConflictDecision, TableMeta, TransactionExecutor;
 export 'tables.dart'
@@ -55,6 +55,8 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (migrator) async {
           await migrator.createAll();
+          // Seed data alat listrik + 3 bulan transaksi
+          await seedDatabase(this);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

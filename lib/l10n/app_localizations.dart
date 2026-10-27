@@ -485,7 +485,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDisplayName.
   ///
   /// In en, this message translates to:
-  /// **'POSku'**
+  /// **'PrimePOS'**
   String get appDisplayName;
 
   /// No description provided for @appVersion.
@@ -761,7 +761,7 @@ abstract class AppLocalizations {
   /// No description provided for @diskon.
   ///
   /// In en, this message translates to:
-  /// **'Diskon'**
+  /// **'Discount'**
   String get diskon;
 
   /// No description provided for @pajak.
@@ -865,6 +865,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get open;
+
+  /// No description provided for @accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get accounts;
+
+  /// No description provided for @cashSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Sessions'**
+  String get cashSessions;
+
+  /// No description provided for @accountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Type'**
+  String get accountType;
+
+  /// No description provided for @accountTypeCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get accountTypeCash;
+
+  /// No description provided for @accountTypeBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get accountTypeBank;
+
+  /// No description provided for @accountTypeEWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'E-Wallet'**
+  String get accountTypeEWallet;
+
+  /// No description provided for @accountBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Balance'**
+  String get accountBalance;
+
+  /// No description provided for @expenseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense deleted'**
+  String get expenseDeleted;
+
+  /// No description provided for @incomeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Income deleted'**
+  String get incomeDeleted;
+
+  /// No description provided for @descriptionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Description required'**
+  String get descriptionRequired;
+
+  /// No description provided for @amountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount required'**
+  String get amountRequired;
+
+  /// No description provided for @amountInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid amount'**
+  String get amountInvalid;
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name required'**
+  String get nameRequired;
+
+  /// No description provided for @noCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'No Category'**
+  String get noCategory;
+
+  /// No description provided for @selectRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Select register'**
+  String get selectRegister;
+
+  /// No description provided for @balanceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance required'**
+  String get balanceRequired;
+
+  /// No description provided for @balanceInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid balance'**
+  String get balanceInvalid;
+
+  /// No description provided for @paymentMethodCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get paymentMethodCash;
+
+  /// No description provided for @paymentMethodTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get paymentMethodTransfer;
+
+  /// No description provided for @paymentMethodQris.
+  ///
+  /// In en, this message translates to:
+  /// **'QRIS'**
+  String get paymentMethodQris;
+
+  /// No description provided for @paymentMethodCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get paymentMethodCard;
+
+  /// No description provided for @paymentMethodOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get paymentMethodOther;
 }
 
 class _AppLocalizationsDelegate

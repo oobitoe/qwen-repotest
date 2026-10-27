@@ -261,6 +261,81 @@ void registerAllSyncMetas() {
         version: Value(i(j['version'])),
         syncStatus: const Value(SyncStatuses.synced),
       )));
+
+  SyncableDao.register(_meta('cash_register', db.cashRegisters,
+      (j) => CashRegistersCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
+        name: Value(s(j['name'])),
+        openingBalance: Value(d(j['opening_balance'])),
+        isActive: Value(b(j['is_active'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        deletedAt: Value(dt(j['deleted_at'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('cash_session', db.cashSessions,
+      (j) => CashSessionsCompanion(
+        id: Value(s(j['id'])),
+        registerId: Value(s(j['register_id'])),
+        openedBy: Value(sn(j['opened_by'])),
+        openedAt: Value(dt(j['opened_at']) ?? DateTime.now().toUtc()),
+        closedAt: Value(dt(j['closed_at'])),
+        openingBalance: Value(d(j['opening_balance'])),
+        expectedBalance: Value(dn(j['expected_balance'])),
+        actualBalance: Value(dn(j['actual_balance'])),
+        difference: Value(dn(j['difference'])),
+        status: Value(sn(j['status']) ?? 'open'),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('cash_movement', db.cashMovements,
+      (j) => CashMovementsCompanion(
+        id: Value(s(j['id'])),
+        sessionId: Value(sn(j['session_id'])),
+        type: Value(s(j['type'])),
+        amount: Value(d(j['amount'])),
+        referenceType: Value(sn(j['reference_type'])),
+        referenceId: Value(sn(j['reference_id'])),
+        note: Value(sn(j['note'])),
+        createdBy: Value(sn(j['created_by'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('account', db.accounts,
+      (j) => AccountsCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
+        name: Value(s(j['name'])),
+        type: Value(s(j['type'])),
+        balance: Value(d(j['balance'])),
+        isActive: Value(b(j['is_active'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('account_transaction', db.accountTransactions,
+      (j) => AccountTransactionsCompanion(
+        id: Value(s(j['id'])),
+        accountId: Value(s(j['account_id'])),
+        type: Value(s(j['type'])),
+        amount: Value(d(j['amount'])),
+        referenceType: Value(sn(j['reference_type'])),
+        referenceId: Value(sn(j['reference_id'])),
+        createdBy: Value(sn(j['created_by'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
 }
 
 /// Executor sementara hanya untuk membaca metadata kolom saat registrasi

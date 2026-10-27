@@ -1,4 +1,4 @@
-name: pos_app
+name: PrimePOS
 description: "Sistem Point of Sale (POS) offline-first berbasis Flutter + SQLite (Drift) + Supabase."
 publish_to: 'none'
 

@@ -6,11 +6,16 @@ import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/supabase_config.dart';
+import 'core/database/sync_registry.dart';
 import 'shared/providers/core_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.initialize();
+  
+  // Register sync metas once at app startup
+  registerAllSyncMetas();
+  
   runApp(const ProviderScope(child: PosApp()));
 }
 

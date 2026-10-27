@@ -202,7 +202,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Akses ditolak. Anda tidak memiliki izin untuk mengakses fitur ini.';
 
   @override
-  String get appDisplayName => 'POSku';
+  String get appDisplayName => 'PrimePOS';
 
   @override
   String get appVersion => 'v0.1.0';
@@ -412,4 +412,70 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get open => 'Buka';
+
+  @override
+  String get accounts => 'Rekening';
+
+  @override
+  String get cashSessions => 'Sesi Kasir';
+
+  @override
+  String get accountType => 'Tipe Rekening';
+
+  @override
+  String get accountTypeCash => 'Kas';
+
+  @override
+  String get accountTypeBank => 'Bank';
+
+  @override
+  String get accountTypeEWallet => 'E-Wallet';
+
+  @override
+  String get accountBalance => 'Saldo Rekening';
+
+  @override
+  String get expenseDeleted => 'Pengeluaran dihapus';
+
+  @override
+  String get incomeDeleted => 'Pemasukan dihapus';
+
+  @override
+  String get descriptionRequired => 'Deskripsi wajib diisi';
+
+  @override
+  String get amountRequired => 'Jumlah wajib diisi';
+
+  @override
+  String get amountInvalid => 'Jumlah tidak valid';
+
+  @override
+  String get nameRequired => 'Nama wajib diisi';
+
+  @override
+  String get noCategory => 'Tanpa Kategori';
+
+  @override
+  String get selectRegister => 'Pilih register';
+
+  @override
+  String get balanceRequired => 'Saldo wajib diisi';
+
+  @override
+  String get balanceInvalid => 'Saldo tidak valid';
+
+  @override
+  String get paymentMethodCash => 'Tunai';
+
+  @override
+  String get paymentMethodTransfer => 'Transfer';
+
+  @override
+  String get paymentMethodQris => 'QRIS';
+
+  @override
+  String get paymentMethodCard => 'Kartu';
+
+  @override
+  String get paymentMethodOther => 'Lainnya';
 }

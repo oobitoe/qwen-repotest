@@ -46,4 +46,6 @@ class AppIcons {
   static const IconData registerRounded = Icons.point_of_sale;
   static const IconData accountBalanceRounded = Icons.account_balance_rounded;
   static const IconData refresh = Icons.refresh;
+  static const IconData delete = Icons.delete_rounded;
+  static const IconData remove = Icons.remove_circle_rounded;
 }

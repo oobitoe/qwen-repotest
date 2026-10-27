@@ -14,6 +14,8 @@ import '../../features/sales/presentation/sale_page.dart';
 import '../../features/pos/presentation/pos_page.dart';
 import '../../features/purchases/presentation/purchase_page.dart';
 import '../../features/suppliers/presentation/supplier_page.dart';
+import '../../features/expenses/presentation/expenses_page.dart';
+import '../../features/income/presentation/income_page.dart';
 import '../responsive/responsive_shell.dart';
 
 /// Rute utama aplikasi.
@@ -30,6 +32,8 @@ class AppRoutes {
   static const pos = '/pos';
   static const sales = '/sales';
   static const cash = '/cash';
+  static const expenses = '/expenses';
+  static const income = '/income';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -105,6 +109,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.cash,
             builder: (context, state) => const CashPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.expenses,
+            builder: (context, state) => const ExpensesPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.income,
+            builder: (context, state) => const IncomePage(),
           ),
         ],
       ),

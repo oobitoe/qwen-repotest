@@ -353,6 +353,93 @@ class IncomeEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ---------- Kas & Keuangan ----------
+
+class CashRegisters extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get name => text()();
+  RealColumn get openingBalance => real().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class CashSessions extends Table {
+  TextColumn get id => text()();
+  TextColumn get registerId => text().references(CashRegisters, #id)();
+  TextColumn get openedBy => text().nullable()();
+  DateTimeColumn get openedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get closedAt => dateTime().nullable()();
+  RealColumn get openingBalance => real().withDefault(const Constant(0))();
+  RealColumn get expectedBalance => real().nullable()();
+  RealColumn get actualBalance => real().nullable()();
+  RealColumn get difference => real().nullable()();
+  TextColumn get status => text().withDefault(const Constant('open'))(); // open | closed
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class CashMovements extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().nullable().references(CashSessions, #id)();
+  TextColumn get type => text()(); // sale | expense | income | transfer | adjustment
+  RealColumn get amount => real()();
+  TextColumn get referenceType => text().nullable()();
+  TextColumn get referenceId => text().nullable()();
+  TextColumn get note => text().nullable()();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Accounts extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get name => text()();
+  TextColumn get type => text()(); // cash | bank | e_wallet
+  RealColumn get balance => real().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class AccountTransactions extends Table {
+  TextColumn get id => text()();
+  TextColumn get accountId => text().references(Accounts, #id)();
+  TextColumn get type => text()(); // debit | credit
+  RealColumn get amount => real()();
+  TextColumn get referenceType => text().nullable()();
+  TextColumn get referenceId => text().nullable()();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ---------- Antrean Sinkronisasi (outbox) ----------
 
 class SyncQueue extends Table {

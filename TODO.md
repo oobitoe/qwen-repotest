@@ -41,6 +41,7 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 - [ ] Animasi halus & reduced motion
 - [ ] Responsive refinement (mobile/tablet/desktop)
 - [ ] Dark mode polish, loading skeleton, empty/error states
+- [ ] Theme presets
 - [ ] Audit keamanan (permission granular, audit log)
 - [ ] Optimasi performa (pagination, indeks, agregasi)
 - [ ] Suite pengujian lengkap + dokumentasi README

@@ -10,7 +10,6 @@ import '../../core/network/supabase_config.dart';
 
 /// Dependency injection terpusat berbasis Riverpod.
 final databaseProvider = Provider<AppDatabase>((ref) {
-  registerAllSyncMetas();
   final db = AppDatabase();
   ref.onDispose(db.close);
   return db;

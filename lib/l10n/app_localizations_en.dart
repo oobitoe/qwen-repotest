@@ -202,7 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Access denied. You do not have permission to access this feature.';
 
   @override
-  String get appDisplayName => 'POSku';
+  String get appDisplayName => 'PrimePOS';
 
   @override
   String get appVersion => 'v0.1.0';
@@ -360,7 +360,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subtotal => 'Subtotal';
 
   @override
-  String get diskon => 'Diskon';
+  String get diskon => 'Discount';
 
   @override
   String get pajak => 'Tax';
@@ -412,4 +412,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get open => 'Open';
+
+  @override
+  String get accounts => 'Accounts';
+
+  @override
+  String get cashSessions => 'Cash Sessions';
+
+  @override
+  String get accountType => 'Account Type';
+
+  @override
+  String get accountTypeCash => 'Cash';
+
+  @override
+  String get accountTypeBank => 'Bank';
+
+  @override
+  String get accountTypeEWallet => 'E-Wallet';
+
+  @override
+  String get accountBalance => 'Account Balance';
+
+  @override
+  String get expenseDeleted => 'Expense deleted';
+
+  @override
+  String get incomeDeleted => 'Income deleted';
+
+  @override
+  String get descriptionRequired => 'Description required';
+
+  @override
+  String get amountRequired => 'Amount required';
+
+  @override
+  String get amountInvalid => 'Invalid amount';
+
+  @override
+  String get nameRequired => 'Name required';
+
+  @override
+  String get noCategory => 'No Category';
+
+  @override
+  String get selectRegister => 'Select register';
+
+  @override
+  String get balanceRequired => 'Balance required';
+
+  @override
+  String get balanceInvalid => 'Invalid balance';
+
+  @override
+  String get paymentMethodCash => 'Cash';
+
+  @override
+  String get paymentMethodTransfer => 'Transfer';
+
+  @override
+  String get paymentMethodQris => 'QRIS';
+
+  @override
+  String get paymentMethodCard => 'Card';
+
+  @override
+  String get paymentMethodOther => 'Other';
 }

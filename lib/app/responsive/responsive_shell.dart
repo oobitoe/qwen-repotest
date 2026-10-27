@@ -48,6 +48,10 @@ const appNavItems = <NavItem>[
       AppIcons.receiptLongRounded),
   NavItem('/cash', 'cash', AppIcons.accountBalanceRounded,
       AppIcons.accountBalanceRounded),
+  NavItem('/expenses', 'expenses', AppIcons.receiptLongRounded,
+      AppIcons.receiptLongRounded),
+  NavItem('/income', 'income', AppIcons.savingsRounded,
+      AppIcons.savingsRounded),
 ];
 
 /// Resolve label tujuan navigasi ke string terlokalisasi.
@@ -62,6 +66,8 @@ String _navLabel(AppLocalizations l10n, String key) => switch (key) {
       'pos' => l10n.pos,
       'sales' => l10n.sales,
       'cash' => l10n.cashRegister,
+      'expenses' => l10n.expenses,
+      'income' => l10n.income,
       _ => key,
     };
 

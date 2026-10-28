@@ -151,7 +151,7 @@ class SyncableDao {
         operation: SyncOperations.delete,
         payload: {
           'id': id,
-          'deleted_at': now.toIso8601String(),
+          'deleted_at': now.millisecondsSinceEpoch,
           'version': newVersion,
         },
       );

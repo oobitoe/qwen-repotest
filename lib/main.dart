@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
@@ -11,6 +12,10 @@ import 'shared/providers/core_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Muat kunci rahasia dari file .env (tidak di-commit, ada di .gitignore)
+  await dotenv.load(fileName: '.env');
+
   await SupabaseConfig.initialize();
 
   // Initialize database singleton BEFORE runApp to avoid multiple instances

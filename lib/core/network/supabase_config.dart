@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Konfigurasi Supabase. Nilai dibaca dari environment (dart-define),
+/// Konfigurasi Supabase. Nilai dibaca dari file .env via flutter_dotenv,
 /// TIDAK ADA secret di source code. Hanya anon/public key yang boleh dipakai
 /// di klien; service_role key tidak pernah disertakan.
 class SupabaseConfig {
@@ -16,11 +17,13 @@ class SupabaseConfig {
       anonKey.isNotEmpty &&
       Uri.tryParse(url)?.hasAbsolutePath == true;
 
-  static const envUrl = String.fromEnvironment('SUPABASE_URL');
-  static const envAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static SupabaseConfig _fromEnv() {
+    final url = dotenv.env['SUPABASE_URL'] ?? '';
+    final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    return SupabaseConfig(url: url, anonKey: anonKey);
+  }
 
-  static const SupabaseConfig instance =
-      SupabaseConfig(url: envUrl, anonKey: envAnonKey);
+  static SupabaseConfig get instance => _fromEnv();
 
   static bool _initialized = false;
 
@@ -30,7 +33,7 @@ class SupabaseConfig {
     if (!instance.isValid) {
       debugPrint(
         'Supabase belum dikonfigurasi — menjalankan mode offline-only. '
-        'Set SUPABASE_URL & SUPABASE_ANON_KEY via --dart-define.',
+        'Isi SUPABASE_URL & SUPABASE_ANON_KEY di file .env.',
       );
       return false;
     }

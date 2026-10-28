@@ -13,8 +13,13 @@ import 'shared/providers/core_providers.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Muat kunci rahasia dari file .env (tidak di-commit, ada di .gitignore)
-  await dotenv.load(fileName: '.env');
+  // Muat kunci rahasia dari file .env (tidak di-commit, ada di .gitignore).
+  // Jika .env belum ada, aplikasi tetap jalan dalam mode offline-only.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    debugPrint('File .env tidak ditemukan — menjalankan mode offline-only.');
+  }
 
   await SupabaseConfig.initialize();
 

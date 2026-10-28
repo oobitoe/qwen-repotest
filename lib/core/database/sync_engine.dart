@@ -50,7 +50,7 @@ class SupabaseSyncTransport implements SyncTransport {
         await table
             .update({
               'deleted_at': item.payload['deleted_at'],
-              'updated_at': item.payload['deleted_at'],
+              'updated_at': item.payload['updated_at'],
               'version': item.payload['version'],
             })
             .eq('id', item.entityId);

@@ -477,17 +477,17 @@ class DebtPayments extends Table {
 // ---------- Audit Log ----------
 class AuditLogs extends Table {
   TextColumn get id => text()();
-  TextColumn get userId => text()();
-  TextColumn get userName => text()();
-  TextColumn get action => text()(); // create | update | delete | login | logout | payment | refund | stockAdjustment | priceChange | permissionChange | settingsChange | dataExport | dataImport | sync
-  TextColumn get entityType => text()(); // products | sales | expenses | users | etc
-  TextColumn get entityId => text()();
-  TextColumn get description => text()();
-  TextColumn get oldValue => text().nullable()();
-  TextColumn get newValue => text().nullable()();
-  TextColumn get ipAddress => text().nullable()();
-  TextColumn get deviceInfo => text().nullable()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get userId => text().named('user_id')();
+  TextColumn get userName => text().named('user_name')();
+  TextColumn get action => text().named('action')(); // create | update | delete | login | logout | payment | refund | stockAdjustment | priceChange | permissionChange | settingsChange | dataExport | dataImport | sync
+  TextColumn get entityType => text().named('entity_type')(); // products | sales | expenses | users | etc
+  TextColumn get entityId => text().named('entity_id')();
+  TextColumn get description => text().named('description')();
+  TextColumn get oldValue => text().named('old_value').nullable()();
+  TextColumn get newValue => text().named('new_value').nullable()();
+  TextColumn get ipAddress => text().named('ip_address').nullable()();
+  TextColumn get deviceInfo => text().named('device_info').nullable()();
+  DateTimeColumn get createdAt => dateTime().named('created_at').withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};

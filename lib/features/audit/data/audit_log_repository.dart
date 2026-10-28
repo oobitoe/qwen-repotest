@@ -246,9 +246,6 @@ class AuditLogRepository {
     );
   }
 
-  /// Ambil audit log dengan filter.
-  /// Tanggal difilter di Dart setelah normalisasi agar robust terhadap
-  /// format bercampur (seconds vs milliseconds) di database lama/baru.
   Future<List<AuditLogEntity>> getLogs({
     String? userId,
     String? entityType,

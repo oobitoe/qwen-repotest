@@ -7,7 +7,6 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../shared/providers/core_providers.dart';
 import '../../suppliers/data/supplier_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/debt_entity.dart';
@@ -45,29 +44,19 @@ class _DebtsPageState extends ConsumerState<DebtsPage>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.debts),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Hutang (Supplier)'),
-            Tab(text: 'Piutang (Pelanggan)'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: l10n.syncNow,
-            onPressed: () => runManualSync(ref),
-            icon: const Icon(AppIcons.sync),
-          ),
-        ],
-      ),
       body: Column(
         children: [
           _SearchBar(
             controller: _searchController,
             onChanged: (v) => setState(() => _query = v),
             l10n: l10n,
+          ),
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Hutang (Supplier)'),
+              Tab(text: 'Piutang (Pelanggan)'),
+            ],
           ),
           Expanded(
             child: TabBarView(

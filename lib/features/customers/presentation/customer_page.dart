@@ -33,7 +33,6 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     final customers = ref.watch(customersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.customers)),
       body: Column(
         children: [
           _CustomerSearchBar(

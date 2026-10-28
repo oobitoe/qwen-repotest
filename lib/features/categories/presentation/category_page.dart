@@ -34,7 +34,6 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
     final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.categories)),
       body: Column(
         children: [
           _SearchBar(

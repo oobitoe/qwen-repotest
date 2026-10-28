@@ -34,7 +34,6 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
     final purchases = ref.watch(purchasesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.purchases)),
       body: Column(
         children: [
           _PurchaseSearchBar(

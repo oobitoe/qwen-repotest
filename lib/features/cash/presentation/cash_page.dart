@@ -38,23 +38,26 @@ class _CashPageState extends ConsumerState<CashPage>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.cashRegister),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: l10n.cashRegister),
-            const Tab(text: 'Rekening'),
-            const Tab(text: 'Sesi Kasir'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _CashRegisterTab(l10n: l10n),
-          _AccountsTab(l10n: l10n),
-          _CashSessionsTab(l10n: l10n),
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(text: l10n.cashRegister),
+              const Tab(text: 'Rekening'),
+              const Tab(text: 'Sesi Kasir'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _CashRegisterTab(l10n: l10n),
+                _AccountsTab(l10n: l10n),
+                _CashSessionsTab(l10n: l10n),
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

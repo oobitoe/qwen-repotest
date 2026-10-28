@@ -26,7 +26,6 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.inventory)),
       body: Column(
         children: [
           Container(

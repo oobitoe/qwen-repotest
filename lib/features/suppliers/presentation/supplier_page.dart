@@ -33,7 +33,6 @@ class _SuppliersPageState extends ConsumerState<SuppliersPage> {
     final suppliers = ref.watch(suppliersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.suppliers)),
       body: Column(
         children: [
           _SupplierSearchBar(

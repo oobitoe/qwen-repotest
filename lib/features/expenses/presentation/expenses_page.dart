@@ -41,39 +41,19 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.expenses),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: l10n.expenses),
-            Tab(text: l10n.categories),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: l10n.syncNow,
-            onPressed: () => ref
-                .read(expenseRepositoryProvider)
-                .saveExpenseCategory(
-                  ExpenseCategoryEntity(
-                    id: const Uuid().v4(),
-                    name: 'Test',
-                    isActive: true,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  ),
-                ),
-            icon: const Icon(AppIcons.sync),
-          ),
-        ],
-      ),
       body: Column(
         children: [
           _SearchBar(
             controller: _searchController,
             onChanged: (v) => setState(() => _query = v),
             l10n: l10n,
+          ),
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(text: l10n.expenses),
+              Tab(text: l10n.categories),
+            ],
           ),
           Expanded(
             child: TabBarView(

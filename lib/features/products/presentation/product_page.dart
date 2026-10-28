@@ -45,7 +45,6 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     )));
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.products)),
       body: Column(
         children: [
           _SearchAndFilterBar(

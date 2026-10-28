@@ -10,7 +10,6 @@ import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/database/sync_engine.dart';
 import '../../../shared/providers/core_providers.dart';
-import '../../auth/application/auth_controller.dart';
 import '../application/dashboard_repository.dart';
 
 /// Provider snapshot dashboard — baca dari SQLite lokal (lokal-first).
@@ -51,42 +50,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sync = ref.watch(syncStatusProvider);
     final snapshot = ref.watch(dashboardSnapshotProvider);
-    final role = ref.watch(currentRoleProvider);
-    final isDesktop = context.isDesktop;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Text(isDesktop ? l10n.dashboard : l10n.appDisplayName),
-            if (isDesktop) ...[
-              const SizedBox(width: AppSpacing.md),
-              _GreetingChip(role: role?.name ?? 'owner', l10n: l10n),
-            ],
-          ],
-        ),
-        actions: [
-          if (!context.isMobile) ...[
-            _SyncBadge(status: sync, l10n: l10n),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          IconButton(
-            tooltip: l10n.syncNow,
-            onPressed: () => runManualSync(ref),
-            icon: const Icon(AppIcons.sync),
-          ),
-          IconButton(
-            tooltip: l10n.logout,
-            onPressed: () =>
-                ref.read(authProvider.notifier).signOut(),
-            icon: const Icon(AppIcons.logout),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(dashboardSnapshotProvider);
@@ -841,68 +808,6 @@ class _SectionCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           child,
         ],
-      ),
-    );
-  }
-}
-
-class _GreetingChip extends StatelessWidget {
-  const _GreetingChip({required this.role, required this.l10n});
-  final String role;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final hour = DateTime.now().hour;
-    final greet = hour < 11
-        ? l10n.greetingMorning
-        : hour < 15
-            ? l10n.greetingAfternoon
-            : hour < 19
-                ? l10n.greetingEvening
-                : l10n.greetingNight;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-      ),
-      child: Text(l10n.greetingRole(greet, role),
-          style: Theme.of(context).textTheme.labelMedium),
-    );
-  }
-}
-
-class _SyncBadge extends ConsumerWidget {
-  const _SyncBadge({required this.status, required this.l10n});
-  final AsyncValue<SyncStatus> status;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = status.valueOrNull;
-    final (icon, color) = switch (s?.phase) {
-      SyncPhase.offline => (AppIcons.cloudOffRounded, AppTheme.warning),
-      SyncPhase.syncing => (AppIcons.syncRounded, AppTheme.info),
-      SyncPhase.error => (AppIcons.errorOutlineRounded, AppTheme.error),
-      _ => (AppIcons.cloudDoneRounded, AppTheme.success),
-    };
-    return Tooltip(
-      message: switch (s?.phase) {
-        SyncPhase.offline => l10n.offlineSaved,
-        SyncPhase.syncing => 'Sinkronisasi berjalan',
-        SyncPhase.error => l10n.syncInterrupted,
-        _ => 'Terhubung & tersinkron',
-      },
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withValues(alpha: 0.14),
-        ),
-        child: Icon(icon, size: 18, color: color),
       ),
     );
   }

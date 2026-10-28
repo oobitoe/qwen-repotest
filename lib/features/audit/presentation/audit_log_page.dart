@@ -35,16 +35,6 @@ class _AuditLogPageState extends ConsumerState<AuditLogPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.auditLog),
-        actions: [
-          IconButton(
-            tooltip: l10n.exportCSV,
-            onPressed: _exportCSV,
-            icon: const Icon(AppIcons.downloadRounded),
-          ),
-        ],
-      ),
       body: Column(
         children: [
           // Filter bar

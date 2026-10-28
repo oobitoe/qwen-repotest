@@ -42,7 +42,6 @@ class _PosPageState extends ConsumerState<PosPage> {
     final total = subtotal - _discount + _tax;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.pos)),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= AppBreakpoints.tablet;

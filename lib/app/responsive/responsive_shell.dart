@@ -6,9 +6,10 @@ import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
 import '../theme/design_tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../widgets/app_top_bar.dart';
 import 'responsive_layout.dart';
 
-/// State sidebar: true = diciutkan. Dipertahankan selama sesi aplikasi.
+/// State sidebar: true = diciutkan (tablet/desktop). Dipertahankan selama sesi aplikasi.
 class SidebarController extends Notifier<bool> {
   @override
   bool build() => false;
@@ -83,9 +84,52 @@ String _navLabel(AppLocalizations l10n, String key) => switch (key) {
       _ => key,
     };
 
+/// Resolve judul halaman dari lokasi route saat ini.
+String _pageTitle(String location, AppLocalizations l10n) {
+  switch (location) {
+    case '/dashboard':
+      return l10n.dashboard;
+    case '/products':
+      return l10n.products;
+    case '/categories':
+      return l10n.categories;
+    case '/suppliers':
+      return l10n.suppliers;
+    case '/customers':
+      return l10n.customers;
+    case '/inventory':
+      return l10n.inventory;
+    case '/purchases':
+      return l10n.purchases;
+    case '/pos':
+      return l10n.pos;
+    case '/sales':
+      return l10n.sales;
+    case '/cash':
+      return l10n.cashRegister;
+    case '/expenses':
+      return l10n.expenses;
+    case '/income':
+      return l10n.income;
+    case '/debts':
+      return l10n.debts;
+    case '/reports':
+      return l10n.reports;
+    case '/audit-log':
+      return l10n.auditLog;
+    case '/settings':
+      return l10n.settings;
+    case '/login':
+      return l10n.appDisplayName;
+    default:
+      return l10n.appDisplayName;
+  }
+}
+
 /// Shell responsif dengan animasi:
-/// - Mobile: NavigationBar di bawah.
-/// - Tablet/Desktop: sidebar yang bisa diciutkan (toggle animasi lebar).
+/// - Mobile: hamburger menu di topbar buka/tutup drawer sidebar.
+/// - Tablet: sidebar collapsed (hanya icon, teks jadi tooltip), tidak ada hamburger.
+/// - Desktop: sidebar expanded.
 class ResponsiveShell extends ConsumerWidget {
   const ResponsiveShell({super.key, required this.child});
 
@@ -101,26 +145,140 @@ class ResponsiveShell extends ConsumerWidget {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _indexFor(location);
     final l10n = AppLocalizations.of(context)!;
+    final title = _pageTitle(location, l10n);
+    final isMobile = context.isMobile;
 
-    if (context.isMobile) {
+    if (isMobile) {
       return Scaffold(
-        body: child,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: currentIndex,
-          onDestinationSelected: (i) =>
-              context.go(appNavItems[i].path),
-          destinations: [
-            for (final d in appNavItems)
-              NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.selectedIcon),
-                label: _navLabel(l10n, d.label),
-              ),
-          ],
+        appBar: _TopBarWrapper(title: title),
+        drawer: _MobileDrawer(
+          currentIndex: currentIndex,
+          l10n: l10n,
         ),
+        body: child,
       );
     }
-    return _SidebarShell(currentIndex: currentIndex, l10n: l10n, child: child);
+
+    // Tablet selalu collapsed (hanya icon, teks jadi tooltip), desktop mengikuti provider.
+    final collapsed = context.isTablet ? true : ref.watch(sidebarCollapsedProvider);
+
+    return _SidebarShell(
+      currentIndex: currentIndex,
+      l10n: l10n,
+      child: child,
+      title: title,
+      collapsed: collapsed,
+      onToggle: () => ref
+          .read(sidebarCollapsedProvider.notifier)
+          .toggle(),
+    );
+  }
+}
+
+/// Wrapper agar [AppTopBar] punya konteks Scaffold (untuk [Scaffold.of] di tombol menu mobile).
+class _TopBarWrapper extends StatelessWidget implements PreferredSizeWidget {
+  const _TopBarWrapper({required this.title});
+
+  final String title;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (context) => AppTopBar(
+        title: title,
+        onMenuTap: () => Scaffold.of(context).openDrawer(),
+      ),
+    );
+  }
+}
+
+/// Drawer sidebar khusus mobile (muncul dari kiri saat hamburger ditekan).
+class _MobileDrawer extends ConsumerWidget {
+  const _MobileDrawer({
+    required this.currentIndex,
+    required this.l10n,
+  });
+
+  final int currentIndex;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    return Drawer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppSpacing.lg),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.tertiary,
+                    ]),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: const Icon(AppIcons.storefrontRounded,
+                      color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    l10n.appDisplayName,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: ListView.separated(
+                itemCount: appNavItems.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                itemBuilder: (context, index) {
+                  final item = appNavItems[index];
+                  final isSelected = index == currentIndex;
+                  return _NavItemTile(
+                    item: item,
+                    isSelected: isSelected,
+                    collapsed: false,
+                    l10n: l10n,
+                    onTap: () {
+                      context.go(item.path);
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Text(
+              l10n.appVersion,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -129,24 +287,33 @@ class _SidebarShell extends ConsumerWidget {
     required this.currentIndex,
     required this.child,
     required this.l10n,
+    required this.title,
+    required this.collapsed,
+    required this.onToggle,
   });
 
   final int currentIndex;
   final Widget child;
   final AppLocalizations l10n;
+  final String title;
+  final bool collapsed;
+  final VoidCallback onToggle;
 
   static const double _expandedWidth = 240;
   static const double _collapsedWidth = 84;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final collapsed = ref.watch(sidebarCollapsedProvider);
     final theme = Theme.of(context);
     final width = collapsed ? _collapsedWidth : _expandedWidth;
 
     return Scaffold(
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Sidebar full height (dari atas sampai bawah)
+          // Tablet: collapsed (hanya icon, teks jadi tooltip)
+          // Desktop: expanded
           AnimatedContainer(
             duration: AppDurations.slow,
             curve: Curves.easeOutCubic,
@@ -174,24 +341,19 @@ class _SidebarShell extends ConsumerWidget {
                         child: const Icon(AppIcons.storefrontRounded,
                             color: Colors.white, size: 22),
                       ),
-                      Expanded(
-                        child: AnimatedSize(
-                          duration: AppDurations.normal,
-                          alignment: Alignment.centerLeft,
-                          child: collapsed
-                              ? const SizedBox(width: 1)
-                              : Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: AppSpacing.md),
-                                  child: Text(
-                                    l10n.appDisplayName,
-                                    overflow: TextOverflow.clip,
-                                    style: theme.textTheme.titleLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
+                      if (!collapsed)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                                left: AppSpacing.md),
+                            child: Text(
+                              l10n.appDisplayName,
+                              overflow: TextOverflow.clip,
+                              style: theme.textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -222,9 +384,7 @@ class _SidebarShell extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   child: Row(
-                    mainAxisAlignment: collapsed
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (!collapsed)
                         Text(l10n.appVersion,
@@ -234,9 +394,7 @@ class _SidebarShell extends ConsumerWidget {
                         tooltip: collapsed
                             ? l10n.tooltipOpenSidebar
                             : l10n.tooltipCollapseSidebar,
-                        onPressed: () => ref
-                            .read(sidebarCollapsedProvider.notifier)
-                            .toggle(),
+                        onPressed: onToggle,
                         icon: AnimatedRotation(
                           turns: collapsed ? 0.5 : 0,
                           duration: AppDurations.normal,
@@ -251,7 +409,19 @@ class _SidebarShell extends ConsumerWidget {
           ),
           VerticalDivider(width: 1, thickness: 1,
               color: theme.colorScheme.outlineVariant),
-          Expanded(child: child),
+          // TopBar di kanan sidebar, di atas konten
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: kToolbarHeight,
+                  child: AppTopBar(title: title),
+                ),
+                Expanded(child: child),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -299,10 +469,13 @@ class _NavItemTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: collapsed
-              ? Icon(
-                  isSelected ? item.selectedIcon : item.icon,
-                  color: color,
-                  size: 24,
+              ? Tooltip(
+                  message: _navLabel(l10n, item.label),
+                  child: Icon(
+                    isSelected ? item.selectedIcon : item.icon,
+                    color: color,
+                    size: 24,
+                  ),
                 )
               : Row(
                   children: [
@@ -340,7 +513,7 @@ class ComingSoonPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppTopBar(title: title),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

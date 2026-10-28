@@ -41,22 +41,19 @@ class _IncomePageState extends ConsumerState<IncomePage>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.income),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: l10n.income),
-            Tab(text: l10n.categories),
-          ],
-        ),
-      ),
       body: Column(
         children: [
           _SearchBar(
             controller: _searchController,
             onChanged: (v) => setState(() => _query = v),
             l10n: l10n,
+          ),
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(text: l10n.income),
+              Tab(text: l10n.categories),
+            ],
           ),
           Expanded(
             child: TabBarView(

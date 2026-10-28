@@ -80,34 +80,18 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.reports),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: [
-            Tab(text: l10n.sales),
-            Tab(text: l10n.products),
-            Tab(text: l10n.inventory),
-            Tab(text: l10n.financial),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: l10n.exportCSV,
-            onPressed: _exportCSV,
-            icon: const Icon(AppIcons.downloadRounded),
-          ),
-          IconButton(
-            tooltip: l10n.exportPDF,
-            onPressed: _exportPDF,
-            icon: const Icon(AppIcons.pictureAsPdfRounded),
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          // Date filter bar
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabs: [
+              Tab(text: l10n.sales),
+              Tab(text: l10n.products),
+              Tab(text: l10n.inventory),
+              Tab(text: l10n.financial),
+            ],
+          ),
           _DateFilterBar(
             startDateCtrl: _startDateCtrl,
             endDateCtrl: _endDateCtrl,
@@ -115,7 +99,6 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
             onEndTap: () => _pickDate(isStart: false),
             l10n: l10n,
           ),
-          // Tab content
           Expanded(
             child: TabBarView(
               controller: _tabController,

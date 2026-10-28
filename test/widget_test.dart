@@ -122,13 +122,12 @@ void main() {
     });
   });
 
-  group('SyncableDao + SyncEngine (outbox & LWW)', () {
     late AppDatabase db;
     late SyncableDao dao;
 
     setUp(() {
-      registerAllSyncMetas();
       db = AppDatabase(NativeDatabase.memory());
+      registerAllSyncMetas(db);
       dao = SyncableDao(db);
     });
     tearDown(() => db.close());

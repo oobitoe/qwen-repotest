@@ -35,7 +35,6 @@ class _SalesPageState extends ConsumerState<SalesPage> {
     final sales = ref.watch(salesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.sales)),
       body: Column(
         children: [
           _SaleSearchBar(

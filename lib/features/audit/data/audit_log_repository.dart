@@ -247,6 +247,8 @@ class AuditLogRepository {
   }
 
   /// Ambil audit log dengan filter.
+  /// Tanggal difilter di Dart setelah normalisasi agar robust terhadap
+  /// format bercampur (seconds vs milliseconds) di database lama/baru.
   Future<List<AuditLogEntity>> getLogs({
     String? userId,
     String? entityType,
@@ -272,12 +274,6 @@ class AuditLogRepository {
     if (action != null) {
       q.where((t) => t.action.equals(action.name));
     }
-    if (startDate != null) {
-      q.where((t) => t.createdAt.isBiggerOrEqualValue(startDate.toUtc()));
-    }
-    if (endDate != null) {
-      q.where((t) => t.createdAt.isSmallerOrEqualValue(endDate.toUtc()));
-    }
     if (query != null && query.isNotEmpty) {
       final searchTerm = '%$query%';
       q.where((t) =>
@@ -288,10 +284,22 @@ class AuditLogRepository {
     }
 
     q.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
-    q.limit(limit, offset: offset);
 
     final rows = await q.get();
-    return rows.map(AuditLogEntity.fromRow).toList();
+
+    // Filter tanggal di Dart setelah normalisasi (robust vs seconds/ms bercampur)
+    final result = <AuditLogEntity>[];
+    for (final row in rows) {
+      final log = AuditLogEntity.fromRow(row);
+      if (startDate != null && log.createdAt.isBefore(startDate)) continue;
+      if (endDate != null && log.createdAt.isAfter(endDate)) continue;
+      result.add(log);
+    }
+
+    // Terapkan limit/offset setelah filter
+    final start = offset.clamp(0, result.length);
+    final end = (start + limit).clamp(0, result.length);
+    return result.sublist(start, end);
   }
 
   /// Ambil statistik audit log.

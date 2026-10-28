@@ -345,16 +345,112 @@ Future<void> seedDatabase(AppDatabase db) async {
         amount: 2000000.0,
       ));
 
-  // ---------- Audit log sample ----------
-  await db.into(db.auditLogs).insert(AuditLogsCompanion.insert(
-        id: _uuid.v4(),
-        userId: 'local',
-        userName: 'Admin',
-        action: 'dataImport',
-        entityType: 'system',
-        entityId: 'seed',
-        description: 'Seed data alat listrik 3 bulan transaksi',
-      ));
+  // ---------- Audit log sample ---------- (banyak entri agar list tidak kosong)
+  final auditEntries = <Map<String, dynamic>>[
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'dataImport',
+      'entityType': 'system',
+      'entityId': 'seed',
+      'description': 'Seed data awal alat listrik + 3 bulan transaksi',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(days: 1)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'create',
+      'entityType': 'supplier',
+      'entityId': 'supplier-001',
+      'description': 'Menambahkan supplier PT Sinar Jaya Elektrik',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 5)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'create',
+      'entityType': 'supplier',
+      'entityId': 'supplier-002',
+      'description': 'Menambahkan supplier CV Mega Listrik',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 4)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'update',
+      'entityType': 'product',
+      'entityId': 'product-001',
+      'description': 'Mengubah harga jual Kabel NYA 1.5mm dari Rp 4.500 menjadi Rp 5.000',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 3)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'login',
+      'entityType': 'auth',
+      'entityId': 'session-001',
+      'description': 'Admin masuk ke aplikasi',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 2)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'sale',
+      'entityType': 'sale',
+      'entityId': 'sale-001',
+      'description': 'Transaksi penjualan INV-0001 sebesar Rp 125.000',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 1)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'stockAdjustment',
+      'entityType': 'stock_adjustment',
+      'entityId': 'adj-001',
+      'description': 'Penyesuaian stok Multimeter Digital: 15 → 12',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 45)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'logout',
+      'entityType': 'auth',
+      'entityId': 'session-001',
+      'description': 'Admin keluar dari aplikasi',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 30)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'create',
+      'entityType': 'customer',
+      'entityId': 'customer-001',
+      'description': 'Menambahkan pelanggan Budi Santoso',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 15)),
+    },
+    {
+      'userId': 'local',
+      'userName': 'Admin',
+      'action': 'settingsChange',
+      'entityType': 'settings',
+      'entityId': 'theme',
+      'description': 'Mengubah preset tema dari forest menjadi sunset',
+      'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 5)),
+    },
+  ];
+
+  for (final entry in auditEntries) {
+    await db.into(db.auditLogs).insert(AuditLogsCompanion.insert(
+      id: _uuid.v4(),
+      userId: entry['userId'] as String,
+      userName: entry['userName'] as String,
+      action: entry['action'] as String,
+      entityType: entry['entityType'] as String,
+      entityId: entry['entityId'] as String,
+      description: entry['description'] as String,
+      createdAt: Value(entry['createdAt'] as DateTime),
+    ));
+  }
 }
 
 /// Simple seeded random untuk reproducibility.

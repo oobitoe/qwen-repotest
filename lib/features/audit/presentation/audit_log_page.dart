@@ -51,6 +51,7 @@ class _AuditLogPageState extends ConsumerState<AuditLogPage> {
           _FilterBar(
             searchController: _searchController,
             onSearchChanged: (v) => setState(() => _query = v),
+            onSearchApplied: () => setState(() {}),
             startDate: _startDate,
             endDate: _endDate,
             onStartDateTap: () => _pickDate(isStart: true),
@@ -119,6 +120,7 @@ class _FilterBar extends StatelessWidget {
   const _FilterBar({
     required this.searchController,
     required this.onSearchChanged,
+    required this.onSearchApplied,
     required this.startDate,
     required this.endDate,
     required this.onStartDateTap,
@@ -133,6 +135,7 @@ class _FilterBar extends StatelessWidget {
 
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
+  final VoidCallback onSearchApplied;
   final DateTime? startDate;
   final DateTime? endDate;
   final VoidCallback onStartDateTap;
@@ -164,15 +167,25 @@ class _FilterBar extends StatelessWidget {
             decoration: InputDecoration(
               hintText: l10n.search,
               prefixIcon: const Icon(AppIcons.search),
-              suffixIcon: searchController.text.isNotEmpty
-                  ? IconButton(
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (searchController.text.isNotEmpty)
+                    IconButton(
                       icon: const Icon(AppIcons.closeRounded),
                       onPressed: () {
                         searchController.clear();
                         onSearchChanged('');
                       },
-                    )
-                  : null,
+                    ),
+                  const SizedBox(width: AppSpacing.sm),
+                  FilledButton.tonalIcon(
+                    onPressed: onSearchApplied,
+                    icon: const Icon(AppIcons.search, size: 18),
+                    label: Text(l10n.apply, style: const TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),

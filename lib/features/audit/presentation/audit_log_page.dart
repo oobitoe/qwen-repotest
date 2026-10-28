@@ -487,6 +487,26 @@ class AuditLogUI {
     }
   }
 
+  /// Format tanggal aman: tangani baik format milliseconds (baru) maupun
+  /// seconds (database lama) agar tidak throw FormatException di UI.
+  static String formatDate(DateTime? date, {bool withSeconds = false}) {
+    if (date == null) return '-';
+    try {
+      // Jika tahun < 2000, berarti disimpan dalam seconds (Unix epoch)
+      // Kalikan 1000 → milidetik agar benar
+      final d = date.year < 2000
+          ? DateTime.fromMillisecondsSinceEpoch(
+              date.millisecondsSinceEpoch * 1000,
+              isUtc: true,
+            )
+          : date;
+      final fmt = DateFormat(withSeconds ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm');
+      return fmt.format(d.toLocal());
+    } catch (_) {
+      return '-';
+    }
+  }
+
   static String actionLabel(AuditAction action, AppLocalizations l10n) {
     switch (action) {
       case AuditAction.create:
@@ -556,7 +576,7 @@ class _AuditLogTile extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             Text(
-              '${DateFormat('dd/MM/yyyy HH:mm').format(log.createdAt.toLocal())} · ${log.userName}',
+              '${AuditLogUI.formatDate(log.createdAt)} · ${log.userName}',
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -665,7 +685,7 @@ class _AuditLogDetailSheet extends StatelessWidget {
           _DetailRow(label: l10n.action, value: AuditLogUI.actionLabel(log.action, l10n)),
           _DetailRow(label: l10n.entityType, value: log.entityType),
           _DetailRow(label: l10n.entityId, value: log.entityId),
-          _DetailRow(label: l10n.timestamp, value: DateFormat('dd/MM/yyyy HH:mm:ss').format(log.createdAt.toLocal())),
+          _DetailRow(label: l10n.timestamp, value: AuditLogUI.formatDate(log.createdAt, withSeconds: true)),
           if (log.ipAddress != null) _DetailRow(label: 'IP Address', value: log.ipAddress!),
           if (log.deviceInfo != null) _DetailRow(label: 'Device', value: log.deviceInfo!),
           const SizedBox(height: AppSpacing.lg),

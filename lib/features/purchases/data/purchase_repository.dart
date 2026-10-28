@@ -124,7 +124,7 @@ class PurchaseRepository {
         'payment_method': paymentMethod,
         'is_credit': isCredit,
         'created_by': createdBy,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
     );
   }

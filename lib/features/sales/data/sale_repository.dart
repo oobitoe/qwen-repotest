@@ -48,7 +48,7 @@ class SaleRepository {
         'is_credit': isCredit,
         'status': status,
         'cashier_id': cashierId,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
     );
   }
@@ -70,7 +70,7 @@ class SaleRepository {
         'sale_id': saleId,
         'total': total,
         'cashier_id': cashierId,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
     );
   }

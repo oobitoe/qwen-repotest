@@ -137,7 +137,7 @@ class CashRepository {
       {
         'register_id': registerId,
         'opened_by': openedBy,
-        'opened_at': DateTime.now().toUtc().toIso8601String(),
+        'opened_at': DateTime.now().toUtc().millisecondsSinceEpoch,
         'opening_balance': openingBalance,
         'status': 'open',
       },
@@ -155,7 +155,7 @@ class CashRepository {
     await _dao.upsertAndEnqueue(
       'cash_session',
       {
-        'closed_at': DateTime.now().toUtc().toIso8601String(),
+        'closed_at': DateTime.now().toUtc().millisecondsSinceEpoch,
         'actual_balance': actualBalance,
         'expected_balance': expectedBalance,
         'difference': difference,
@@ -234,7 +234,7 @@ class CashRepository {
         'reference_type': referenceType,
         'reference_id': referenceId,
         'created_by': createdBy,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
       id: transactionId,
     );

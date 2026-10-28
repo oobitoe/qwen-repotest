@@ -98,7 +98,7 @@ class DebtRepository {
         'amount': debt.amount,
         'paid_amount': debt.paidAmount,
         'status': debt.status,
-        'due_date': debt.dueDate?.toIso8601String().split('T').first,
+        'due_date': debt.dueDate?.millisecondsSinceEpoch,
       },
       id: debt.id,
     );
@@ -164,7 +164,7 @@ class DebtRepository {
         'id': paymentId,
         'debt_id': debtId,
         'amount': amount,
-        'paid_at': DateTime.now().toUtc().toIso8601String(),
+        'paid_at': DateTime.now().toUtc().millisecondsSinceEpoch,
         'created_by': createdBy,
       },
       id: paymentId,

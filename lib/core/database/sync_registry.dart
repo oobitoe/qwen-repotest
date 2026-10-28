@@ -21,15 +21,46 @@ TableMeta _meta<T extends Table>(
 }
 
 bool _registered = false;
+AppDatabase? _storedDb;
+
+/// Parse tanggal aman dari berbagai sumber (ISO8601, integer ms, integer detik).
+///
+/// Konsisten dengan format Supabase (ISO8601 UTC) dan SQLite Drift
+/// (integer millisecondsSinceEpoch UTC). Jika integer < 1e12 dianggap detik
+/// Unix epoch dan dikalikan 1000 → milidetik.
+DateTime? _safeParseDateTime(Object? v) {
+  if (v == null) return null;
+  if (v is DateTime) return v.toUtc();
+  final s = v.toString();
+  final asNum = int.tryParse(s);
+  if (asNum != null) {
+    final ms = asNum < 1000000000000 ? asNum * 1000 : asNum;
+    return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+  }
+  return DateTime.tryParse(s)?.toUtc();
+}
 
 /// Daftarkan seluruh tabel yang ikut program sinkronisasi.
 /// Idempoten — aman dipanggil berkali-kali.
-void registerAllSyncMetas() {
+/// [db] - Database instance yang sudah diinisialisasi (singleton). Jika tidak
+/// diberikan, akan menggunakan instance yang tersimpan dari pemanggilan pertama.
+void registerAllSyncMetas([AppDatabase? db]) {
+  // Store the database instance for later calls without arguments
+  if (db != null) {
+    _storedDb = db;
+  }
+
+  final effectiveDb = db ?? _storedDb;
+  if (effectiveDb == null) {
+    throw StateError(
+        'registerAllSyncMetas called without database instance. Call with AppDatabase first.');
+  }
+
   if (_registered) return;
   _registered = true;
 
-  DateTime? dt(Object? v) =>
-      v == null ? null : DateTime.parse(v.toString()).toUtc();
+  // --- Local helpers ---
+  DateTime? dt(Object? v) => _safeParseDateTime(v);
   int i(Object? v, [int fallback = 1]) => (v as num?)?.toInt() ?? fallback;
   double d(Object? v, [double fallback = 0]) =>
       (v as num?)?.toDouble() ?? fallback;
@@ -38,9 +69,9 @@ void registerAllSyncMetas() {
   double? dn(Object? v) => v == null ? null : (v as num).toDouble();
   String? sn(Object? v) => v?.toString();
 
-  final db = AppDatabase(_headlessExecutor);
-
-  SyncableDao.register(_meta('business', db.businesses, (j) => BusinessesCompanion(
+  // Use effectiveDb since we've verified it's not null above
+  final db_ = effectiveDb;
+  SyncableDao.register(_meta('business', db_.businesses, (j) => BusinessesCompanion(
         id: Value(s(j['id'])),
         name: Value(s(j['name'])),
         currency: Value(sn(j['currency']) ?? 'IDR'),
@@ -52,7 +83,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('store', db.stores, (j) => StoresCompanion(
+  SyncableDao.register(_meta('store', db_.stores, (j) => StoresCompanion(
         id: Value(s(j['id'])),
         businessId: Value(s(j['business_id'])),
         name: Value(s(j['name'])),
@@ -65,7 +96,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('profile', db.profiles, (j) => ProfilesCompanion(
+  SyncableDao.register(_meta('profile', db_.profiles, (j) => ProfilesCompanion(
         id: Value(s(j['id'])),
         email: Value(s(j['email'])),
         fullName: Value(s(j['full_name'])),
@@ -78,7 +109,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('category', db.categories, (j) => CategoriesCompanion(
+  SyncableDao.register(_meta('category', db_.categories, (j) => CategoriesCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),
         name: Value(s(j['name'])),
@@ -90,7 +121,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('unit', db.units, (j) => UnitsCompanion(
+  SyncableDao.register(_meta('unit', db_.units, (j) => UnitsCompanion(
         id: Value(s(j['id'])),
         name: Value(s(j['name'])),
         abbreviation: Value(s(j['abbreviation'])),
@@ -101,7 +132,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('product', db.products, (j) => ProductsCompanion(
+  SyncableDao.register(_meta('product', db_.products, (j) => ProductsCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),
         sku: Value(s(j['sku'])),
@@ -124,7 +155,7 @@ void registerAllSyncMetas() {
       )));
 
   SyncableDao.register(
-      _meta('stock_movement', db.stockMovements, (j) => StockMovementsCompanion(
+      _meta('stock_movement', db_.stockMovements, (j) => StockMovementsCompanion(
             id: Value(s(j['id'])),
             productId: Value(s(j['product_id'])),
             type: Value(s(j['type'])),
@@ -139,7 +170,7 @@ void registerAllSyncMetas() {
             syncStatus: const Value(SyncStatuses.synced),
           )));
 
-  SyncableDao.register(_meta('supplier', db.suppliers, (j) => SuppliersCompanion(
+  SyncableDao.register(_meta('supplier', db_.suppliers, (j) => SuppliersCompanion(
         id: Value(s(j['id'])),
         name: Value(s(j['name'])),
         phone: Value(sn(j['phone'])),
@@ -154,7 +185,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('customer', db.customers, (j) => CustomersCompanion(
+  SyncableDao.register(_meta('customer', db_.customers, (j) => CustomersCompanion(
         id: Value(s(j['id'])),
         code: Value(sn(j['code'])),
         name: Value(s(j['name'])),
@@ -170,7 +201,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('sale', db.sales, (j) => SalesCompanion(
+  SyncableDao.register(_meta('sale', db_.sales, (j) => SalesCompanion(
         id: Value(s(j['id'])),
         invoiceNumber: Value(s(j['invoice_number'])),
         customerNameSnapshot: Value(sn(j['customer_name_snapshot'])),
@@ -192,7 +223,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('sale_item', db.saleItems, (j) => SaleItemsCompanion(
+  SyncableDao.register(_meta('sale_item', db_.saleItems, (j) => SaleItemsCompanion(
         id: Value(s(j['id'])),
         saleId: Value(s(j['sale_id'])),
         productId: Value(s(j['product_id'])),
@@ -209,7 +240,7 @@ void registerAllSyncMetas() {
       )));
 
   SyncableDao.register(
-      _meta('expense_category', db.expenseCategories,
+      _meta('expense_category', db_.expenseCategories,
           (j) => ExpenseCategoriesCompanion(
         id: Value(s(j['id'])),
         name: Value(s(j['name'])),
@@ -221,7 +252,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('expense', db.expenses, (j) => ExpensesCompanion(
+  SyncableDao.register(_meta('expense', db_.expenses, (j) => ExpensesCompanion(
         id: Value(s(j['id'])),
         categoryId: Value(sn(j['category_id'])),
         description: Value(s(j['description'])),
@@ -236,7 +267,7 @@ void registerAllSyncMetas() {
       )));
 
   SyncableDao.register(
-      _meta('income_category', db.incomeCategories,
+      _meta('income_category', db_.incomeCategories,
           (j) => IncomeCategoriesCompanion(
         id: Value(s(j['id'])),
         name: Value(s(j['name'])),
@@ -248,7 +279,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('income', db.incomeEntries, (j) => IncomeEntriesCompanion(
+  SyncableDao.register(_meta('income', db_.incomeEntries, (j) => IncomeEntriesCompanion(
         id: Value(s(j['id'])),
         categoryId: Value(sn(j['category_id'])),
         description: Value(s(j['description'])),
@@ -262,7 +293,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('cash_register', db.cashRegisters,
+  SyncableDao.register(_meta('cash_register', db_.cashRegisters,
       (j) => CashRegistersCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),
@@ -276,7 +307,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('cash_session', db.cashSessions,
+  SyncableDao.register(_meta('cash_session', db_.cashSessions,
       (j) => CashSessionsCompanion(
         id: Value(s(j['id'])),
         registerId: Value(s(j['register_id'])),
@@ -294,7 +325,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('cash_movement', db.cashMovements,
+  SyncableDao.register(_meta('cash_movement', db_.cashMovements,
       (j) => CashMovementsCompanion(
         id: Value(s(j['id'])),
         sessionId: Value(sn(j['session_id'])),
@@ -309,7 +340,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('account', db.accounts,
+  SyncableDao.register(_meta('account', db_.accounts,
       (j) => AccountsCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),
@@ -323,7 +354,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('account_transaction', db.accountTransactions,
+  SyncableDao.register(_meta('account_transaction', db_.accountTransactions,
       (j) => AccountTransactionsCompanion(
         id: Value(s(j['id'])),
         accountId: Value(s(j['account_id'])),
@@ -337,7 +368,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('debt', db.debts,
+  SyncableDao.register(_meta('debt', db_.debts,
       (j) => DebtsCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),
@@ -354,7 +385,7 @@ void registerAllSyncMetas() {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('debt_payment', db.debtPayments,
+  SyncableDao.register(_meta('debt_payment', db_.debtPayments,
       (j) => DebtPaymentsCompanion(
         id: Value(s(j['id'])),
         debtId: Value(s(j['debt_id'])),
@@ -364,16 +395,20 @@ void registerAllSyncMetas() {
         version: Value(i(j['version'])),
         syncStatus: const Value(SyncStatuses.synced),
       )));
-}
 
-/// Executor sementara hanya untuk membaca metadata kolom saat registrasi
-/// (tidak pernah membuka koneksi sungguhan).
-final QueryExecutor _headlessExecutor = _NoopExecutor();
-
-class _NoopExecutor extends QueryExecutor {
-  @override
-  Future<bool> ensureOpen(_) async => false;
-  @override
-  noSuchMethod(Invocation invocation) => throw UnimplementedError(
-      'Executor registrasi tidak boleh dipakai untuk query nyata');
+  SyncableDao.register(_meta('audit_log', db_.auditLogs,
+      (j) => AuditLogsCompanion.insert(
+        id: s(j['id']),
+        userId: s(j['user_id']),
+        userName: s(j['user_name']),
+        action: s(j['action']),
+        entityType: s(j['entity_type']),
+        entityId: s(j['entity_id']),
+        description: s(j['description']),
+        oldValue: Value(sn(j['old_value'])),
+        newValue: Value(sn(j['new_value'])),
+        ipAddress: Value(sn(j['ip_address'])),
+        deviceInfo: Value(sn(j['device_info'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+      )));
 }

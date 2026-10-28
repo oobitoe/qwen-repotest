@@ -217,7 +217,7 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
               const SizedBox(height: AppSpacing.md),
               ref.watch(suppliersProvider).when(
                     data: (items) => DropdownButtonFormField<String>(
-                      value: _supplierId,
+                      initialValue: _supplierId,
                       decoration: const InputDecoration(labelText: 'Supplier'),
                       items: [
                         for (final s in items)
@@ -238,7 +238,7 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
               ),
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
-                value: _paymentMethod,
+                initialValue: _paymentMethod,
                 decoration: const InputDecoration(labelText: 'Metode Pembayaran'),
                 items: const [
                   DropdownMenuItem(value: 'cash', child: Text('Tunai')),

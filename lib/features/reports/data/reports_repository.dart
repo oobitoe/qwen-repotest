@@ -335,9 +335,13 @@ class ReportsRepository {
       final minStock = product.minStock;
 
       String status;
-      if (stock <= 0) status = 'out';
-      else if (stock <= minStock) status = 'low';
-      else status = 'normal';
+      if (stock <= 0) {
+        status = 'out';
+      } else if (stock <= minStock) {
+        status = 'low';
+      } else {
+        status = 'normal';
+      }
 
       return StockReportData(
         productId: product.id,

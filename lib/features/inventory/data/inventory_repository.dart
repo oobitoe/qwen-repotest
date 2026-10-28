@@ -13,6 +13,7 @@ class InventoryRepository {
 
   final AppDatabase _db;
   final SyncableDao _dao;
+  // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
   /// Stream riwayat pergerakan stok.
@@ -154,7 +155,7 @@ class InventoryRepository {
             type: 'adjustment',
             quantity: item.quantityAfter - item.quantityBefore,
             balanceAfter: item.quantityAfter,
-            referenceType: Value('adjustment'),
+            referenceType: const Value('adjustment'),
             referenceId: Value(adjustmentId),
             note: Value(item.reason ?? note),
             createdBy: Value(createdBy),
@@ -190,7 +191,7 @@ class InventoryRepository {
         StockOpnamesCompanion.insert(
           id: opnameId,
           referenceNumber: referenceNumber,
-          status: Value('draft'),
+          status: const Value('draft'),
           createdBy: Value(createdBy),
         ),
       );

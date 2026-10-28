@@ -44,8 +44,8 @@ class _CashPageState extends ConsumerState<CashPage>
           controller: _tabController,
           tabs: [
             Tab(text: l10n.cashRegister),
-            Tab(text: 'Rekening'),
-            Tab(text: 'Sesi Kasir'),
+            const Tab(text: 'Rekening'),
+            const Tab(text: 'Sesi Kasir'),
           ],
         ),
       ),
@@ -122,7 +122,7 @@ class _CashRegisterTab extends ConsumerWidget {
     return registers.when(
       data: (items) {
         if (items.isEmpty) {
-          return _EmptyState(
+          return const _EmptyState(
             icon: AppIcons.accountBalanceRounded,
             message: 'Belum ada register kasir',
           );
@@ -183,7 +183,7 @@ class _AccountsTab extends ConsumerWidget {
     return accounts.when(
       data: (items) {
         if (items.isEmpty) {
-          return _EmptyState(
+          return const _EmptyState(
             icon: AppIcons.accountBalanceRounded,
             message: 'Belum ada rekening',
           );
@@ -264,7 +264,7 @@ class _CashSessionsTab extends ConsumerWidget {
     return sessions.when(
       data: (items) {
         if (items.isEmpty) {
-          return _EmptyState(
+          return const _EmptyState(
             icon: AppIcons.historyRounded,
             message: 'Belum ada sesi kasir',
           );
@@ -410,7 +410,7 @@ class _CashRegisterFormState extends ConsumerState<_CashRegisterForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final register = CashRegisterEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       name: _nameCtrl.text.trim(),
       openingBalance: double.tryParse(_balanceCtrl.text) ?? 0,
       isActive: true,
@@ -520,7 +520,7 @@ class _AccountFormState extends ConsumerState<_AccountForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final account = AccountEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       name: _nameCtrl.text.trim(),
       type: _type,
       isActive: true,
@@ -561,8 +561,8 @@ class _AccountFormState extends ConsumerState<_AccountForm> {
             ),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<String>(
-              value: _type,
-              decoration: InputDecoration(labelText: 'Tipe Rekening'),
+              initialValue: _type,
+              decoration: const InputDecoration(labelText: 'Tipe Rekening'),
               items: const [
                 DropdownMenuItem(value: 'cash', child: Text('Kas')),
                 DropdownMenuItem(value: 'bank', child: Text('Bank')),
@@ -649,7 +649,7 @@ class _OpenSessionFormState extends ConsumerState<_OpenSessionForm> {
             const SizedBox(height: AppSpacing.lg),
             registers.when(
               data: (items) => DropdownButtonFormField<String>(
-                value: _registerId,
+                initialValue: _registerId,
                 decoration: InputDecoration(labelText: l10n.register),
                 items: [
                   for (final r in items.where((r) => r.isActive))

@@ -78,23 +78,23 @@ class _SkeletonItem extends StatelessWidget {
         child: Row(
           children: [
             if (showAvatar)
-              _SkeletonCircle(size: 44),
+              const _SkeletonCircle(size: 44),
             if (showAvatar) const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _SkeletonLine(width: 0.6, height: 16),
+                  const _SkeletonLine(width: 0.6, height: 16),
                   if (showSubtitle) ...[
                     const SizedBox(height: AppSpacing.xs),
-                    _SkeletonLine(width: 0.4, height: 12),
+                    const _SkeletonLine(width: 0.4, height: 12),
                   ],
                 ],
               ),
             ),
             if (showTrailing)
-              _SkeletonLine(width: 60, height: 20),
+              const _SkeletonLine(width: 60, height: 20),
           ],
         ),
       ),
@@ -167,19 +167,19 @@ class _SkeletonGridCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           if (showHeader)
-            Row(
+            const Row(
               children: [
                 _SkeletonCircle(size: 36),
-                const Spacer(),
+                Spacer(),
                 _SkeletonLine(width: 40, height: 14),
               ],
             ),
-          _SkeletonLine(width: 0.8, height: 28),
+          const _SkeletonLine(width: 0.8, height: 28),
           const SizedBox(height: AppSpacing.xs),
-          _SkeletonLine(width: 0.5, height: 14),
+          const _SkeletonLine(width: 0.5, height: 14),
           if (showHeader) ...[
             const SizedBox(height: AppSpacing.sm),
-            _SkeletonLine(width: 0.7, height: 12),
+            const _SkeletonLine(width: 0.7, height: 12),
           ],
         ],
       ),
@@ -209,19 +209,19 @@ class SkeletonChart extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   _SkeletonLine(width: 0.5, height: 20),
-                  const Spacer(),
+                  Spacer(),
                   _SkeletonCircle(size: 20),
                 ],
               ),
             ),
-            Expanded(
+            const Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
                 child: _SkeletonLine(width: double.infinity, height: double.infinity),
               ),
             ),
@@ -229,7 +229,7 @@ class SkeletonChart extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(4, (i) => _SkeletonLine(width: 30, height: 12)),
+                children: List.generate(4, (i) => const _SkeletonLine(width: 30, height: 12)),
               ),
             ),
           ],
@@ -271,7 +271,7 @@ class SkeletonTable extends StatelessWidget {
             child: Row(
               children: List.generate(columnCount, (i) => Expanded(
                 flex: columnWidths != null && i < columnWidths!.length ? (columnWidths![i] * 10).round() : 1,
-                child: _SkeletonLine(width: 0.7, height: 14),
+                child: const _SkeletonLine(width: 0.7, height: 14),
               )),
             ),
           ),
@@ -292,7 +292,7 @@ class SkeletonTable extends StatelessWidget {
               child: Row(
                 children: List.generate(columnCount, (colIndex) => Expanded(
                   flex: columnWidths != null && colIndex < columnWidths!.length ? (columnWidths![colIndex] * 10).round() : 1,
-                  child: _SkeletonLine(width: 0.6, height: 14),
+                  child: const _SkeletonLine(width: 0.6, height: 14),
                 )),
               ),
             ),
@@ -366,17 +366,17 @@ class PageSkeleton extends StatelessWidget {
       appBar: hasAppBar ? AppBar(
         title: Animate(
           effects: [ShimmerEffect(duration: 1200.ms, color: highlightColor)],
-          child: _SkeletonLine(width: 120, height: 24),
+          child: const _SkeletonLine(width: 120, height: 24),
         ),
         actions: [
           Animate(
             effects: [ShimmerEffect(duration: 1200.ms, color: highlightColor)],
-            child: _SkeletonCircle(size: 24),
+            child: const _SkeletonCircle(size: 24),
           ),
           const SizedBox(width: AppSpacing.md),
           Animate(
             effects: [ShimmerEffect(duration: 1200.ms, color: highlightColor)],
-            child: _SkeletonCircle(size: 24),
+            child: const _SkeletonCircle(size: 24),
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
@@ -396,7 +396,7 @@ class PageSkeleton extends StatelessWidget {
                 children: List.generate(tabCount, (i) => Animate(
                   delay: (i * 100).ms,
                   effects: [ShimmerEffect(duration: 1200.ms, color: highlightColor)],
-                  child: Expanded(child: _SkeletonLine(width: 0.6, height: 20)),
+                  child: const Expanded(child: _SkeletonLine(width: 0.6, height: 20)),
                 )),
               ),
             ),
@@ -424,10 +424,10 @@ class PageSkeleton extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   // Chart skeleton
-                  SkeletonChart(height: 240),
+                  const SkeletonChart(height: 240),
                   const SizedBox(height: AppSpacing.lg),
                   // List skeleton
-                  SkeletonList(itemCount: 4, itemHeight: 80),
+                  const SkeletonList(itemCount: 4, itemHeight: 80),
                 ],
               ),
             ),
@@ -436,7 +436,7 @@ class PageSkeleton extends StatelessWidget {
       ),
       floatingActionButton: hasFAB ? Animate(
         effects: [ShimmerEffect(duration: 1200.ms, color: highlightColor)],
-        child: _SkeletonCircle(size: 56),
+        child: const _SkeletonCircle(size: 56),
       ) : null,
     );
   }
@@ -461,19 +461,19 @@ class _StatSkeleton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
-        child: Column(
+        child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 _SkeletonCircle(size: 36),
-                const Spacer(),
+                Spacer(),
                 _SkeletonLine(width: 50, height: 14),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _SkeletonLine(width: 0.8, height: 28),
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: AppSpacing.xs),
             _SkeletonLine(width: 0.5, height: 14),
           ],
         ),

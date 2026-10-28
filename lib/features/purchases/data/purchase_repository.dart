@@ -86,6 +86,7 @@ class PurchaseRepository {
   PurchaseRepository(this._dao);
 
   final SyncableDao _dao;
+  // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
   Stream<List<PurchaseEntity>> watchPurchases() => Stream.value([]);

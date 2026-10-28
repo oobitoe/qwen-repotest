@@ -53,7 +53,7 @@ class PermissionGate extends ConsumerWidget {
       return child;
     }
     return fallback ??
-        ErrorState(
+        const ErrorState(
           message: 'Anda tidak memiliki akses ke fitur ini',
           onRetry: null,
           icon: Icons.lock_outline_rounded,

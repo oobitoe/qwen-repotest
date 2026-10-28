@@ -161,7 +161,7 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(categoryRepositoryProvider);
     await repo.saveCategory(CategoryEntity(
-      id: Uuid().v4(),
+      id: const Uuid().v4(),
       name: _nameCtrl.text.trim(),
       isActive: true,
       createdAt: DateTime.now(),

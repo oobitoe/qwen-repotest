@@ -279,7 +279,7 @@ class _AdjustmentDialogState extends ConsumerState<_AdjustmentDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: _productId,
+                initialValue: _productId,
                 decoration: const InputDecoration(labelText: 'Produk'),
                 items: [
                   for (final p in items)

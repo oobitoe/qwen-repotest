@@ -109,7 +109,7 @@ class _AuditLogPageState extends ConsumerState<AuditLogPage> {
 
   void _exportCSV() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Export CSV - Coming soon')),
+      const SnackBar(content: Text('Export CSV - Coming soon')),
     );
   }
 }
@@ -221,7 +221,7 @@ class _FilterBar extends StatelessWidget {
             children: [
               Expanded(
                 child: DropdownButtonFormField<AuditAction>(
-                  value: selectedAction,
+                  initialValue: selectedAction,
                   decoration: InputDecoration(
                     labelText: l10n.action,
                     prefixIcon: const Icon(AppIcons.filterListRounded, size: 20),
@@ -246,7 +246,7 @@ class _FilterBar extends StatelessWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: selectedEntityType,
+                  initialValue: selectedEntityType,
                   decoration: InputDecoration(
                     labelText: l10n.entityType,
                     prefixIcon: const Icon(AppIcons.categoryRounded, size: 20),

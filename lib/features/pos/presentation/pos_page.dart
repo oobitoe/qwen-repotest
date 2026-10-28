@@ -121,15 +121,16 @@ class _PosPageState extends ConsumerState<PosPage> {
       paymentBreakdown: {_paymentMethod: total},
     );
 
-    if (mounted) {
-      setState(() {
-        _discount = 0;
-        _tax = 0;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.checkout} berhasil')),
-      );
-    }
+    if (!mounted) return;
+    setState(() {
+      _discount = 0;
+      _tax = 0;
+    });
+    if (!mounted) return;
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${l10n.checkout} berhasil')),
+    );
   }
 }
 
@@ -155,7 +156,7 @@ class _ProductSearch extends ConsumerWidget {
           hintText: '${l10n.search} produk',
           prefixIcon: const Icon(AppIcons.search),
           filled: true,
-          fillColor: themeColor(context).colorScheme.surfaceContainerHighest,
+          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: BorderSide.none,
@@ -260,7 +261,7 @@ class _CartSummary extends StatelessWidget {
           Text(l10n.keranjang, style: theme.textTheme.titleLarge),
           const SizedBox(height: AppSpacing.md),
           if (cart.isEmpty)
-            Text('${l10n.keranjangKosong}',
+            Text(l10n.keranjangKosong,
                 style: theme.textTheme.bodyMedium)
           else
             Column(
@@ -270,7 +271,7 @@ class _CartSummary extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     title: Text(item.productName,
                         style: theme.textTheme.bodyMedium),
-                    subtitle: Text('${item.sku}',
+                    subtitle: Text(item.sku,
                         style: theme.textTheme.bodySmall),
                     trailing: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -283,12 +284,12 @@ class _CartSummary extends StatelessWidget {
                     ),
                   ),
                 const Divider(height: 1),
-                _RowLabel(l10n.subtotal, _idr(subtotal), theme),
-                _RowLabel('${l10n.diskon}', _idr(discount), theme,
+                _rowLabel(l10n.subtotal, _idr(subtotal), theme),
+                _rowLabel(l10n.diskon, _idr(discount), theme,
                     isNegative: true),
-                _RowLabel('${l10n.pajak}', _idr(tax), theme),
+                _rowLabel(l10n.pajak, _idr(tax), theme),
                 const Divider(height: 1),
-                _RowLabel(l10n.total, _idr(total), theme,
+                _rowLabel(l10n.total, _idr(total), theme,
                     isBold: true, isPrimary: true),
               ],
             ),
@@ -315,7 +316,7 @@ class _CartSummary extends StatelessWidget {
     );
   }
 
-  Widget _RowLabel(String label, String value, ThemeData theme,
+  Widget _rowLabel(String label, String value, ThemeData theme,
       {bool isBold = false, bool isPrimary = false, bool isNegative = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -347,8 +348,6 @@ class _CartSummary extends StatelessWidget {
   }
 }
 
-ThemeData themeColor(BuildContext context) => Theme.of(context);
-
 class _PaymentSection extends StatelessWidget {
   const _PaymentSection({
     required this.l10n,
@@ -370,7 +369,7 @@ class _PaymentSection extends StatelessWidget {
           Text(l10n.pembayaran, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.md),
           DropdownButtonFormField<String>(
-            value: paymentMethod,
+            initialValue: paymentMethod,
             decoration: InputDecoration(
               labelText: l10n.metodePembayaran,
               prefixIcon: const Icon(AppIcons.paymentRounded),

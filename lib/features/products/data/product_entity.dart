@@ -1,4 +1,5 @@
 /// Entitas bersama untuk fitur produk dan kategori.
+library;
 
 class ProductEntity {
   const ProductEntity({

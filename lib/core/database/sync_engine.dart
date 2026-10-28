@@ -327,7 +327,7 @@ class SyncEngine {
     final since = await _getMeta(_metaLastPull);
     final sinceTime = since == null
         ? DateTime.utc(2000)
-        : DateTime.parse(since).subtract(const Duration(seconds: 2));
+        : _safeParseDateTime(since)!.subtract(const Duration(seconds: 2));
     final changes = await _transport.pull(sinceTime);
     for (final entry in changes.entries) {
       for (final row in entry.value) {
@@ -394,4 +394,21 @@ class SyncEngine {
     stopPeriodic();
     await _statusController.close();
   }
+}
+
+/// Parse tanggal aman dari berbagai sumber (ISO8601, integer ms, integer detik).
+///
+/// Konsisten dengan format Supabase (ISO8601 UTC) dan SQLite Drift
+/// (integer millisecondsSinceEpoch UTC). Jika integer < 1e12 dianggap detik
+/// Unix epoch dan dikalikan 1000 → milidetik.
+DateTime? _safeParseDateTime(Object? v) {
+  if (v == null) return null;
+  if (v is DateTime) return v.toUtc();
+  final s = v.toString();
+  final asNum = int.tryParse(s);
+  if (asNum != null) {
+    final ms = asNum < 1000000000000 ? asNum * 1000 : asNum;
+    return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+  }
+  return DateTime.tryParse(s)?.toUtc();
 }

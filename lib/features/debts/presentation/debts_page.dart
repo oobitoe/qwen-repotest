@@ -49,7 +49,7 @@ class _DebtsPageState extends ConsumerState<DebtsPage>
         title: Text(l10n.debts),
         bottom: TabBar(
           controller: _tabController,
-          tabs: [
+          tabs: const [
             Tab(text: 'Hutang (Supplier)'),
             Tab(text: 'Piutang (Pelanggan)'),
           ],
@@ -250,7 +250,7 @@ class _DebtsTab extends ConsumerWidget {
   void _deleteDebt(BuildContext context, WidgetRef ref, String id) {
     ref.read(debtRepositoryProvider).deleteDebt(id);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Hutang/Piutang dihapus')),
+      const SnackBar(content: Text('Hutang/Piutang dihapus')),
     );
   }
 
@@ -331,7 +331,7 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final debt = DebtEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       type: _type,
       supplierId: _type == 'payable' ? _supplierId : null,
       customerId: _type == 'receivable' ? _customerId : null,
@@ -373,8 +373,8 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
             ),
             const SizedBox(height: AppSpacing.lg),
             DropdownButtonFormField<String>(
-              value: _type,
-              decoration: InputDecoration(labelText: 'Tipe'),
+              initialValue: _type,
+              decoration: const InputDecoration(labelText: 'Tipe'),
               items: const [
                 DropdownMenuItem(value: 'payable', child: Text('Hutang (Supplier)')),
                 DropdownMenuItem(value: 'receivable', child: Text('Piutang (Pelanggan)')),
@@ -385,8 +385,8 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
             if (_type == 'payable')
               suppliers.when(
                 data: (items) => DropdownButtonFormField<String>(
-                  value: _supplierId,
-                  decoration: InputDecoration(labelText: 'Supplier'),
+                  initialValue: _supplierId,
+                  decoration: const InputDecoration(labelText: 'Supplier'),
                   items: [
                     for (final s in items.where((s) => s.isActive))
                       DropdownMenuItem(value: s.id, child: Text(s.name)),
@@ -400,8 +400,8 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
             else
               customers.when(
                 data: (items) => DropdownButtonFormField<String>(
-                  value: _customerId,
-                  decoration: InputDecoration(labelText: 'Pelanggan'),
+                  initialValue: _customerId,
+                  decoration: const InputDecoration(labelText: 'Pelanggan'),
                   items: [
                     for (final c in items.where((c) => c.isActive))
                       DropdownMenuItem(value: c.id, child: Text(c.name)),
@@ -426,9 +426,9 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
             const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _dueDateCtrl,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Jatuh Tempo (YYYY-MM-DD)',
-                prefixIcon: const Icon(AppIcons.calendarMonthRounded),
+                prefixIcon: Icon(AppIcons.calendarMonthRounded),
               ),
               readOnly: true,
               onTap: () async {
@@ -535,10 +535,10 @@ class _DebtDetailSheet extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: CircleAvatar(
                       backgroundColor: AppTheme.success.withValues(alpha: 0.15),
-                      child: Icon(AppIcons.paymentsRounded, color: AppTheme.success, size: 16),
+                      child: const Icon(AppIcons.paymentsRounded, color: AppTheme.success, size: 16),
                     ),
                     title: Text(p.formattedAmount, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${DateFormat('d MMM yyyy HH:mm').format(p.paidAt)}'),
+                    subtitle: Text(DateFormat('d MMM yyyy HH:mm').format(p.paidAt)),
                   ),
               ],
             ),
@@ -548,7 +548,7 @@ class _DebtDetailSheet extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: debt.status == 'paid' ? null : onAddPayment,
               icon: const Icon(AppIcons.add),
-              label: Text('Tambah Pembayaran'),
+              label: const Text('Tambah Pembayaran'),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),

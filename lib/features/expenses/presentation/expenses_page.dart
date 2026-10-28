@@ -57,7 +57,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
                 .read(expenseRepositoryProvider)
                 .saveExpenseCategory(
                   ExpenseCategoryEntity(
-                    id: Uuid().v4(),
+                    id: const Uuid().v4(),
                     name: 'Test',
                     isActive: true,
                     createdAt: DateTime.now(),
@@ -153,7 +153,7 @@ class _ExpensesTab extends ConsumerWidget {
                 leading: CircleAvatar(
                   backgroundColor:
                       AppTheme.error.withValues(alpha: 0.15),
-                  child: Icon(AppIcons.receiptLongRounded,
+                  child: const Icon(AppIcons.receiptLongRounded,
                       color: AppTheme.error, size: 20),
                 ),
                 title: Text(e.description,
@@ -202,7 +202,7 @@ class _ExpensesTab extends ConsumerWidget {
   void _deleteExpense(BuildContext context, WidgetRef ref, String id) {
     ref.read(expenseRepositoryProvider).deleteExpense(id);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Pengeluaran dihapus')),
+      const SnackBar(content: Text('Pengeluaran dihapus')),
     );
   }
 
@@ -334,7 +334,7 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final expense = ExpenseEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       categoryId: _categoryId,
       description: _descCtrl.text.trim(),
       amount: double.tryParse(_amountCtrl.text) ?? 0,
@@ -390,7 +390,7 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
             const SizedBox(height: AppSpacing.md),
             categories.when(
               data: (items) => DropdownButtonFormField<String>(
-                value: _categoryId,
+                initialValue: _categoryId,
                 decoration: InputDecoration(labelText: l10n.categories),
                 items: [
                   const DropdownMenuItem(
@@ -407,7 +407,7 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
             ),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<String>(
-              value: _paymentMethod,
+              initialValue: _paymentMethod,
               decoration: InputDecoration(
                 labelText: l10n.metodePembayaran,
                 prefixIcon: const Icon(AppIcons.paymentRounded),
@@ -480,7 +480,7 @@ class _ExpenseCategoryFormState extends ConsumerState<_ExpenseCategoryForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final category = ExpenseCategoryEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       name: _nameCtrl.text.trim(),
       isActive: true,
       createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),

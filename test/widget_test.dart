@@ -3,14 +3,14 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:PrimePOS/core/constants/app_constants.dart';
-import 'package:PrimePOS/core/database/app_database.dart';
-import 'package:PrimePOS/core/database/sync_dao.dart';
-import 'package:PrimePOS/core/database/sync_engine.dart';
-import 'package:PrimePOS/core/database/sync_registry.dart';
-import 'package:PrimePOS/features/dashboard/application/dashboard_repository.dart';
-import 'package:PrimePOS/main.dart';
-import 'package:PrimePOS/shared/providers/core_providers.dart';
+import 'package:prime_pos/core/constants/app_constants.dart';
+import 'package:prime_pos/core/database/app_database.dart';
+import 'package:prime_pos/core/database/sync_dao.dart';
+import 'package:prime_pos/core/database/sync_engine.dart';
+import 'package:prime_pos/core/database/sync_registry.dart';
+import 'package:prime_pos/features/dashboard/application/dashboard_repository.dart';
+import 'package:prime_pos/main.dart';
+import 'package:prime_pos/shared/providers/core_providers.dart';
 
 void main() {
   setUpAll(registerAllSyncMetas);

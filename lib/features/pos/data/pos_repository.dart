@@ -52,7 +52,7 @@ class PosRepository {
     required Map<String, double> paymentBreakdown,
   }) async {
     final total = subtotal - discount + tax;
-    final saleId = Uuid().v4();
+    final saleId = const Uuid().v4();
 
     await _dao.enqueue(
       entityType: 'sale',

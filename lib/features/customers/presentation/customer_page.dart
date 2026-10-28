@@ -175,7 +175,7 @@ class _CustomerFormState extends ConsumerState<_CustomerForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(customerRepositoryProvider);
     await repo.saveCustomer(CustomerEntity(
-      id: Uuid().v4(),
+      id: const Uuid().v4(),
       code: _codeCtrl.text.trim().isEmpty ? null : _codeCtrl.text.trim(),
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),

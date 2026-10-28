@@ -42,7 +42,7 @@ class ExpenseRepository {
     if (onlyActive) {
       q.where((t) => t.deletedAt.isNull());
     }
-    q.orderBy([(_) => OrderingTerm.desc(_.createdAt)]);
+    q.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
     return q.watch().map((rows) {
       return [
         for (final r in rows)

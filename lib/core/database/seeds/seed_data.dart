@@ -58,7 +58,7 @@ Future<void> seedDatabase(AppDatabase db) async {
           name: entry.key,
           phone: Value('08${_uuid.v4().substring(0, 8)}'),
           email: Value('${entry.key.toLowerCase().replaceAll(' ', '')}@email.com'),
-          address: Value('Jakarta'),
+          address: const Value('Jakarta'),
         ));
   }
 
@@ -268,7 +268,7 @@ Future<void> seedDatabase(AppDatabase db) async {
               type: 'sale',
               quantity: -qty,
               balanceAfter: (product['stock'] as double) - qty,
-              referenceType: Value('sale'),
+              referenceType: const Value('sale'),
               referenceId: Value(saleId),
               createdAt: Value(saleDate),
             ));
@@ -279,7 +279,7 @@ Future<void> seedDatabase(AppDatabase db) async {
             id: _uuid.v4(),
             type: 'sale',
             amount: total,
-            referenceType: Value('sale'),
+            referenceType: const Value('sale'),
             referenceId: Value(saleId),
             createdAt: Value(saleDate),
           ));
@@ -334,8 +334,8 @@ Future<void> seedDatabase(AppDatabase db) async {
         id: debtId,
         supplierId: Value(supplierIds.values.first),
         type: 'payable',
-        amount: Value(5000000.0),
-        paidAmount: Value(2000000.0),
+        amount: const Value(5000000.0),
+        paidAmount: const Value(2000000.0),
         status: const Value('partially_paid'),
         dueDate: Value(now.add(const Duration(days: 30))),
       ));

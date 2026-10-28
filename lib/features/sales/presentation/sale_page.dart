@@ -219,7 +219,7 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
               const SizedBox(height: AppSpacing.md),
               ref.watch(customersProvider).when(
                     data: (items) => DropdownButtonFormField<String>(
-                      value: _customerId,
+                      initialValue: _customerId,
                       decoration: const InputDecoration(labelText: 'Pelanggan'),
                       items: [
                         for (final c in items)
@@ -239,7 +239,7 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
               ),
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
-                value: _paymentMethod,
+                initialValue: _paymentMethod,
                 decoration: const InputDecoration(labelText: 'Metode Pembayaran'),
                 items: const [
                   DropdownMenuItem(value: 'cash', child: Text('Tunai')),

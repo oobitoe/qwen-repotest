@@ -44,13 +44,13 @@ class SettingsPage extends ConsumerWidget {
           // Language Section
           _SectionHeader(title: l10n.language, subtitle: l10n.languageSubtitle),
           const SizedBox(height: AppSpacing.md),
-          _LanguageSelector(),
+          const _LanguageSelector(),
           const SizedBox(height: AppSpacing.xl),
 
           // Sync Section
           _SectionHeader(title: l10n.sync, subtitle: l10n.syncSubtitle),
           const SizedBox(height: AppSpacing.md),
-          _SyncSettings(),
+          const _SyncSettings(),
           const SizedBox(height: AppSpacing.xl),
 
           // About Section
@@ -93,7 +93,7 @@ class _ThemePresetGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final presets = AppThemePresets.presets;
+    const presets = AppThemePresets.presets;
 
     return Wrap(
       spacing: AppSpacing.md,
@@ -404,7 +404,7 @@ class _SyncSettings extends ConsumerWidget {
           tileColor: theme.colorScheme.surfaceContainerLow,
           leading: CircleAvatar(
             backgroundColor: AppTheme.info.withValues(alpha: 0.15),
-            child: Icon(AppIcons.queueRounded, color: AppTheme.info),
+            child: const Icon(AppIcons.queueRounded, color: AppTheme.info),
           ),
           title: Text(l10n.syncQueue, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
           subtitle: Text(l10n.syncQueueDesc, style: theme.textTheme.bodySmall),

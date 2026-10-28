@@ -176,7 +176,7 @@ class _SupplierFormState extends ConsumerState<_SupplierForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(supplierRepositoryProvider);
     await repo.saveSupplier(SupplierEntity(
-      id: Uuid().v4(),
+      id: const Uuid().v4(),
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),

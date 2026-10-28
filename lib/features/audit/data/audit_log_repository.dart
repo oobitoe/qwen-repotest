@@ -88,8 +88,22 @@ class AuditLogEntity {
       newValue: row.newValue,
       ipAddress: row.ipAddress,
       deviceInfo: row.deviceInfo,
-      createdAt: row.createdAt,
+      // Defensive: Drift DateTimeColumn bisa menghasilkan integer detik
+      // (Unix epoch) daripada milidetik pada DB lama. Normalisasi ke UTC.
+      createdAt: _normalizeDateTime(row.createdAt),
     );
+  }
+
+  /// Normalisasi DateTime dari DB agar aman dari format integer detik vs ms.
+  /// Jika sebelum tahun 2000, dianggap detik → kalikan 1000 → milidetik.
+  static DateTime _normalizeDateTime(DateTime dt) {
+    if (dt.isBefore(DateTime(2000))) {
+      return DateTime.fromMillisecondsSinceEpoch(
+        dt.millisecondsSinceEpoch * 1000,
+        isUtc: true,
+      );
+    }
+    return dt.toUtc();
   }
 
   AuditLogEntity copyWith({

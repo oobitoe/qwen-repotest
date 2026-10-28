@@ -13,8 +13,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.initialize();
 
+  // Initialize database singleton BEFORE runApp to avoid multiple instances
+  final db = initializeDatabase();
+
   // Register sync metas once at app startup
-  registerAllSyncMetas();
+  registerAllSyncMetas(db);
 
   runApp(const ProviderScope(child: PosApp()));
 }

@@ -182,7 +182,7 @@ class _SearchAndFilterBar extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           categories.when(
             data: (cats) => DropdownButtonFormField<String>(
-              value: selectedCategoryId,
+              initialValue: selectedCategoryId,
               decoration: InputDecoration(
                 labelText: l10n.category,
                 prefixIcon: const Icon(AppIcons.categoryRounded),
@@ -310,7 +310,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(productRepositoryProvider);
     await repo.saveProduct(ProductEntity(
-      id: Uuid().v4(),
+      id: const Uuid().v4(),
       sku: _skuCtrl.text.trim(),
       barcode: _barcodeCtrl.text.trim().isEmpty
           ? null
@@ -370,7 +370,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
             const SizedBox(height: AppSpacing.md),
             categories.when(
               data: (items) => DropdownButtonFormField<String>(
-                value: _categoryId,
+                initialValue: _categoryId,
                 decoration: const InputDecoration(labelText: 'Kategori'),
                 items: [
                   for (final c in items)

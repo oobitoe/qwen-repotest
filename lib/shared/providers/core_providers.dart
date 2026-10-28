@@ -7,12 +7,21 @@ import '../../core/database/sync_dao.dart';
 import '../../core/database/sync_engine.dart';
 import '../../core/network/supabase_config.dart';
 
+/// Global singleton database instance.
+/// Dibuat sekali saat aplikasi start untuk menghindari multiple instances warning Drift.
+late final AppDatabase _globalDatabase;
+
+/// Inisialisasi database global (dipanggil dari main.dart sebelum runApp).
+AppDatabase initializeDatabase() {
+  _globalDatabase = AppDatabase();
+  return _globalDatabase;
+}
+
 /// Dependency injection terpusat berbasis Riverpod.
+/// Menggunakan global singleton untuk menghindari multiple database instances.
 final databaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(db.close);
-  return db;
-});
+  return _globalDatabase;
+}, name: 'databaseProvider');
 
 /// Akses helper sinkronisasi generik (outbox + LWW).
 final syncDaoProvider = Provider<SyncableDao>(

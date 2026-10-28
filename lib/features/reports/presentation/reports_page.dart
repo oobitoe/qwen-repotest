@@ -134,13 +134,13 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
 
   void _exportCSV() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Export CSV - Coming soon')),
+      const SnackBar(content: Text('Export CSV - Coming soon')),
     );
   }
 
   void _exportPDF() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Export PDF - Coming soon')),
+      const SnackBar(content: Text('Export PDF - Coming soon')),
     );
   }
 }
@@ -315,7 +315,7 @@ class _SalesReportContent extends StatelessWidget {
                           if (i < 0 || i >= data.length) return const SizedBox.shrink();
                           return SideTitleWidget(
                             axisSide: meta.axisSide,
-                            child: Text(DateFormat('d/M').format(DateTime.parse(data[i].period + ' 00:00:00')), style: theme.textTheme.labelSmall),
+                            child: Text(DateFormat('d/M').format(DateTime.parse('${data[i].period} 00:00:00')), style: theme.textTheme.labelSmall),
                           );
                         },
                       ),

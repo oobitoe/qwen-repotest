@@ -183,12 +183,12 @@ class _SidebarShell extends ConsumerWidget {
                               : Padding(
                                   padding: const EdgeInsets.only(
                                       left: AppSpacing.md),
-                              child: Text(
-                                l10n.appDisplayName,
-                                overflow: TextOverflow.clip,
-                                style: theme.textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
+                                  child: Text(
+                                    l10n.appDisplayName,
+                                    overflow: TextOverflow.clip,
+                                    style: theme.textTheme.titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                         ),
                       ),
@@ -196,35 +196,26 @@ class _SidebarShell extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                // Navigasi menggunakan ListView untuk mendukung scroll
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm),
-                    child: NavigationRail(
-                        extended: !collapsed,
-                        selectedIndex: currentIndex,
-                        onDestinationSelected: (i) =>
-                            context.go(appNavItems[i].path),
-                        labelType: collapsed
-                            ? NavigationRailLabelType.all
-                            : null,
-                        indicatorColor:
-                            theme.colorScheme.primary.withValues(alpha: 0.15),
-                        destinations: [
-                          for (final d in appNavItems)
-                            NavigationRailDestination(
-                              icon: _AnimIcon(
-                                icon: collapsed ? d.selectedIcon : d.icon,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              selectedIcon: _AnimIcon(
-                                icon: d.selectedIcon,
-                                color: theme.colorScheme.primary,
-                              ),
-                              label: Text(_navLabel(l10n, d.label)),
-                            ),
-                        ],
-                      ),
+                    child: ListView.separated(
+                      itemCount: appNavItems.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 4),
+                      itemBuilder: (context, index) {
+                        final item = appNavItems[index];
+                        final isSelected = index == currentIndex;
+                        return _NavItemTile(
+                          item: item,
+                          isSelected: isSelected,
+                          collapsed: collapsed,
+                          l10n: l10n,
+                          onTap: () => context.go(item.path),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const Divider(height: 1),
@@ -267,18 +258,77 @@ class _SidebarShell extends ConsumerWidget {
   }
 }
 
-class _AnimIcon extends StatelessWidget {
-  const _AnimIcon({required this.icon, required this.color});
-  final IconData icon;
-  final Color color;
+class _NavItemTile extends StatelessWidget {
+  const _NavItemTile({
+    required this.item,
+    required this.isSelected,
+    required this.collapsed,
+    required this.l10n,
+    required this.onTap,
+  });
+
+  final NavItem item;
+  final bool isSelected;
+  final bool collapsed;
+  final AppLocalizations l10n;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.6, end: 1),
-        duration: AppDurations.normal,
-        builder: (_, v, ch) => Transform.scale(scale: v, child: ch),
-        child: Icon(icon, color: color),
-      );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = isSelected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: AnimatedContainer(
+          duration: AppDurations.fast,
+          curve: Curves.easeOut,
+          padding: EdgeInsets.symmetric(
+            horizontal: collapsed ? AppSpacing.sm : AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: collapsed
+              ? Icon(
+                  isSelected ? item.selectedIcon : item.icon,
+                  color: color,
+                  size: 24,
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      isSelected ? item.selectedIcon : item.icon,
+                      color: color,
+                      size: 24,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Text(
+                        _navLabel(l10n, item.label),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: color,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Halaman placeholder untuk rute yang belum dibangun (Fase 3+).

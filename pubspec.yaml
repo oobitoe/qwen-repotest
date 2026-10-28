@@ -1,4 +1,4 @@
-name: PrimePOS
+name: prime_pos
 description: "Sistem Point of Sale (POS) offline-first berbasis Flutter + SQLite (Drift) + Supabase."
 publish_to: 'none'
 
@@ -42,13 +42,13 @@ dependencies:
   flutter_animate: ^4.5.0
   async: ^2.11.0
 
+  path: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
   drift_dev: ^2.20.3
   build_runner: ^2.4.11
-
 flutter:
   uses-material-design: true
   generate: true

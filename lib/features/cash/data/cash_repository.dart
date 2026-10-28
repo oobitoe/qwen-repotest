@@ -13,6 +13,7 @@ class CashRepository {
 
   final AppDatabase _db;
   final SyncableDao _dao;
+  // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
   /// Stream semua register kasir aktif.

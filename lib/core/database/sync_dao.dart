@@ -275,14 +275,16 @@ class SyncableDao {
 
   /// Drift menyimpan DateTime sebagai integer ms-since-epoch (UTC) pada
   /// SQLite; bacaan mentah customSelect mengembalikan bentuk tersebut.
+  /// Aman terhadap integer detik (Unix epoch) dan ISO8601 string.
   DateTime? _parseLocalDate(Object? raw) {
     if (raw == null) return null;
-    if (raw is int) return DateTime.fromMillisecondsSinceEpoch(raw, isUtc: true);
     if (raw is DateTime) return raw.toUtc();
     final s = raw.toString();
     final asNum = int.tryParse(s);
     if (asNum != null) {
-      return DateTime.fromMillisecondsSinceEpoch(asNum, isUtc: true);
+      // Jika < 1e12 berarti dalam detik, kalikan 1000 → milidetik
+      final ms = asNum < 1000000000000 ? asNum * 1000 : asNum;
+      return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
     }
     return DateTime.tryParse(s)?.toUtc();
   }

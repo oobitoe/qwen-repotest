@@ -126,7 +126,18 @@ class TableMeta {
     if (raw == null) return null;
     if (type == DriftSqlType.dateTime) {
       if (raw is DateTime) return raw.toUtc().millisecondsSinceEpoch;
-      return DateTime.parse(raw.toString()).toUtc().millisecondsSinceEpoch;
+      // Handle: ISO8601 string, integer milliseconds, integer seconds (Unix epoch)
+      final s = raw.toString();
+      final asNum = int.tryParse(s);
+      if (asNum != null) {
+        // Jika < 1e12 berarti dalam detik (Unix epoch), kalikan 1000 → milidetik
+        final ms = asNum < 1000000000000 ? asNum * 1000 : asNum;
+        return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true)
+            .millisecondsSinceEpoch;
+      }
+      // Fallback ISO8601 parse dengan tryParse, tidak boleh throw
+      return DateTime.tryParse(s)?.toUtc().millisecondsSinceEpoch ??
+          DateTime.now().toUtc().millisecondsSinceEpoch;
     }
     if (type == DriftSqlType.int) {
       return raw is num ? raw.toInt() : int.tryParse(raw.toString()) ?? 0;

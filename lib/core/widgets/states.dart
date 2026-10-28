@@ -413,7 +413,7 @@ class ValidationErrorState extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(AppIcons.errorOutlineRounded, color: AppTheme.error, size: 18),
+              const Icon(AppIcons.errorOutlineRounded, color: AppTheme.error, size: 18),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Validasi Gagal',
@@ -423,7 +423,7 @@ class ValidationErrorState extends StatelessWidget {
               if (onDismiss != null)
                 IconButton(
                   onPressed: onDismiss,
-                  icon: Icon(AppIcons.closeRounded, size: 18, color: AppTheme.error),
+                  icon: const Icon(AppIcons.closeRounded, size: 18, color: AppTheme.error),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),

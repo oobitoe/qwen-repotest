@@ -13,6 +13,7 @@ class DebtRepository {
 
   final AppDatabase _db;
   final SyncableDao _dao;
+  // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
   /// Stream semua hutang/piutang aktif.

@@ -137,7 +137,7 @@ class _IncomesTab extends ConsumerWidget {
                 leading: CircleAvatar(
                   backgroundColor:
                       AppTheme.success.withValues(alpha: 0.15),
-                  child: Icon(AppIcons.savingsRounded,
+                  child: const Icon(AppIcons.savingsRounded,
                       color: AppTheme.success, size: 20),
                 ),
                 title: Text(e.description,
@@ -185,7 +185,7 @@ class _IncomesTab extends ConsumerWidget {
   void _deleteIncome(BuildContext context, WidgetRef ref, String id) {
     ref.read(incomeRepositoryProvider).deleteIncome(id);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Pemasukan dihapus')),
+      const SnackBar(content: Text('Pemasukan dihapus')),
     );
   }
 }
@@ -225,7 +225,7 @@ class _IncomeCategoriesTab extends ConsumerWidget {
               leading: CircleAvatar(
                 backgroundColor:
                     AppTheme.success.withValues(alpha: 0.15),
-                child: Icon(AppIcons.categoryRounded,
+                child: const Icon(AppIcons.categoryRounded,
                     color: AppTheme.success, size: 20),
               ),
               title: Text(c.name,
@@ -311,7 +311,7 @@ class _IncomeFormState extends ConsumerState<_IncomeForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final income = IncomeEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       categoryId: _categoryId,
       description: _descCtrl.text.trim(),
       amount: double.tryParse(_amountCtrl.text) ?? 0,
@@ -367,7 +367,7 @@ class _IncomeFormState extends ConsumerState<_IncomeForm> {
             const SizedBox(height: AppSpacing.md),
             categories.when(
               data: (items) => DropdownButtonFormField<String>(
-                value: _categoryId,
+                initialValue: _categoryId,
                 decoration: InputDecoration(labelText: l10n.categories),
                 items: [
                   const DropdownMenuItem(
@@ -384,7 +384,7 @@ class _IncomeFormState extends ConsumerState<_IncomeForm> {
             ),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<String>(
-              value: _paymentMethod,
+              initialValue: _paymentMethod,
               decoration: InputDecoration(
                 labelText: l10n.metodePembayaran,
                 prefixIcon: const Icon(AppIcons.paymentRounded),
@@ -457,7 +457,7 @@ class _IncomeCategoryFormState extends ConsumerState<_IncomeCategoryForm> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final category = IncomeCategoryEntity(
-      id: isEditing ? widget.existing!.id : Uuid().v4(),
+      id: isEditing ? widget.existing!.id : const Uuid().v4(),
       name: _nameCtrl.text.trim(),
       isActive: true,
       createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),

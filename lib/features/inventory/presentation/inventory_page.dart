@@ -162,11 +162,12 @@ class _MovementsTab extends ConsumerWidget {
                   color: isIn ? AppTheme.success : AppTheme.error,
                 ),
               ),
-              title: Text('${m.type}  ·  ${m.productId}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600)),
+              title: Text(
+                '${m.type}  ·  ${m.productName ?? m.productId}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600)),
               subtitle: Text(
-                '${m.quantity.toInt()} → saldo ${m.balanceAfter.toInt()}  ·  ${m.note ?? '-'}',
+                '${m.productName ?? '-'}  ·  ${m.quantity.toInt()} → saldo ${m.balanceAfter.toInt()}  ·  ${m.note ?? '-'}',
                 style: theme.textTheme.bodySmall,
               ),
               trailing: Text(

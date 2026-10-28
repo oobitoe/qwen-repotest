@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:async/async.dart'; // for StreamZip
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,18 +22,25 @@ class InventoryRepository {
     String? productId,
     int limit = 50,
   }) {
-    final q = _db.select(_db.stockMovements);
+    final movements = _db.select(_db.stockMovements);
     if (productId != null) {
-      q.where((t) => t.productId.equals(productId));
+      movements.where((t) => t.productId.equals(productId));
     }
-    q.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
-    q.limit(limit);
-    return q.watch().map((rows) {
+    movements.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
+    movements.limit(limit);
+
+    final products = _db.select(_db.products);
+
+    return StreamZip([movements.watch(), products.watch()]).map((results) {
+      final movementRows = results[0] as List<StockMovement>;
+      final productRows = results[1] as List<Product>;
+      final productMap = {for (final p in productRows) p.id: p.name};
       return [
-        for (final r in rows)
+        for (final r in movementRows)
           StockMovementEntity(
             id: r.id,
             productId: r.productId,
+            productName: productMap[r.productId],
             type: r.type,
             quantity: r.quantity,
             balanceAfter: r.balanceAfter,

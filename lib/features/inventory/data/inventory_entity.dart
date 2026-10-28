@@ -3,6 +3,7 @@ class StockMovementEntity {
   const StockMovementEntity({
     required this.id,
     required this.productId,
+    this.productName,
     required this.type,
     required this.quantity,
     required this.balanceAfter,
@@ -15,6 +16,7 @@ class StockMovementEntity {
 
   final String id;
   final String productId;
+  final String? productName;
   final String type;
   final double quantity;
   final double balanceAfter;

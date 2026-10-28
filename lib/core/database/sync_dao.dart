@@ -103,13 +103,18 @@ class SyncableDao {
   }) async {
     final meta = _require(entityType);
     final now = DateTime.now().toUtc();
+    final nowMs = now.millisecondsSinceEpoch;
     final version = await currentVersion(entityType, id) + 1;
     final row = <String, dynamic>{
       ...values,
       'id': id,
-      'updated_at': now.toIso8601String(),
+      'updated_at': nowMs,
       if (meta.hasColumn('created_at') && !values.containsKey('created_at'))
-        'created_at': now.toIso8601String(),
+        'created_at': nowMs,
+      // deleted_at nullable HARUS null (bukan 0/epoch) agar baris baru
+      // tetap lolos filter deletedAt.isNull() di watchSuppliers dst.
+      if (meta.hasColumn('deleted_at') && !values.containsKey('deleted_at'))
+        'deleted_at': null,
       'version': version,
       'sync_status':
           markSynced ? SyncStatuses.synced : SyncStatuses.pending,

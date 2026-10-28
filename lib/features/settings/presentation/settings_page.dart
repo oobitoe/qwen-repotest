@@ -160,8 +160,10 @@ class _ThemePresetCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Color swatches
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.center,
               children: [
                 _ColorDot(color: preset.seedColor, label: 'Primary', isSelected: isSelected),
                 _ColorDot(color: preset.secondary, label: 'Secondary', isSelected: isSelected),
@@ -301,8 +303,7 @@ class _LanguageSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    // TODO: Implement language provider
-    const currentLocale = 'id';
+    final currentLocale = ref.watch(localeProvider).languageCode;
 
     return Column(
       children: [
@@ -311,7 +312,7 @@ class _LanguageSelector extends ConsumerWidget {
           name: l10n.indonesian,
           isSelected: currentLocale == 'id',
           onTap: () {
-            // TODO: Change locale
+            ref.read(localeProvider.notifier).state = const Locale('id', 'ID');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(l10n.languageChanged(l10n.indonesian))),
             );
@@ -322,7 +323,7 @@ class _LanguageSelector extends ConsumerWidget {
           name: l10n.english,
           isSelected: currentLocale == 'en',
           onTap: () {
-            // TODO: Change locale
+            ref.read(localeProvider.notifier).state = const Locale('en', 'US');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(l10n.languageChanged(l10n.english))),
             );

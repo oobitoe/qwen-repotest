@@ -34,6 +34,7 @@ class PosApp extends ConsumerWidget {
     final lightTheme = ref.watch(lightThemeProvider);
     final darkTheme = ref.watch(darkThemeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: AppLocalizations.of(context)?.appDisplayName ?? 'POSku',
@@ -41,8 +42,8 @@ class PosApp extends ConsumerWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeModeOverride ?? themeMode,
+      locale: locale,
       routerConfig: router,
-      locale: const Locale('id', 'ID'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,

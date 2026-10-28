@@ -62,13 +62,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         title: Row(
           children: [
             Text(isDesktop ? l10n.dashboard : l10n.appDisplayName),
-            const SizedBox(width: AppSpacing.md),
-            if (isDesktop) _GreetingChip(role: role?.name ?? 'owner', l10n: l10n),
+            if (isDesktop) ...[
+              const SizedBox(width: AppSpacing.md),
+              _GreetingChip(role: role?.name ?? 'owner', l10n: l10n),
+            ],
           ],
         ),
         actions: [
-          _SyncBadge(status: sync, l10n: l10n),
-          const SizedBox(width: AppSpacing.sm),
+          if (!context.isMobile) ...[
+            _SyncBadge(status: sync, l10n: l10n),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           IconButton(
             tooltip: l10n.syncNow,
             onPressed: () => runManualSync(ref),

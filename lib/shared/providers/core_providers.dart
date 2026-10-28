@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -32,6 +33,9 @@ const uuid = Uuid();
 
 /// Penyedia UUID agar mudah di-mock pada pengujian.
 final uuidProvider = Provider<Uuid>((ref) => uuid);
+
+/// Locale saat ini (id / en). Diubah dari halaman Settings.
+final localeProvider = StateProvider<Locale>((ref) => const Locale('id', 'ID'));
 
 /// True bila Supabase tersedia (kredensial terisi & SDK aktif).
 final supabaseAvailableProvider = Provider<bool>(

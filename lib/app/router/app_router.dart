@@ -67,8 +67,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authProvider);
       final signedIn = auth is AuthSignedIn;
       final goingTo = state.matchedLocation;
-      // Guard route: belum login -> paksa ke halaman login, dan sebaliknya.
-      if (!signedIn && goingTo != AppRoutes.login) return AppRoutes.login;
+      // Guard route: belum login -> paksa ke halaman login (kecuali /register),
+      // dan sebaliknya.
+      if (!signedIn && goingTo != AppRoutes.login && goingTo != AppRoutes.register) {
+        return AppRoutes.login;
+      }
       if (signedIn && goingTo == AppRoutes.login) return AppRoutes.dashboard;
       return null;
     },

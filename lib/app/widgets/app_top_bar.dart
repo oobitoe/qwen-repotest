@@ -29,38 +29,32 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
     final role = ref.watch(currentRoleProvider);
     final isMobile = MediaQuery.sizeOf(context).width < AppBreakpoints.tablet;
 
-    return AppBar(
-      leading: isMobile && onMenuTap != null
-          ? IconButton(
-              tooltip: 'Menu',
-              onPressed: onMenuTap,
-              icon: const Icon(menu),
-            )
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: double.infinity),
+      child: AppBar(
+        automaticallyImplyLeading: false,
+        leading: isMobile && onMenuTap != null
+            ? IconButton(
+                tooltip: 'Menu',
+                onPressed: onMenuTap,
+                icon: const Icon(menu, size: 18),
+              )
           : null,
-      title: Row(
-        children: [
-          Expanded(child: Text(title)),
-          if (!isMobile) ...[
-            const SizedBox(width: AppSpacing.md),
-            _GreetingChip(role: role?.name ?? 'owner', l10n: l10n),
-          ],
-        ],
+        leadingWidth: (isMobile && onMenuTap != null) ? 56 : 0,
+        titleSpacing: 0.0,
+        title: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 150),
+          child: Text(
+            title,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 16,
+            ),
+          ),
+        ),
+        actions: const [],
       ),
-      actions: [
-        if (!isMobile) _SyncBadge(status: sync, l10n: l10n),
-        const SizedBox(width: AppSpacing.sm),
-        IconButton(
-          tooltip: l10n.syncNow,
-          onPressed: () => ref.read(syncEngineProvider).syncNow(),
-          icon: const Icon(AppIcons.sync),
-        ),
-        IconButton(
-          tooltip: l10n.logout,
-          onPressed: () => ref.read(authProvider.notifier).signOut(),
-          icon: const Icon(AppIcons.logout),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/login_page.dart';
+import '../../features/auth/presentation/register_page.dart';
 import '../../features/categories/presentation/category_page.dart';
 import '../../features/customers/presentation/customer_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
@@ -26,6 +27,7 @@ import '../responsive/responsive_shell.dart';
 class AppRoutes {
   const AppRoutes._();
   static const login = '/login';
+  static const register = '/register';
   static const dashboard = '/dashboard';
   static const products = '/products';
   static const categories = '/categories';
@@ -74,6 +76,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        builder: (context, state) => const RegisterPage(),
       ),
       ShellRoute(
         builder: (context, state, child) => ResponsiveShell(child: child),

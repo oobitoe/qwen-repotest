@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../core/network/supabase_config.dart';
@@ -153,6 +154,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Text(l10n.login),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      OutlinedButton(
+                        onPressed: _busy || offlineOnly
+                            ? null
+                            : () => Navigator.of(context)
+                                .pushNamed(AppRoutes.register),
+                        child: Text(l10n.registerAccount),
                       ),
                     ],
                   ),

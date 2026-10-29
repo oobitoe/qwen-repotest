@@ -235,6 +235,26 @@ class AppLocalizationsId extends AppLocalizations {
       'Masuk dengan akun toko Anda atau gunakan mode offline.';
 
   @override
+  String get registerAccount => 'Daftar Akun';
+
+  @override
+  String get registerSubtitle => 'Buat akun baru untuk toko Anda.';
+
+  @override
+  String get fullName => 'Nama Lengkap';
+
+  @override
+  String get role => 'Peran';
+
+  @override
+  String get backToLogin => 'Kembali ke masuk';
+
+  @override
+  String registrationFailed(Object error) {
+    return 'Gagal mendaftar: $error';
+  }
+
+  @override
   String get loginSubtitle => 'Masuk dengan akun toko Anda.';
 
   @override

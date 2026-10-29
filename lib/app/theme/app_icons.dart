@@ -68,6 +68,8 @@ class AppIcons {
   static const IconData downloadRounded = Icons.download_rounded;
   static const IconData pictureAsPdfRounded = Icons.picture_as_pdf_rounded;
   static const IconData login = Icons.login_rounded;
+  static const IconData personAddRounded = Icons.person_add_rounded;
+  static const IconData personRounded = Icons.person_rounded;
   static const IconData moneyOffRounded = Icons.money_off_rounded;
   static const IconData attachMoneyRounded = Icons.attach_money_rounded;
   static const IconData filterListRounded = Icons.filter_list_rounded;

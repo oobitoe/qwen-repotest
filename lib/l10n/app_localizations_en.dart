@@ -235,6 +235,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in with your store account or use offline mode.';
 
   @override
+  String get registerAccount => 'Register Account';
+
+  @override
+  String get registerSubtitle => 'Create a new account for your store.';
+
+  @override
+  String get fullName => 'Full Name';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get backToLogin => 'Back to login';
+
+  @override
+  String registrationFailed(Object error) {
+    return 'Registration failed: $error';
+  }
+
+  @override
   String get loginSubtitle => 'Sign in with your store account.';
 
   @override

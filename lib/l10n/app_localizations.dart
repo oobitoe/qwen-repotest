@@ -530,6 +530,18 @@ abstract class AppLocalizations {
   /// **'Offline mode — data stored on this device.'**
   String get offlineMode;
 
+  /// No description provided for @onlineMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Online — data stored in cloud.'**
+  String get onlineMode;
+
+  /// No description provided for @offlineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your store account or use offline mode.'**
+  String get offlineSubtitle;
+
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:

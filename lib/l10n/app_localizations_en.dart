@@ -228,6 +228,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineMode => 'Offline mode — data stored on this device.';
 
   @override
+  String get onlineMode => 'Online — data stored in cloud.';
+
+  @override
+  String get offlineSubtitle =>
+      'Sign in with your store account or use offline mode.';
+
+  @override
   String get loginSubtitle => 'Sign in with your store account.';
 
   @override

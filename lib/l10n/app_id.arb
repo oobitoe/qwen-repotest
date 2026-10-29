@@ -73,6 +73,8 @@
   "minPasswordLength": "Minimal 6 karakter",
   "loginFailed": "Gagal masuk: {error}",
   "offlineMode": "Mode offline — data tersimpan di perangkat ini.",
+  "onlineMode": "Online — data tersimpan di awan.",
+  "offlineSubtitle": "Masuk dengan akun toko Anda atau gunakan mode offline.",
   "loginSubtitle": "Masuk dengan akun toko Anda.",
   "syncNow": "Sinkronkan sekarang",
   "newTransaction": "Transaksi Baru",

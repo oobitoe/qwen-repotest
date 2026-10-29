@@ -228,6 +228,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get offlineMode => 'Mode offline — data tersimpan di perangkat ini.';
 
   @override
+  String get onlineMode => 'Online — data tersimpan di awan.';
+
+  @override
+  String get offlineSubtitle =>
+      'Masuk dengan akun toko Anda atau gunakan mode offline.';
+
+  @override
   String get loginSubtitle => 'Masuk dengan akun toko Anda.';
 
   @override

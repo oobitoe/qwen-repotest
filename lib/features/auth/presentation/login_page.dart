@@ -77,9 +77,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: AppSpacing.xxs),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            offlineOnly
+                                ? AppIcons.cloudOffRounded
+                                : AppIcons.cloudDoneRounded,
+                            size: 18,
+                            color: offlineOnly
+                                ? scheme.onSurfaceVariant
+                                : scheme.primary,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            offlineOnly
+                                ? l10n.offlineMode
+                                : l10n.onlineMode,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: offlineOnly
+                                      ? scheme.onSurfaceVariant
+                                      : scheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
                       Text(
                         offlineOnly
-                            ? l10n.offlineMode
+                            ? l10n.offlineSubtitle
                             : l10n.loginSubtitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(

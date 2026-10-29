@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../core/network/supabase_config.dart';
+
 export 'package:supabase_flutter/supabase_flutter.dart' show User, Session;
 
 /// Role pengguna awal sesuai PRD.
@@ -85,7 +87,12 @@ final localOfflineUser = AuthSignedIn(localDeviceUser, UserRole.owner);
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
-    return localOfflineUser;
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      return localOfflineUser;
+    }
+    _listen(client);
+    return _fromSession(client.auth.currentSession);
   }
 
   StreamSubscription<sb.AuthState>? _sub;
@@ -107,15 +114,25 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> signIn(String email, String password) async {
-    // Mode lokal, tidak perlu login
+    final client = SupabaseConfig.client;
+    if (client == null) return; // mode lokal, tidak perlu login
+    await client.auth.signInWithPassword(email: email, password: password);
   }
 
   Future<void> signUp(String email, String password, String fullName) async {
-    // Mode lokal, tidak perlu sign up
+    final client = SupabaseConfig.client;
+    if (client == null) return;
+    await client.auth.signUp(
+      email: email,
+      password: password,
+      data: {'full_name': fullName, 'role': 'kasir'},
+    );
   }
 
   Future<void> signOut() async {
-    // Mode lokal, tidak perlu sign out
+    final client = SupabaseConfig.client;
+    if (client == null) return;
+    await client.auth.signOut();
   }
 
   void dispose() {

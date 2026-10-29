@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
+import '../../../core/network/supabase_config.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../shared/providers/core_providers.dart';
 import '../application/auth_controller.dart';
 
 /// Halaman login Supabase. Bila Supabase tidak dikonfigurasi, aplikasi berada
@@ -51,7 +51,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final offlineOnly = true;
+    final offlineOnly = !SupabaseConfig.isValid;
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 

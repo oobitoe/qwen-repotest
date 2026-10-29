@@ -1,27 +1,66 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
-import 'core/network/supabase_config.dart';
 import 'core/database/sync_registry.dart';
 import 'shared/providers/core_providers.dart';
+
+/// Inisialisasi Supabase dari berkas .env (bos mengisi di sana).
+Future<bool> _initSupabase() async {
+  // Coba baca .env dari beberapa lokasi karena working directory
+  // bisa berbeda saat flutter run di desktop/linux.
+  final candidates = <String>[
+    '.env',
+    '${Directory.current.path}/.env',
+    '${Directory(Directory.current.path).parent.path}/.env',
+  ];
+
+  for (final candidate in candidates) {
+    try {
+      final f = File(candidate);
+      if (!f.existsSync()) continue;
+
+      String? url;
+      String? anonKey;
+      for (final line in f.readAsLinesSync()) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+        final eq = trimmed.indexOf('=');
+        if (eq <= 0) continue;
+        final key = trimmed.substring(0, eq).trim();
+        final value = trimmed.substring(eq + 1).trim();
+        if (key == 'SUPABASE_URL') url = value;
+        if (key == 'SUPABASE_ANON_KEY') anonKey = value;
+      }
+
+      if (url != null && anonKey != null && url.isNotEmpty && anonKey.isNotEmpty) {
+        await Supabase.initialize(url: url, publishableKey: anonKey);
+        debugPrint('🏴‍☠️ Supabase TERHUBUNG ke awan — mode online aktif.');
+        return true;
+      }
+    } catch (_) {
+      // Coba kandidat berikutnya
+    }
+  }
+
+  debugPrint(
+    '🏴‍☠️ Supabase TIDAK terhubung — jalan dalam mode offline-only. '
+    'Isi SUPABASE_URL & SUPABASE_ANON_KEY di file .env.',
+  );
+  return false;
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Muat kunci rahasia dari file .env (tidak di-commit, ada di .gitignore).
-  // Jika .env belum ada, aplikasi tetap jalan dalam mode offline-only.
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (_) {
-    debugPrint('File .env tidak ditemukan — menjalankan mode offline-only.');
-  }
-
-  await SupabaseConfig.initialize();
+  // Inisialisasi Supabase (mode offline-only jika .env belum diisi)
+  await _initSupabase();
 
   // Initialize database singleton BEFORE runApp to avoid multiple instances
   final db = initializeDatabase();

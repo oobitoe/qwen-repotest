@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/sync_dao.dart';
 import '../../core/database/sync_engine.dart';
-import '../../core/network/supabase_config.dart';
 
 /// Global singleton database instance.
 /// Dibuat sekali saat aplikasi start untuk menghindari multiple instances warning Drift.
@@ -25,9 +24,7 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 }, name: 'databaseProvider');
 
 /// Akses helper sinkronisasi generik (outbox + LWW).
-final syncDaoProvider = Provider<SyncableDao>(
-  (ref) => SyncableDao(ref.watch(databaseProvider)),
-);
+final syncDaoProvider = Provider<SyncableDao>((ref) => SyncableDao(ref.watch(databaseProvider)));
 
 const uuid = Uuid();
 
@@ -37,18 +34,8 @@ final uuidProvider = Provider<Uuid>((ref) => uuid);
 /// Locale saat ini (id / en). Diubah dari halaman Settings.
 final localeProvider = StateProvider<Locale>((ref) => const Locale('id', 'ID'));
 
-/// True bila Supabase tersedia (kredensial terisi & SDK aktif).
-final supabaseAvailableProvider = Provider<bool>(
-  (ref) => SupabaseConfig.instance.isValid && SupabaseConfig.client != null,
-);
-
-/// Transport sinkronisasi: Supabase bila tersedia, selain itu in-memory
-/// (mode offline-only — push/pull tidak pernah benar-benar dilakukan).
+/// Transport sinkronisasi: in-memory (mode offline-only — push/pull tidak pernah benar-benar dilakukan).
 final syncTransportProvider = Provider<SyncTransport>((ref) {
-  final client = SupabaseConfig.client;
-  if (SupabaseConfig.instance.isValid && client != null) {
-    return SupabaseSyncTransport(client);
-  }
   return InMemorySyncTransport(online: false);
 });
 

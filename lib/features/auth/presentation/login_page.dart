@@ -51,7 +51,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final offlineOnly = ref.watch(supabaseAvailableProvider) == false;
+    final offlineOnly = true;
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 

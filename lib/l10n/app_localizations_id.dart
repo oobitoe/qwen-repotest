@@ -740,4 +740,16 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get nextPage => 'Halaman Selanjutnya';
+
+  @override
+  String get kredit => 'Kredit';
+
+  @override
+  String get holdTransaction => 'Tahan Transaksi';
+
+  @override
+  String get transactionsTertahan => 'Transaksi Ditahan';
+
+  @override
+  String get lanjutkanTransaksi => 'Lanjutkan Transaksi';
 }

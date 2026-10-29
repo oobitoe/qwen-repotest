@@ -739,4 +739,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextPage => 'Next Page';
+
+  @override
+  String get kredit => 'Credit';
+
+  @override
+  String get holdTransaction => 'Hold Transaction';
+
+  @override
+  String get transactionsTertahan => 'Held Transactions';
+
+  @override
+  String get lanjutkanTransaksi => 'Resume Transaction';
 }

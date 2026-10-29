@@ -243,5 +243,9 @@
   "auditLogSubtitle": "Lacak semua aktivitas sistem",
   "previousPage": "Halaman Sebelumnya",
   "nextPage": "Halaman Selanjutnya",
-  "category": "Kategori"
+  "category": "Kategori",
+  "kredit": "Kredit",
+  "holdTransaction": "Tahan Transaksi",
+  "transactionsTertahan": "Transaksi Ditahan",
+  "lanjutkanTransaksi": "Lanjutkan Transaksi"
 }

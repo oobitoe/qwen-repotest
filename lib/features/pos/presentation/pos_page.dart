@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
+import '../../../features/auth/application/auth_controller.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../products/data/product_repository.dart';
 import '../data/pos_entity.dart';
@@ -26,11 +27,150 @@ class _PosPageState extends ConsumerState<PosPage> {
   double _discount = 0;
   double _tax = 0;
   String _paymentMethod = 'cash';
+  bool _isCredit = false;
+  List<HoldTransactionEntity> _heldTransactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHeldTransactions();
+  }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadHeldTransactions() async {
+    final repo = ref.read(posRepositoryProvider);
+    final held = await repo.getHoldTransactions();
+    if (mounted) {
+      setState(() => _heldTransactions = held);
+    }
+  }
+
+  String? _getCashierId(WidgetRef ref) {
+    final auth = ref.read(authProvider);
+    if (auth is AuthSignedIn) return auth.user.id;
+    return null;
+  }
+
+  Future<void> _checkout(
+    BuildContext context,
+    WidgetRef ref,
+    List<CartItem> cart,
+    double total,
+    AppLocalizations l10n,
+  ) async {
+    if (cart.isEmpty) return;
+
+    final cashierId = _getCashierId(ref);
+    if (cashierId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Kasir belum login, tidak bisa checkout'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    final repo = ref.read(posRepositoryProvider);
+    try {
+      await repo.checkout(
+        discount: _discount,
+        tax: _tax,
+        paymentMethod: _paymentMethod,
+        isCredit: _isCredit,
+        cashierId: cashierId,
+        paymentBreakdown: {_paymentMethod: total},
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _discount = 0;
+        _tax = 0;
+        _isCredit = false;
+        _paymentMethod = 'cash';
+      });
+      _loadHeldTransactions();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.checkout} berhasil'),
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Checkout gagal: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _holdTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    List<CartItem> cart,
+    double total,
+    AppLocalizations l10n,
+  ) async {
+    if (cart.isEmpty) return;
+
+    final cashierId = _getCashierId(ref);
+    if (cashierId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Kasir belum login, tidak bisa simpan transaksi'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    final repo = ref.read(posRepositoryProvider);
+    try {
+      await repo.holdTransaction(
+        discount: _discount,
+        tax: _tax,
+        paymentMethod: _paymentMethod,
+        isCredit: _isCredit,
+        cashierId: cashierId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _discount = 0;
+        _tax = 0;
+        _isCredit = false;
+        _paymentMethod = 'cash';
+      });
+      _loadHeldTransactions();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaksi ditahan'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menahan transaksi: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -63,7 +203,14 @@ class _PosPageState extends ConsumerState<PosPage> {
                   paymentMethod: _paymentMethod,
                   onPaymentChanged: (v) =>
                       setState(() => _paymentMethod = v),
-                  onCheckout: () => _checkout(context, cart, total, l10n),
+                  isCredit: _isCredit,
+                  onCreditChanged: (v) => setState(() => _isCredit = v),
+                  onCheckout: () => _checkout(context, ref, cart, total, l10n),
+                  onHold: () => _holdTransaction(
+                    context, ref, cart, total, l10n,
+                  ),
+                  heldTransactions: _heldTransactions,
+                  onResumeHold: (holdId) => _resumeHold(context, ref, holdId),
                 )
               : _NarrowLayout(
                   l10n: l10n,
@@ -82,41 +229,53 @@ class _PosPageState extends ConsumerState<PosPage> {
                   paymentMethod: _paymentMethod,
                   onPaymentChanged: (v) =>
                       setState(() => _paymentMethod = v),
-                  onCheckout: () => _checkout(context, cart, total, l10n),
+                  isCredit: _isCredit,
+                  onCreditChanged: (v) => setState(() => _isCredit = v),
+                  onCheckout: () => _checkout(context, ref, cart, total, l10n),
+                  onHold: () => _holdTransaction(
+                    context, ref, cart, total, l10n,
+                  ),
+                  heldTransactions: _heldTransactions,
+                  onResumeHold: (holdId) => _resumeHold(context, ref, holdId),
                 );
         },
       ),
     );
   }
 
-  Future<void> _checkout(
+  Future<void> _resumeHold(
     BuildContext context,
-    List<CartItem> cart,
-    double total,
-    AppLocalizations l10n,
+    WidgetRef ref,
+    String holdId,
   ) async {
-    if (cart.isEmpty) return;
-
     final repo = ref.read(posRepositoryProvider);
-    await repo.checkout(
-      discount: _discount,
-      tax: _tax,
-      paymentMethod: _paymentMethod,
-      isCredit: false,
-      cashierId: 'kasir',
-      paymentBreakdown: {_paymentMethod: total},
-    );
+    try {
+      await repo.resumeHoldTransaction(holdId);
+      if (!mounted) return;
+      setState(() {
+        _discount = 0;
+        _tax = 0;
+        _isCredit = false;
+        _paymentMethod = 'cash';
+      });
+      _loadHeldTransactions();
 
-    if (!mounted) return;
-    setState(() {
-      _discount = 0;
-      _tax = 0;
-    });
-    if (!mounted) return;
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${l10n.checkout} berhasil')),
-    );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaksi ditangguhkan dimuat ulang ke keranjang'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat ulang transaksi: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 }
 
@@ -230,7 +389,12 @@ class _WideLayout extends StatelessWidget {
     required this.onTaxChanged,
     required this.paymentMethod,
     required this.onPaymentChanged,
+    required this.isCredit,
+    required this.onCreditChanged,
     required this.onCheckout,
+    required this.onHold,
+    required this.heldTransactions,
+    required this.onResumeHold,
   });
 
   final AppLocalizations l10n;
@@ -246,7 +410,12 @@ class _WideLayout extends StatelessWidget {
   final ValueChanged<String> onTaxChanged;
   final String paymentMethod;
   final ValueChanged<String> onPaymentChanged;
+  final bool isCredit;
+  final ValueChanged<bool> onCreditChanged;
   final VoidCallback onCheckout;
+  final VoidCallback onHold;
+  final List<HoldTransactionEntity> heldTransactions;
+  final ValueChanged<String> onResumeHold;
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +456,17 @@ class _WideLayout extends StatelessWidget {
                 l10n: l10n,
                 paymentMethod: paymentMethod,
                 onChanged: onPaymentChanged,
+                isCredit: isCredit,
+                onCreditChanged: onCreditChanged,
               ),
+              if (heldTransactions.isNotEmpty) ...[
+                const Divider(height: 1),
+                _HeldTransactionsList(
+                  l10n: l10n,
+                  transactions: heldTransactions,
+                  onResume: onResumeHold,
+                ),
+              ],
               const Spacer(),
               _CheckoutBar(
                 l10n: l10n,
@@ -296,7 +475,9 @@ class _WideLayout extends StatelessWidget {
                 discount: discount,
                 tax: tax,
                 paymentMethod: paymentMethod,
+                isCredit: isCredit,
                 onCheckout: onCheckout,
+                onHold: onHold,
               ),
             ],
           ),
@@ -322,7 +503,12 @@ class _NarrowLayout extends StatelessWidget {
     required this.onTaxChanged,
     required this.paymentMethod,
     required this.onPaymentChanged,
+    required this.isCredit,
+    required this.onCreditChanged,
     required this.onCheckout,
+    required this.onHold,
+    required this.heldTransactions,
+    required this.onResumeHold,
   });
 
   final AppLocalizations l10n;
@@ -338,7 +524,12 @@ class _NarrowLayout extends StatelessWidget {
   final ValueChanged<String> onTaxChanged;
   final String paymentMethod;
   final ValueChanged<String> onPaymentChanged;
+  final bool isCredit;
+  final ValueChanged<bool> onCreditChanged;
   final VoidCallback onCheckout;
+  final VoidCallback onHold;
+  final List<HoldTransactionEntity> heldTransactions;
+  final ValueChanged<String> onResumeHold;
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +570,17 @@ class _NarrowLayout extends StatelessWidget {
                 l10n: l10n,
                 paymentMethod: paymentMethod,
                 onChanged: onPaymentChanged,
+                isCredit: isCredit,
+                onCreditChanged: onCreditChanged,
               ),
+              if (heldTransactions.isNotEmpty) ...[
+                const Divider(height: 1),
+                _HeldTransactionsList(
+                  l10n: l10n,
+                  transactions: heldTransactions,
+                  onResume: onResumeHold,
+                ),
+              ],
               const Spacer(),
               _CheckoutBar(
                 l10n: l10n,
@@ -388,7 +589,9 @@ class _NarrowLayout extends StatelessWidget {
                 discount: discount,
                 tax: tax,
                 paymentMethod: paymentMethod,
+                isCredit: isCredit,
                 onCheckout: onCheckout,
+                onHold: onHold,
               ),
             ],
           ),
@@ -523,11 +726,15 @@ class _PaymentSection extends StatelessWidget {
     required this.l10n,
     required this.paymentMethod,
     required this.onChanged,
+    required this.isCredit,
+    required this.onCreditChanged,
   });
 
   final AppLocalizations l10n;
   final String paymentMethod;
   final ValueChanged<String> onChanged;
+  final bool isCredit;
+  final ValueChanged<bool> onCreditChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -553,6 +760,14 @@ class _PaymentSection extends StatelessWidget {
             ],
             onChanged: (v) => onChanged(v!),
           ),
+          const SizedBox(height: AppSpacing.md),
+          CheckboxListTile(
+            title: Text(l10n.kredit),
+            value: isCredit,
+            onChanged: (v) => onCreditChanged(v ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+          ),
         ],
       ),
     );
@@ -567,7 +782,9 @@ class _CheckoutBar extends StatelessWidget {
     required this.discount,
     required this.tax,
     required this.paymentMethod,
+    required this.isCredit,
     required this.onCheckout,
+    required this.onHold,
   });
 
   final AppLocalizations l10n;
@@ -576,7 +793,9 @@ class _CheckoutBar extends StatelessWidget {
   final double discount;
   final double tax;
   final String paymentMethod;
+  final bool isCredit;
   final VoidCallback onCheckout;
+  final VoidCallback onHold;
 
   @override
   Widget build(BuildContext context) {
@@ -619,6 +838,25 @@ class _CheckoutBar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: cart.isEmpty ? null : onHold,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(AppIcons.clockRounded),
+                    const SizedBox(width: AppSpacing.md),
+                    Text(l10n.holdTransaction,
+                        style: const TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           OutlinedButton(
             onPressed: cart.isEmpty ? null : () {},
             child: Text(l10n.batal),
@@ -632,5 +870,75 @@ class _CheckoutBar extends StatelessWidget {
     final nf = NumberFormat.simpleCurrency(
         locale: 'id_ID', name: 'Rp ', decimalDigits: 0);
     return nf.format(v);
+  }
+}
+
+/// Daftar transaksi yang ditahan (hold) untuk dilanjutkan.
+class _HeldTransactionsList extends StatelessWidget {
+  const _HeldTransactionsList({
+    required this.l10n,
+    required this.transactions,
+    required this.onResume,
+  });
+
+  final AppLocalizations l10n;
+  final List<HoldTransactionEntity> transactions;
+  final ValueChanged<String> onResume;
+
+  static String _idr(double v) {
+    final nf = NumberFormat.simpleCurrency(
+        locale: 'id_ID', name: 'Rp ', decimalDigits: 0);
+    return nf.format(v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(l10n.transactionsTertahan,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.warning,
+                  )),
+              Text('${transactions.length}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppTheme.warning,
+                  )),
+            ],
+          ),
+        ),
+        ...transactions.map((t) => ListTile(
+          dense: true,
+          leading: CircleAvatar(
+            radius: 14,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            child: Text(t.invoiceNumber.substring(0, 1),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                )),
+          ),
+          title: Text(t.invoiceNumber,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              )),
+          subtitle: Text(_idr(t.total),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              )),
+          trailing: IconButton(
+            icon: const Icon(AppIcons.playArrowRounded),
+            onPressed: () => onResume(t.id),
+            tooltip: l10n.lanjutkanTransaksi,
+          ),
+        )),
+      ],
+    );
   }
 }

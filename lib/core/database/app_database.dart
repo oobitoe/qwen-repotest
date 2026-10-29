@@ -43,6 +43,9 @@ part 'app_database.g.dart';
     AuditLogs,
     SyncQueue,
     SyncMetadata,
+    Purchases,
+    PurchaseItems,
+    PurchasePayments,
   ],
 )
 class AppDatabase extends _$AppDatabase {

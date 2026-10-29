@@ -78,4 +78,6 @@ class AppIcons {
   static const IconData uploadRounded = Icons.upload_rounded;
   static const IconData edit = Icons.edit_rounded;
   static const IconData clearRounded = Icons.clear_rounded;
+  static const IconData clockRounded = Icons.access_alarm_rounded;
+  static const IconData playArrowRounded = Icons.play_arrow_rounded;
 }

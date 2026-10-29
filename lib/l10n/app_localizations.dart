@@ -1495,6 +1495,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next Page'**
   String get nextPage;
+
+  /// No description provided for @kredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get kredit;
+
+  /// No description provided for @holdTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold Transaction'**
+  String get holdTransaction;
+
+  /// No description provided for @transactionsTertahan.
+  ///
+  /// In en, this message translates to:
+  /// **'Held Transactions'**
+  String get transactionsTertahan;
+
+  /// No description provided for @lanjutkanTransaksi.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Transaction'**
+  String get lanjutkanTransaksi;
 }
 
 class _AppLocalizationsDelegate

@@ -1,14 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:drift/drift.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../core/database/sync_dao.dart';
 import '../../../shared/providers/core_providers.dart';
 import 'pos_entity.dart';
 
-/// Manajemen keranjang belanja dan checkout (POS).
+/// Manajemen keranjang belanja, checkout, dan hold transaction (POS).
 class PosRepository {
-  PosRepository(this._dao);
+  PosRepository(this._db, this._dao);
 
+  final AppDatabase _db;
   final SyncableDao _dao;
   final List<CartItem> _cart = [];
 
@@ -43,7 +46,332 @@ class PosRepository {
     _cart.clear();
   }
 
-  Future<void> checkout({
+  /// Validasi stok mencukupi untuk semua item di keranjang.
+  /// Mengembalikan daftar produk yang stoknya tidak mencukupi.
+  Future<List<String>> validateStock() async {
+    final insufficient = <String>[];
+    for (final item in _cart) {
+      final product = await (_db.select(_db.products)
+            ..where((t) => t.id.equals(item.productId)))
+        .getSingleOrNull();
+      if (product == null) {
+        insufficient.add('${item.productName} (produk tidak ditemukan)');
+        continue;
+      }
+      if (product.stock < item.quantity) {
+        insufficient.add(
+            '${item.productName} (tersisa ${product.stock.toInt()}, dibutuhkan ${item.quantity.toInt()})');
+      }
+    }
+    return insufficient;
+  }
+
+  /// Checkout atomik: simpan Sale + SaleItems + StockMovements dalam satu
+  /// transaksi Drift, lalu enqueue ke outbox. Stok dikurangi segera secara lokal.
+  Future<String> checkout({
+    required double discount,
+    required double tax,
+    required String paymentMethod,
+    required bool isCredit,
+    required String cashierId,
+    required Map<String, double> paymentBreakdown,
+    String? customerNameSnapshot,
+  }) async {
+    if (_cart.isEmpty) {
+      throw StateError('Keranjang kosong, tidak bisa checkout');
+    }
+
+    // Validasi stok sebelum transaksi
+    final insufficient = await validateStock();
+    if (insufficient.isNotEmpty) {
+      throw StateError('Stok tidak mencukupi: ${insufficient.join(', ')}');
+    }
+
+    final saleId = const Uuid().v4();
+    final now = DateTime.now().toUtc();
+    final invoiceNumber =
+        'INV-${now.millisecondsSinceEpoch}-${saleId.substring(0, 8)}';
+    final subtotal = this.subtotal;
+    final total = subtotal - discount + tax;
+
+    await _db.transaction(() async {
+      // 1. Simpan ke tabel Sales
+      await _db.into(_db.sales).insert(SalesCompanion(
+        id: Value(saleId),
+        invoiceNumber: Value(invoiceNumber),
+        customerNameSnapshot: Value(customerNameSnapshot),
+        subtotal: Value(subtotal),
+        discount: Value(discount),
+        tax: Value(tax),
+        total: Value(total),
+        paid: Value(total),
+        changeDue: Value(0),
+        paymentMethod: Value(paymentMethod),
+        isCredit: Value(isCredit),
+        status: Value('completed'),
+        cashierId: Value(cashierId),
+        createdAt: Value(now),
+        updatedAt: Value(now),
+        version: Value(1),
+        syncStatus: const Value('pending'),
+      ));
+
+      // 2. Simpan SaleItems + buat StockMovements (kurangi stok)
+      for (final item in _cart) {
+        final itemId = const Uuid().v4();
+        await _db.into(_db.saleItems).insert(SaleItemsCompanion(
+          id: Value(itemId),
+          saleId: Value(saleId),
+          productId: Value(item.productId),
+          productName: Value(item.productName),
+          sku: Value(item.sku),
+          unitPrice: Value(item.unitPrice),
+          costPrice: Value(item.costPrice),
+          quantity: Value(item.quantity),
+          discount: Value(0),
+          lineTotal: Value(item.lineTotal),
+          createdAt: Value(now),
+          version: Value(1),
+          syncStatus: const Value('pending'),
+        ));
+
+        // Ambil stok terkini dan kurangi
+        final product = await (_db.select(_db.products)
+              ..where((t) => t.id.equals(item.productId)))
+            .getSingleOrNull();
+        if (product == null) {
+          throw StateError('Produk ${item.productName} tidak ditemukan');
+        }
+        final newStock = product.stock - item.quantity;
+
+        await (_db.update(_db.products)..where((t) => t.id.equals(item.productId)))
+            .write(ProductsCompanion(
+          stock: Value(newStock),
+          updatedAt: Value(now),
+          version: Value(product.version + 1),
+          syncStatus: const Value('pending'),
+        ));
+
+        // 3. Catat StockMovements (sale = keluar, quantity negatif)
+        await _db.into(_db.stockMovements).insert(StockMovementsCompanion(
+          id: Value(const Uuid().v4()),
+          productId: Value(item.productId),
+          type: Value('sale'),
+          quantity: Value(-item.quantity),
+          balanceAfter: Value(newStock),
+          referenceType: Value('sale'),
+          referenceId: Value(saleId),
+          note: Value('Penjualan $invoiceNumber'),
+          createdBy: Value(cashierId),
+          createdAt: Value(now),
+          version: Value(1),
+          syncStatus: const Value('pending'),
+        ));
+      }
+
+      // 4. Enqueue seluruh operasi ke outbox (sale, sale_items, stock_movements, products)
+      await _dao.enqueue(
+        entityType: 'sale',
+        entityId: saleId,
+        operation: SyncOperations.upsert,
+        payload: {
+          'id': saleId,
+          'invoice_number': invoiceNumber,
+          'subtotal': subtotal,
+          'discount': discount,
+          'tax': tax,
+          'total': total,
+          'payment_method': paymentMethod,
+          'is_credit': isCredit,
+          'cashier_id': cashierId,
+          'customer_name_snapshot': customerNameSnapshot,
+          'created_at': now.millisecondsSinceEpoch,
+          'updated_at': now.millisecondsSinceEpoch,
+        },
+      );
+
+      for (final item in _cart) {
+        await _dao.enqueue(
+          entityType: 'sale_item',
+          entityId: item.productId,
+          operation: SyncOperations.upsert,
+          payload: {
+            'id': const Uuid().v4(),
+            'sale_id': saleId,
+            'product_id': item.productId,
+            'product_name': item.productName,
+            'sku': item.sku,
+            'unit_price': item.unitPrice,
+            'cost_price': item.costPrice,
+            'quantity': item.quantity,
+            'line_total': item.lineTotal,
+            'created_at': now.millisecondsSinceEpoch,
+          },
+        );
+      }
+
+      // Enqueue stock update per produk
+      for (final item in _cart) {
+        final product = await (_db.select(_db.products)
+              ..where((t) => t.id.equals(item.productId)))
+            .getSingleOrNull();
+        if (product != null) {
+          await _dao.enqueue(
+            entityType: 'product',
+            entityId: item.productId,
+            operation: SyncOperations.upsert,
+            payload: {
+              'id': item.productId,
+              'stock': product.stock,
+              'updated_at': now.millisecondsSinceEpoch,
+              'version': product.version,
+            },
+          );
+        }
+      }
+    });
+
+    clear();
+    return saleId;
+  }
+
+  /// Simpan transaksi ke hold (ditanam di SQLite, belum checkout).
+  /// Mengembalikan ID hold transaction.
+  Future<String> holdTransaction({
+    required double discount,
+    required double tax,
+    required String paymentMethod,
+    required bool isCredit,
+    required String cashierId,
+    String? customerNameSnapshot,
+  }) async {
+    if (_cart.isEmpty) {
+      throw StateError('Keranjang kosong, tidak bisa ditahan');
+    }
+
+    final holdId = const Uuid().v4();
+    final now = DateTime.now().toUtc();
+    final invoiceNumber = 'HOLD-${now.millisecondsSinceEpoch}-${holdId.substring(0, 8)}';
+    final subtotal = this.subtotal;
+    final total = subtotal - discount + tax;
+
+    final itemsSnapshot = List<CartItem>.from(_cart);
+
+    await _db.into(_db.sales).insert(SalesCompanion(
+      id: Value(holdId),
+      invoiceNumber: Value(invoiceNumber),
+      customerNameSnapshot: Value(customerNameSnapshot),
+      subtotal: Value(subtotal),
+      discount: Value(discount),
+      tax: Value(tax),
+      total: Value(total),
+      paid: Value(0),
+      changeDue: Value(0),
+      paymentMethod: Value(paymentMethod),
+      isCredit: Value(isCredit),
+      status: Value('held'),
+      cashierId: Value(cashierId),
+      createdAt: Value(now),
+      updatedAt: Value(now),
+      version: Value(1),
+      syncStatus: const Value('pending'),
+    ));
+
+    for (final item in itemsSnapshot) {
+      await _db.into(_db.saleItems).insert(SaleItemsCompanion(
+        id: Value(const Uuid().v4()),
+        saleId: Value(holdId),
+        productId: Value(item.productId),
+        productName: Value(item.productName),
+        sku: Value(item.sku),
+        unitPrice: Value(item.unitPrice),
+        costPrice: Value(item.costPrice),
+        quantity: Value(item.quantity),
+        discount: Value(0),
+        lineTotal: Value(item.lineTotal),
+        createdAt: Value(now),
+        version: Value(1),
+        syncStatus: const Value('pending'),
+      ));
+    }
+
+    return holdId;
+  }
+
+  /// Ambil semua transaksi hold yang belum checkout.
+  Future<List<HoldTransactionEntity>> getHoldTransactions() async {
+    final rows = await (_db.select(_db.sales)
+          ..where((t) => t.status.equals('held')))
+        .get();
+    final result = <HoldTransactionEntity>[];
+    for (final row in rows) {
+      final itemRows = await (_db.select(_db.saleItems)
+            ..where((t) => t.saleId.equals(row.id)))
+          .get();
+      result.add(HoldTransactionEntity(
+        id: row.id,
+        invoiceNumber: row.invoiceNumber,
+        items: [
+          for (final ir in itemRows)
+            CartItem(
+              productId: ir.productId,
+              productName: ir.productName,
+              sku: ir.sku ?? '',
+              unitPrice: ir.unitPrice,
+              costPrice: ir.costPrice,
+              quantity: ir.quantity,
+            ),
+        ],
+        subtotal: row.subtotal,
+        discount: row.discount,
+        tax: row.tax,
+        total: row.total,
+        paymentMethod: row.paymentMethod,
+        isCredit: row.isCredit,
+        cashierId: row.cashierId ?? '',
+        createdAt: row.createdAt,
+        customerNameSnapshot: row.customerNameSnapshot,
+      ));
+    }
+    return result;
+  }
+
+  /// Resume hold transaction: memuat item-item ke keranjang saat ini.
+  Future<void> resumeHoldTransaction(String holdId) async {
+    final row = await (_db.select(_db.sales)
+          ..where((t) => t.id.equals(holdId)))
+        .getSingleOrNull();
+    if (row == null || row.status != 'held') {
+      throw StateError('Transaksi hold tidak ditemukan');
+    }
+
+    _cart.clear();
+    final itemRows = await (_db.select(_db.saleItems)
+          ..where((t) => t.saleId.equals(holdId)))
+        .get();
+    for (final ir in itemRows) {
+      _cart.add(CartItem(
+        productId: ir.productId,
+        productName: ir.productName,
+        sku: ir.sku ?? '',
+        unitPrice: ir.unitPrice,
+        costPrice: ir.costPrice,
+        quantity: ir.quantity,
+      ));
+    }
+  }
+
+  /// Hapus transaksi hold.
+  Future<void> deleteHoldTransaction(String holdId) async {
+    await _db.transaction(() async {
+      await (_db.delete(_db.saleItems)..where((t) => t.saleId.equals(holdId))).go();
+      await (_db.delete(_db.sales)..where((t) => t.id.equals(holdId))).go();
+    });
+  }
+
+  /// Checkout ulang transaksi hold (convert held → completed).
+  Future<String> checkoutHold({
+    required String holdId,
     required double discount,
     required double tax,
     required String paymentMethod,
@@ -51,46 +379,56 @@ class PosRepository {
     required String cashierId,
     required Map<String, double> paymentBreakdown,
   }) async {
-    final total = subtotal - discount + tax;
-    final saleId = const Uuid().v4();
+    final row = await (_db.select(_db.sales)
+          ..where((t) => t.id.equals(holdId)))
+        .getSingleOrNull();
+    if (row == null || row.status != 'held') {
+      throw StateError('Transaksi hold tidak ditemukan');
+    }
 
-    await _dao.enqueue(
-      entityType: 'sale',
-      entityId: saleId,
-      operation: 'upsert',
-      payload: {
-        'id': saleId,
-        'invoice_number': 'INV-${DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '')}',
-        'subtotal': subtotal,
-        'discount': discount,
-        'tax': tax,
-        'total': total,
-        'payment_method': paymentMethod,
-        'is_credit': isCredit,
-        'cashier_id': cashierId,
-        'payment_breakdown': paymentBreakdown,
-        'items': [
-          for (final item in _cart)
-            {
-              'product_id': item.productId,
-              'product_name': item.productName,
-              'sku': item.sku,
-              'unit_price': item.unitPrice,
-              'cost_price': item.costPrice,
-              'quantity': item.quantity,
-              'line_total': item.lineTotal,
-            },
-        ],
-      },
+    // Muat item dari hold ke keranjang
+    _cart.clear();
+    final itemRows = await (_db.select(_db.saleItems)
+          ..where((t) => t.saleId.equals(holdId)))
+        .get();
+    for (final ir in itemRows) {
+      _cart.add(CartItem(
+        productId: ir.productId,
+        productName: ir.productName,
+        sku: ir.sku ?? '',
+        unitPrice: ir.unitPrice,
+        costPrice: ir.costPrice,
+        quantity: ir.quantity,
+      ));
+    }
+
+    // Gunakan checkout biasa (transaksional, validasi stok, dll)
+    final saleId = await checkout(
+      discount: discount,
+      tax: tax,
+      paymentMethod: paymentMethod,
+      isCredit: isCredit,
+      cashierId: cashierId,
+      paymentBreakdown: paymentBreakdown,
+      customerNameSnapshot: row.customerNameSnapshot,
     );
 
-    clear();
+    // Tandai hold sebagai voided
+    await (_db.update(_db.sales)..where((t) => t.id.equals(holdId)))
+        .write(SalesCompanion(
+      status: Value('voided'),
+      updatedAt: Value(DateTime.now().toUtc()),
+      version: Value(row.version + 1),
+    ));
+
+    return saleId;
   }
 }
 
 final posRepositoryProvider = Provider<PosRepository>((ref) {
+  final db = ref.watch(databaseProvider);
   final dao = ref.watch(syncDaoProvider);
-  return PosRepository(dao);
+  return PosRepository(db, dao);
 });
 
 final cartProvider = StateNotifierProvider<CartNotifier, List<CartItem>>((ref) {

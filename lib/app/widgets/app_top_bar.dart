@@ -29,33 +29,37 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
     final role = ref.watch(currentRoleProvider);
     final isMobile = MediaQuery.sizeOf(context).width < AppBreakpoints.tablet;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: double.infinity),
-      child: AppBar(
-        automaticallyImplyLeading: false,
-        leading: isMobile && onMenuTap != null
-            ? IconButton(
-                tooltip: 'Menu',
-                onPressed: onMenuTap,
-                icon: const Icon(menu, size: 18),
-              )
-          : null,
-        leadingWidth: (isMobile && onMenuTap != null) ? 56 : 0,
-        titleSpacing: 0.0,
-        title: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 150),
-          child: Text(
-            title,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 16,
+    return SizedBox(
+      height: kToolbarHeight,
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (isMobile && onMenuTap != null) ...[
+            IconButton(
+              tooltip: 'Menu',
+              onPressed: onMenuTap,
+              icon: const Icon(menu, size: 14),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
+          Expanded(
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontSize: 13,
+              ),
             ),
           ),
-        ),
-        actions: [
-          _SyncBadge(status: sync, l10n: l10n),
-          const SizedBox(width: AppSpacing.sm),
+          const Spacer(),
+          IconButton(
+            tooltip: l10n.logout,
+            onPressed: () => ref.read(authProvider.notifier).signOut(),
+            icon: const Icon(AppIcons.logout, size: 12),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
     );

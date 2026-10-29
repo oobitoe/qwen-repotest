@@ -396,6 +396,54 @@ void registerAllSyncMetas([AppDatabase? db]) {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
+  SyncableDao.register(_meta('purchase', db_.purchases, (j) => PurchasesCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
+        referenceNumber: Value(s(j['reference_number'])),
+        supplierId: Value(sn(j['supplier_id'])),
+        supplierName: Value(s(j['supplier_name'])),
+        status: Value(sn(j['status']) ?? 'completed'),
+        subtotal: Value(d(j['subtotal'])),
+        discount: Value(d(j['discount'])),
+        tax: Value(d(j['tax'])),
+        total: Value(d(j['total'])),
+        paymentMethod: Value(sn(j['payment_method']) ?? 'cash'),
+        isCredit: Value(b(j['is_credit'])),
+        createdBy: Value(sn(j['created_by'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        deletedAt: Value(dt(j['deleted_at'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('purchase_item', db_.purchaseItems, (j) => PurchaseItemsCompanion(
+        id: Value(s(j['id'])),
+        purchaseId: Value(s(j['purchase_id'])),
+        productId: Value(s(j['product_id'])),
+        productName: Value(s(j['product_name'])),
+        sku: Value(sn(j['sku'])),
+        unitPrice: Value(d(j['unit_price'])),
+        costPrice: Value(d(j['cost_price'])),
+        quantity: Value(d(j['quantity'])),
+        receivedQuantity: Value(d(j['received_quantity'])),
+        lineTotal: Value(d(j['line_total'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('purchase_payment', db_.purchasePayments, (j) => PurchasePaymentsCompanion(
+        id: Value(s(j['id'])),
+        purchaseId: Value(s(j['purchase_id'])),
+        amount: Value(d(j['amount'])),
+        paymentMethod: Value(s(j['payment_method'])),
+        paidAt: Value(dt(j['paid_at']) ?? DateTime.now().toUtc()),
+        createdBy: Value(sn(j['created_by'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
   SyncableDao.register(_meta('audit_log', db_.auditLogs,
       (j) => AuditLogsCompanion.insert(
         id: s(j['id']),

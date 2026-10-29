@@ -440,6 +440,66 @@ class AccountTransactions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ---------- Pembelian ----------
+
+class Purchases extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get referenceNumber => text()();
+  TextColumn get supplierId => text().nullable().references(Suppliers, #id)();
+  TextColumn get supplierName => text()();
+  TextColumn get status => text().withDefault(const Constant('completed'))(); // completed | voided | held
+  RealColumn get subtotal => real().withDefault(const Constant(0))();
+  RealColumn get discount => real().withDefault(const Constant(0))();
+  RealColumn get tax => real().withDefault(const Constant(0))();
+  RealColumn get total => real()();
+  TextColumn get paymentMethod => text().withDefault(const Constant('cash'))();
+  BoolColumn get isCredit => boolean().withDefault(const Constant(false))();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PurchaseItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get purchaseId => text().references(Purchases, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  // Snapshot agar histori tidak berubah saat produk diedit:
+  TextColumn get productName => text()();
+  TextColumn get sku => text().nullable()();
+  RealColumn get unitPrice => real()();
+  RealColumn get costPrice => real().withDefault(const Constant(0))();
+  RealColumn get quantity => real()();
+  RealColumn get receivedQuantity => real().withDefault(const Constant(0))();
+  RealColumn get lineTotal => real()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PurchasePayments extends Table {
+  TextColumn get id => text()();
+  TextColumn get purchaseId => text().references(Purchases, #id)();
+  RealColumn get amount => real()();
+  TextColumn get paymentMethod => text()();
+  DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get createdBy => text().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ---------- Hutang & Piutang ----------
 
 class Debts extends Table {

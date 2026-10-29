@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_icons.dart';
@@ -159,8 +160,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       OutlinedButton(
                         onPressed: _busy || offlineOnly
                             ? null
-                            : () => Navigator.of(context)
-                                .pushNamed(AppRoutes.register),
+                            : () => GoRouter.of(context).push(AppRoutes.register),
                         child: Text(l10n.registerAccount),
                       ),
                     ],

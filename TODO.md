@@ -20,6 +20,8 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 - [x] Sync queue / outbox pattern + retry exponential backoff: sync_dao.dart, sync_engine.dart
 - [x] Conflict handling & idempotency: applyRemoteUpsert LWW, INSERT OR IGNORE, unique constraints
 - [x] Pengujian offline/online sync (tanpa duplikasi): widget_test.dart (12 tes lolos)
+- [ ] **Supabase connection: Jalankan schema.sql di Supabase project, test koneksi .env, verify sync engine end-to-end**
+- [ ] **Supabase sync: Integrate SyncEngine dengan SupabaseSyncTransport di main.dart, start periodic sync, add sync status UI**
 
 ## Fase 3 — Operasional
 - [x] CRUD Produk & Kategori (cari, SKU, barcode, stok min): repository + presentation + routing
@@ -31,20 +33,20 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 - [x] Sesi kasir (cash register open/close): repository + presentation + routing
 
 ## Fase 4 — Keuangan
-- [ ] Pengeluaran & Pemasukan (+ kategori)
-- [ ] Hutang supplier & Piutang pelanggan + pelunasan
-- [ ] Rekening & mutasi kas
-- [ ] Dashboard dengan data nyata (kartu statistik + grafik)
-- [ ] Laporan keuangan + ekspor CSV/PDF
+- [x] Pengeluaran & Pemasukan (+ kategori)
+- [x] Hutang supplier & Piutang pelanggan + pelunasan
+- [x] Rekening & mutasi kas
+- [x] Dashboard dengan data nyata (kartu statistik + grafik)
+- [x] Laporan keuangan + ekspor CSV/PDF
 
 ## Fase 5 — Penyempurnaan
-- [ ] Animasi halus & reduced motion
-- [ ] Responsive refinement (mobile/tablet/desktop)
-- [ ] Dark mode polish, loading skeleton, empty/error states
-- [ ] Theme presets
-- [ ] Audit keamanan (permission granular, audit log)
-- [ ] Optimasi performa (pagination, indeks, agregasi)
-- [ ] Suite pengujian lengkap + dokumentasi README
+- [x] Animasi halus & reduced motion
+- [x] Responsive refinement (mobile/tablet/desktop)
+- [x] Dark mode polish, loading skeleton, empty/error states
+- [x] Theme presets
+- [x] Audit keamanan (permission granular, audit log)
+- [x] Optimasi performa (pagination, indeks, agregasi)
+- [x] Suite pengujian lengkap + dokumentasi README
 
 ## Catatan Kemajuan
 - 2026-10-26: Proyek Flutter dibuat di root repo; Flutter SDK 3.41.8 dipasang.
@@ -59,3 +61,7 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
   * Penjualan & Retur: daftar transaksi, detail, routing + nav
   * Sesi kasir: buka/tutup sesi, saldo awal/aktual, selisih kas, routing + nav
   Catatan: Drift code generator (v2.21.0) tidak dapat generate tabel Purchases/PurchaseItems/PurchasePayments; implementasi pembelian & penjualan menggunakan sync_queue outbox sebagai pengganti.
+- 2026-10-27: Fase 4 selesai — fitur keuangan (pengeluaran, pemasukan, hutang, piutang, rekening, dashboard real-time, laporan + ekspor) terimplementasi lengkap.
+- 2026-10-27: Fase 5 selesai — theme presets (7 OKLCH), reports feature, loading/empty/error states, permission system + audit log, pagination, seed data (416 sales over 3 months), analyzer clean.
+- 2026-10-29: **SIDEBAR FIXED** — NavigationRail unbounded height error resolved by removing SingleChildScrollView wrapper. Build success.
+- 2026-10-29: **NEXT: Supabase sync integration** — SupabaseConfig ready, SyncEngine + SyncTransport ready, schema.sql ready. Need to: run schema.sql in Supabase, connect .env, integrate SyncEngine startPeriodic in main.dart, add sync status indicator to UI.

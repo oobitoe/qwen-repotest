@@ -53,7 +53,10 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
             ),
           ),
         ),
-        actions: const [],
+        actions: [
+          _SyncBadge(status: sync, l10n: l10n),
+          const SizedBox(width: AppSpacing.sm),
+        ],
       ),
     );
   }

@@ -165,12 +165,12 @@ class ResponsiveShell extends ConsumerWidget {
     return _SidebarShell(
       currentIndex: currentIndex,
       l10n: l10n,
-      child: child,
       title: title,
       collapsed: collapsed,
       onToggle: () => ref
           .read(sidebarCollapsedProvider.notifier)
           .toggle(),
+      child: child,
     );
   }
 }

@@ -67,10 +67,10 @@ class AuthSignedIn extends AuthState {
 }
 
 /// Pengguna lokal untuk mode offline-only (tanpa backend autentikasi).
-final localDeviceUserId = 'local-device-owner';
+const String localDeviceUserId = 'local-device-owner';
 
 /// Mode offline-only: aplikasi tetap dapat dipakai penuh sebagai owner lokal.
-final localOfflineUser = AuthSignedIn(localDeviceUserId, UserRole.owner);
+const localOfflineUser = AuthSignedIn(localDeviceUserId, UserRole.owner);
 
 class AuthController extends Notifier<AuthState> {
   @override

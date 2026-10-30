@@ -60,8 +60,7 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
   * POS/Kasir: keranjang, diskon, pajak, pembayaran campuran, checkout atomik via outbox, routing + nav
   * Penjualan & Retur: daftar transaksi, detail, routing + nav
   * Sesi kasir: buka/tutup sesi, saldo awal/aktual, selisih kas, routing + nav
-  Catatan: Drift code generator (v2.21.0) tidak dapat generate tabel Purchases/PurchaseItems/PurchasePayments; implementasi pembelian & penjualan menggunakan sync_queue outbox sebagai pengganti.
+  
 - 2026-10-27: Fase 4 selesai — fitur keuangan (pengeluaran, pemasukan, hutang, piutang, rekening, dashboard real-time, laporan + ekspor) terimplementasi lengkap.
 - 2026-10-27: Fase 5 selesai — theme presets (7 OKLCH), reports feature, loading/empty/error states, permission system + audit log, pagination, seed data (416 sales over 3 months), analyzer clean.
 - 2026-10-29: **SIDEBAR FIXED** — NavigationRail unbounded height error resolved by removing SingleChildScrollView wrapper. Build success.
-- 2026-10-29: **NEXT: Supabase sync integration** — SupabaseConfig ready, SyncEngine + SyncTransport ready, schema.sql ready. Need to: run schema.sql in Supabase, connect .env, integrate SyncEngine startPeriodic in main.dart, add sync status indicator to UI.

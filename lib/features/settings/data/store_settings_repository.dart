@@ -155,7 +155,7 @@ class StoreSettingsRepository {
             timezone: Value(setting.timezone),
             createdAt: Value(DateTime.now()),
             updatedAt: Value(DateTime.now()),
-            version: Value(1),
+            version: const Value(1),
             syncStatus: const Value('pending'),
           ),
         );
@@ -186,7 +186,7 @@ class StoreSettingsRepository {
             phone: Value(setting.storePhone),
             createdAt: Value(DateTime.now()),
             updatedAt: Value(DateTime.now()),
-            version: Value(1),
+            version: const Value(1),
             syncStatus: const Value('pending'),
           ),
         );
@@ -239,7 +239,7 @@ class StoreSettingsRepository {
           key: Value(key),
           value: Value(value),
           updatedAt: Value(DateTime.now()),
-          version: Value(1),
+          version: const Value(1),
           syncStatus: const Value('pending'),
         ),
       );
@@ -264,12 +264,12 @@ class StoreSettingsRepository {
       await _db.into(_db.taxSettings).insert(
         TaxSettingsCompanion(
           id: Value(DateTime.now().millisecondsSinceEpoch.toString()),
-          businessId: Value('local'),
+          businessId: const Value('local'),
           name: Value(name),
           rate: Value(rate),
-          isActive: Value(true),
+          isActive: const Value(true),
           createdAt: Value(DateTime.now()),
-          version: Value(1),
+          version: const Value(1),
           syncStatus: const Value('pending'),
         ),
       );

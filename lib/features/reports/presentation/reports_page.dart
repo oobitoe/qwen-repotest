@@ -92,11 +92,13 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
               Tab(text: l10n.financial),
             ],
           ),
-          _DateFilterBar(
+           _DateFilterBar(
             startDateCtrl: _startDateCtrl,
             endDateCtrl: _endDateCtrl,
             onStartTap: () => _pickDate(isStart: true),
             onEndTap: () => _pickDate(isStart: false),
+            onExportCSV: _exportCSV,
+            onExportPDF: _exportPDF,
             l10n: l10n,
           ),
           Expanded(
@@ -135,6 +137,8 @@ class _DateFilterBar extends StatelessWidget {
     required this.endDateCtrl,
     required this.onStartTap,
     required this.onEndTap,
+    required this.onExportCSV,
+    required this.onExportPDF,
     required this.l10n,
   });
 
@@ -142,6 +146,8 @@ class _DateFilterBar extends StatelessWidget {
   final TextEditingController endDateCtrl;
   final VoidCallback onStartTap;
   final VoidCallback onEndTap;
+  final VoidCallback onExportCSV;
+  final VoidCallback onExportPDF;
   final AppLocalizations l10n;
 
   @override
@@ -187,12 +193,16 @@ class _DateFilterBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.md),
-          FilledButton.icon(
-            onPressed: () {
-              // Trigger refresh via invalidation handled by parent
-            },
-            icon: const Icon(AppIcons.refresh),
-            label: Text(l10n.apply),
+           FilledButton.icon(
+            onPressed: onExportCSV,
+            icon: const Icon(AppIcons.downloadRounded),
+            label: Text(l10n.exportCSV),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          OutlinedButton.icon(
+            onPressed: onExportPDF,
+            icon: const Icon(AppIcons.pictureAsPdfRounded),
+            label: Text(l10n.exportPDF),
           ),
         ],
       ),

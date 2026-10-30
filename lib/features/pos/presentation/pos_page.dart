@@ -57,7 +57,6 @@ class _PosPageState extends ConsumerState<PosPage> {
   }
 
   Future<void> _checkout(
-    BuildContext context,
     WidgetRef ref,
     List<CartItem> cart,
     double total,
@@ -70,7 +69,7 @@ class _PosPageState extends ConsumerState<PosPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Kasir belum login, tidak bisa checkout'),
+          content: const Text('Kasir belum login, tidak bisa checkout'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -116,7 +115,6 @@ class _PosPageState extends ConsumerState<PosPage> {
   }
 
   Future<void> _holdTransaction(
-    BuildContext context,
     WidgetRef ref,
     List<CartItem> cart,
     double total,
@@ -129,7 +127,7 @@ class _PosPageState extends ConsumerState<PosPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Kasir belum login, tidak bisa simpan transaksi'),
+          content: const Text('Kasir belum login, tidak bisa simpan transaksi'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -158,7 +156,7 @@ class _PosPageState extends ConsumerState<PosPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Transaksi ditahan'),
+          content: const Text('Transaksi ditahan'),
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
@@ -205,12 +203,12 @@ class _PosPageState extends ConsumerState<PosPage> {
                       setState(() => _paymentMethod = v),
                   isCredit: _isCredit,
                   onCreditChanged: (v) => setState(() => _isCredit = v),
-                  onCheckout: () => _checkout(context, ref, cart, total, l10n),
-                  onHold: () => _holdTransaction(
-                    context, ref, cart, total, l10n,
+                   onCheckout: () => _checkout(ref, cart, total, l10n),
+                   onHold: () => _holdTransaction(
+                    ref, cart, total, l10n,
                   ),
                   heldTransactions: _heldTransactions,
-                  onResumeHold: (holdId) => _resumeHold(context, ref, holdId),
+                   onResumeHold: (holdId) => _resumeHold(ref, holdId),
                 )
               : _NarrowLayout(
                   l10n: l10n,
@@ -231,12 +229,12 @@ class _PosPageState extends ConsumerState<PosPage> {
                       setState(() => _paymentMethod = v),
                   isCredit: _isCredit,
                   onCreditChanged: (v) => setState(() => _isCredit = v),
-                  onCheckout: () => _checkout(context, ref, cart, total, l10n),
-                  onHold: () => _holdTransaction(
-                    context, ref, cart, total, l10n,
+                   onCheckout: () => _checkout(ref, cart, total, l10n),
+                   onHold: () => _holdTransaction(
+                    ref, cart, total, l10n,
                   ),
                   heldTransactions: _heldTransactions,
-                  onResumeHold: (holdId) => _resumeHold(context, ref, holdId),
+                   onResumeHold: (holdId) => _resumeHold(ref, holdId),
                 );
         },
       ),
@@ -244,7 +242,6 @@ class _PosPageState extends ConsumerState<PosPage> {
   }
 
   Future<void> _resumeHold(
-    BuildContext context,
     WidgetRef ref,
     String holdId,
   ) async {
@@ -263,7 +260,7 @@ class _PosPageState extends ConsumerState<PosPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Transaksi ditangguhkan dimuat ulang ke keranjang'),
+          content: const Text('Transaksi ditangguhkan dimuat ulang ke keranjang'),
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );

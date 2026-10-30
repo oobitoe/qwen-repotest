@@ -105,14 +105,14 @@ class PosRepository {
         tax: Value(tax),
         total: Value(total),
         paid: Value(total),
-        changeDue: Value(0),
+        changeDue: const Value(0),
         paymentMethod: Value(paymentMethod),
         isCredit: Value(isCredit),
-        status: Value('completed'),
+        status: const Value('completed'),
         cashierId: Value(cashierId),
         createdAt: Value(now),
         updatedAt: Value(now),
-        version: Value(1),
+        version: const Value(1),
         syncStatus: const Value('pending'),
       ));
 
@@ -128,10 +128,10 @@ class PosRepository {
           unitPrice: Value(item.unitPrice),
           costPrice: Value(item.costPrice),
           quantity: Value(item.quantity),
-          discount: Value(0),
+          discount: const Value(0),
           lineTotal: Value(item.lineTotal),
           createdAt: Value(now),
-          version: Value(1),
+          version: const Value(1),
           syncStatus: const Value('pending'),
         ));
 
@@ -156,15 +156,15 @@ class PosRepository {
         await _db.into(_db.stockMovements).insert(StockMovementsCompanion(
           id: Value(const Uuid().v4()),
           productId: Value(item.productId),
-          type: Value('sale'),
-          quantity: Value(-item.quantity),
-          balanceAfter: Value(newStock),
-          referenceType: Value('sale'),
+        type: const Value('sale'),
+        quantity: Value(-item.quantity),
+        balanceAfter: Value(newStock),
+        referenceType: const Value('sale'),
           referenceId: Value(saleId),
           note: Value('Penjualan $invoiceNumber'),
           createdBy: Value(cashierId),
           createdAt: Value(now),
-          version: Value(1),
+          version: const Value(1),
           syncStatus: const Value('pending'),
         ));
       }
@@ -264,36 +264,36 @@ class PosRepository {
       subtotal: Value(subtotal),
       discount: Value(discount),
       tax: Value(tax),
-      total: Value(total),
-      paid: Value(0),
-      changeDue: Value(0),
-      paymentMethod: Value(paymentMethod),
-      isCredit: Value(isCredit),
-      status: Value('held'),
-      cashierId: Value(cashierId),
-      createdAt: Value(now),
-      updatedAt: Value(now),
-      version: Value(1),
-      syncStatus: const Value('pending'),
-    ));
+       total: Value(total),
+       paid: const Value(0),
+       changeDue: const Value(0),
+       paymentMethod: Value(paymentMethod),
+       isCredit: Value(isCredit),
+       status: const Value('held'),
+       cashierId: Value(cashierId),
+       createdAt: Value(now),
+       updatedAt: Value(now),
+       version: const Value(1),
+       syncStatus: const Value('pending'),
+     ));
 
-    for (final item in itemsSnapshot) {
-      await _db.into(_db.saleItems).insert(SaleItemsCompanion(
-        id: Value(const Uuid().v4()),
-        saleId: Value(holdId),
-        productId: Value(item.productId),
-        productName: Value(item.productName),
-        sku: Value(item.sku),
-        unitPrice: Value(item.unitPrice),
-        costPrice: Value(item.costPrice),
-        quantity: Value(item.quantity),
-        discount: Value(0),
-        lineTotal: Value(item.lineTotal),
-        createdAt: Value(now),
-        version: Value(1),
-        syncStatus: const Value('pending'),
-      ));
-    }
+     for (final item in itemsSnapshot) {
+       await _db.into(_db.saleItems).insert(SaleItemsCompanion(
+         id: Value(const Uuid().v4()),
+         saleId: Value(holdId),
+         productId: Value(item.productId),
+         productName: Value(item.productName),
+         sku: Value(item.sku),
+         unitPrice: Value(item.unitPrice),
+         costPrice: Value(item.costPrice),
+         quantity: Value(item.quantity),
+         discount: const Value(0),
+         lineTotal: Value(item.lineTotal),
+         createdAt: Value(now),
+         version: const Value(1),
+         syncStatus: const Value('pending'),
+       ));
+     }
 
     return holdId;
   }
@@ -416,7 +416,7 @@ class PosRepository {
     // Tandai hold sebagai voided
     await (_db.update(_db.sales)..where((t) => t.id.equals(holdId)))
         .write(SalesCompanion(
-      status: Value('voided'),
+        status: const Value('voided'),
       updatedAt: Value(DateTime.now().toUtc()),
       version: Value(row.version + 1),
     ));

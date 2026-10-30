@@ -5,6 +5,8 @@
 ///
 /// Pastikan server PocketBase berjalan di http://127.0.0.1:8090
 /// dan admin sudah terdaftar (email/password di bawah).
+// ignore_for_file: avoid_print
+library;
 
 import 'package:pocketbase/pocketbase.dart';
 

@@ -50,9 +50,10 @@ class _AuditLogPageState extends ConsumerState<AuditLogPage> {
             onActionChanged: (v) => setState(() => _selectedAction = v),
             selectedEntityType: _selectedEntityType,
             onEntityTypeChanged: (v) => setState(() => _selectedEntityType = v),
-            onClearFilters: _clearFilters,
-            l10n: l10n,
-          ),
+             onClearFilters: _clearFilters,
+             onExport: _exportCSV,
+             l10n: l10n,
+           ),
           // Log list
           Expanded(
             child: _AuditLogList(
@@ -120,6 +121,7 @@ class _FilterBar extends StatelessWidget {
     required this.selectedEntityType,
     required this.onEntityTypeChanged,
     required this.onClearFilters,
+    required this.onExport,
     required this.l10n,
   });
 
@@ -135,6 +137,7 @@ class _FilterBar extends StatelessWidget {
   final String? selectedEntityType;
   final ValueChanged<String?> onEntityTypeChanged;
   final VoidCallback onClearFilters;
+  final VoidCallback onExport;
   final AppLocalizations l10n;
 
   @override
@@ -277,6 +280,12 @@ class _FilterBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              TextButton.icon(
+                onPressed: onExport,
+                icon: const Icon(AppIcons.downloadRounded, size: 18),
+                label: Text(l10n.exportCSV),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               TextButton.icon(
                 onPressed: onClearFilters,
                 icon: const Icon(AppIcons.clearRounded, size: 18),

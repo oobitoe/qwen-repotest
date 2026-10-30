@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/sync_dao.dart';
 import '../../core/database/sync_engine.dart';
+import '../../core/network/pocketbase_transport.dart';
 
 /// Global singleton database instance.
 /// Dibuat sekali saat aplikasi start untuk menghindari multiple instances warning Drift.
@@ -34,10 +35,9 @@ final uuidProvider = Provider<Uuid>((ref) => uuid);
 /// Locale saat ini (id / en). Diubah dari halaman Settings.
 final localeProvider = StateProvider<Locale>((ref) => const Locale('id', 'ID'));
 
-/// Transport sinkronisasi: saat ini hanya in-memory (mode offline-only).
-/// Integrasi PocketBase akan ditambahkan nanti.
+/// Transport sinkronisasi: PocketBase (remote) dengan fallback offline.
 final syncTransportProvider = Provider<SyncTransport>((ref) {
-  return InMemorySyncTransport(online: false);
+  return PocketBaseSyncTransport();
 });
 
 /// Engine sinkronisasi global (push outbox + pull + backoff).

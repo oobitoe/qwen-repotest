@@ -23,8 +23,8 @@ dependencies:
   drift: ^2.20.2
   drift_flutter: ^0.2.0
 
-  # Remote database / auth
-  # (PocketBase integration will be added later)
+  # Remote database / auth (PocketBase)
+  pocketbase: ^0.17.0
 
   # Charts
   fl_chart: ^0.68.0

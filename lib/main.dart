@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
@@ -10,6 +11,10 @@ import 'shared/providers/core_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Muat environment variabel (.env) sebelum inisialisasi layanan lain,
+  // agar POCKETBASE_URL dan sebagainya tersedia untuk PocketBaseClient.
+  await dotenv.load(fileName: ".env");
 
   // Initialize database singleton BEFORE runApp to avoid multiple instances warning Drift.
   final db = initializeDatabase();

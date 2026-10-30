@@ -10,7 +10,7 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 - [x] Design system: tema Material 3, light/dark, token warna/spacing, font
 - [x] Routing GoRouter + responsive shell (mobile bottom-nav / desktop sidebar)
 - [x] SQLite via Drift + migrasi awal (tabel inti + sync_queue + metadata sync)
-- [x] Konfigurasi Supabase (.env.example, client provider, aman tanpa secret di kode)
+- [x] Konfigurasi PocketBase (.env.example, client provider, transport sync, aman tanpa secret di kode)
 - [x] Authentication & role (login page, session, guard route)
 - [x] Test fase 1: `dart analyze` bersih + unit/widget test lolos
 
@@ -20,8 +20,8 @@ Status legend: [ ] belum, [~] berjalan, [x] selesai (analyzer + test hijau)
 - [x] Sync queue / outbox pattern + retry exponential backoff: sync_dao.dart, sync_engine.dart
 - [x] Conflict handling & idempotency: applyRemoteUpsert LWW, INSERT OR IGNORE, unique constraints
 - [x] Pengujian offline/online sync (tanpa duplikasi): widget_test.dart (12 tes lolos)
-- [ ] **Supabase connection: Jalankan schema.sql di Supabase project, test koneksi .env, verify sync engine end-to-end**
-- [ ] **Supabase sync: Integrate SyncEngine dengan SupabaseSyncTransport di main.dart, start periodic sync, add sync status UI**
+- [ ] **PocketBase connection: Buat koleksi di PocketBase, test koneksi .env, verify sync engine end-to-end**
+- [ ] **PocketBase sync: SyncEngine sudah terhubung ke PocketBaseSyncTransport di core_providers.dart, start periodic sync di main.dart, add sync status UI**
 
 ## Fase 3 — Operasional
 - [x] CRUD Produk & Kategori (cari, SKU, barcode, stok min): repository + presentation + routing

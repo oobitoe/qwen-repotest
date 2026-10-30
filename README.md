@@ -69,7 +69,7 @@ lib/
 | **State** | Riverpod 2.6+ (Notifier, StreamProvider, FutureProvider) |
 | **Routing** | GoRouter 14+ (ShellRoute, redirect guard) |
 | **Local DB** | Drift 2.21+ (SQLite, type-safe, migrations) |
-| **Remote DB** | Supabase (PostgreSQL, Auth, Realtime) |
+| **Remote DB** | PocketBase (REST/Realtime, self-hosted) |
 | **Charts** | fl_chart 0.68+ |
 | **Sync** | Custom outbox pattern, exponential backoff, LWW conflict resolution |
 | **Localization** | flutter_localizations + ARB (ID/EN) |
@@ -80,7 +80,7 @@ lib/
 - Flutter SDK 3.24+
 - Dart SDK 3.5+
 - Android Studio / VS Code
-- Supabase account (untuk backend cloud)
+- PocketBase server (self-hosted, default: `http://127.0.0.1:8090`)
 - Linux: `libsqlite3-dev` (untuk build)
 
 ## 🚀 Instalasi & Menjalankan
@@ -96,8 +96,9 @@ flutter pub get
 # 3. Generate code (Drift, l10n)
 dart run build_runner build --delete-conflicting-outputs
 
-# 4. Setup Supabase (opsional - untuk mode online)
-# Copy .env.example to .env dan isi SUPABASE_URL + SUPABASE_ANON_KEY
+# 4. Setup PocketBase (opsional - untuk mode online)
+# Copy .env.example ke .env dan isi POCKETBASE_URL (default: http://127.0.0.1:8090)
+# Pastikan server PocketBase sudah berjalan sebelum sinkronisasi dilakukan.
 
 # 5. Jalankan aplikasi
 flutter run -d linux    # Linux desktop
@@ -128,7 +129,7 @@ flutter build windows --release
 
 ### Sinkronisasi (Offline-First)
 1. **Outbox Pattern** - Setiap perubahan lokal masuk ke `sync_queue`
-2. **Push** - Upload perubahan lokal ke Supabase (batch, idempotent)
+2. **Push** - Upload perubahan lokal ke PocketBase (batch, idempotent)
 3. **Pull** - Download perubahan remote (server wins untuk konflik sederhana)
 4. **Retry** - Exponential backoff (max 5x, 30s base)
 4. **Conflict Resolution** - Last-Write-Wins (LWW) berdasarkan `updatedAt`
@@ -136,7 +137,7 @@ flutter build windows --release
 ### Mode Operasi
 | Mode | Deskripsi |
 |------|-----------|
-| **Online** | Supabase connected, sync real-time |
+| **Online** | PocketBase connected, sync real-time |
 | **Offline** | SQLite lokal penuh, antrian sync |
 | **Hybrid** | Lokal dulu, sync saat online |
 
@@ -197,9 +198,9 @@ genhtml coverage/lcov.info -o coverage/html
 ```
 
 ```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+POCKETBASE_URL=http://127.0.0.1:8090
 ```
+
 
 ## 📝 Lisensi
 

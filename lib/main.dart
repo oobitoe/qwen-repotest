@@ -14,7 +14,12 @@ Future<void> main() async {
 
   // Muat environment variabel (.env) sebelum inisialisasi layanan lain,
   // agar POCKETBASE_URL dan sebagainya tersedia untuk PocketBaseClient.
-  await dotenv.load(fileName: ".env");
+  // Jangan crash aplikasi bila .env belum ada — gunakan default.
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Peringatan: .env tidak ditemukan, menggunakan default POCKETBASE_URL.');
+  }
 
   // Initialize database singleton BEFORE runApp to avoid multiple instances warning Drift.
   final db = initializeDatabase();

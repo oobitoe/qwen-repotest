@@ -416,6 +416,25 @@ class _AuditLogsParams {
   final DateTime? endDate;
   final AuditAction? action;
   final String? entityType;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _AuditLogsParams &&
+          runtimeType == other.runtimeType &&
+          query == other.query &&
+          startDate == other.startDate &&
+          endDate == other.endDate &&
+          action == other.action &&
+          entityType == other.entityType;
+
+  @override
+  int get hashCode =>
+      query.hashCode ^
+      startDate.hashCode ^
+      endDate.hashCode ^
+      action.hashCode ^
+      entityType.hashCode;
 }
 
 final _auditLogsProvider = FutureProvider.family<List<AuditLogEntity>, _AuditLogsParams>(

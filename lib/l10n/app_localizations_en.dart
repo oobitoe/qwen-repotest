@@ -751,4 +751,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lanjutkanTransaksi => 'Resume Transaction';
+
+  @override
+  String get storeSettings => 'Store Settings';
+
+  @override
+  String get storeSettingsSubtitle =>
+      'Configure store, business, tax, and printer';
+
+  @override
+  String get businessName => 'Business Name';
+
+  @override
+  String get storeName => 'Store Name';
+
+  @override
+  String get storeAddress => 'Store Address';
+
+  @override
+  String get storePhone => 'Store Phone';
+
+  @override
+  String get currency => 'Currency';
+
+  @override
+  String get timezone => 'Timezone';
+
+  @override
+  String get taxName => 'Tax Name';
+
+  @override
+  String get taxRate => 'Tax Rate (%)';
+
+  @override
+  String get printerName => 'Printer Name';
+
+  @override
+  String get printerEnabled => 'Enable Thermal Printer';
+
+  @override
+  String get printerSettings => 'Printer Settings';
+
+  @override
+  String get printerSettingsSubtitle => 'Configure thermal Bluetooth printer';
+
+  @override
+  String get scanPrinter => 'Scan Bluetooth Printer';
+
+  @override
+  String get scanning => 'Scanning…';
+
+  @override
+  String get printerConnected => 'Connected';
+
+  @override
+  String get printerDisconnected => 'Disconnected';
+
+  @override
+  String get disconnect => 'Disconnect';
+
+  @override
+  String get printTestReceipt => 'Print Test Receipt';
+
+  @override
+  String get noPrinterFound => 'No Printer Found';
 }

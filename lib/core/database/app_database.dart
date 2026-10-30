@@ -66,6 +66,12 @@ part 'app_database.g.dart';
     PaymentMethodsConfig,
     Devices,
     FinancialAdjustments,
+    Roles,
+    Permissions,
+    RolePermissions,
+    BusinessMembers,
+    UserStoreAccess,
+    SaleSequences,
   ],
 )
 class AppDatabase extends _$AppDatabase {

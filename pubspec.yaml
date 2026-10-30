@@ -42,6 +42,11 @@ dependencies:
   async: ^2.11.0
 
   path: any
+
+  # Printer Thermal Bluetooth (ESC/POS)
+  flutter_blue_plus: ^2.3.14
+  esc_pos_printer: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -52,3 +57,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+  assets:
+    - assets/images/products/
+    - assets/images/logo/

@@ -7,6 +7,8 @@ import '../../../../app/theme/design_tokens.dart';
 import '../../../../app/theme/theme_presets.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/providers/core_providers.dart';
+import '../data/store_settings_repository.dart';
+import 'printer_settings_page.dart';
 
 /// Halaman pengaturan aplikasi.
 class SettingsPage extends ConsumerWidget {
@@ -50,6 +52,18 @@ class SettingsPage extends ConsumerWidget {
           _SectionHeader(title: l10n.sync, subtitle: l10n.syncSubtitle),
           const SizedBox(height: AppSpacing.md),
           const _SyncSettings(),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Toko & Bisnis Section
+          _SectionHeader(title: l10n.storeSettings, subtitle: l10n.storeSettingsSubtitle),
+          const SizedBox(height: AppSpacing.md),
+          const _StoreSettingsSection(),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Printer Section
+          _SectionHeader(title: l10n.printerSettings, subtitle: l10n.printerSettingsSubtitle),
+          const SizedBox(height: AppSpacing.md),
+          const _PrinterSettingsSection(),
           const SizedBox(height: AppSpacing.xl),
 
           // About Section
@@ -202,6 +216,238 @@ class _ThemePresetCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Section printer thermal Bluetooth.
+class _PrinterSettingsSection extends ConsumerWidget {
+  const _PrinterSettingsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const PrinterSettingsPage(),
+              ),
+            );
+          },
+          icon: const Icon(AppIcons.bluetoothRounded),
+          label: Text(AppLocalizations.of(context)!.scanPrinter),
+        ),
+      ],
+    );
+  }
+}
+
+
+/// Section pengaturan toko & bisnis dengan form edit inline.
+class _StoreSettingsSection extends ConsumerStatefulWidget {
+  const _StoreSettingsSection();
+
+  @override
+  ConsumerState<_StoreSettingsSection> createState() => _StoreSettingsSectionState();
+}
+
+class _StoreSettingsSectionState extends ConsumerState<_StoreSettingsSection> {
+  final _businessNameCtrl = TextEditingController();
+  final _storeNameCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _currencyCtrl = TextEditingController();
+  final _timezoneCtrl = TextEditingController();
+  final _taxNameCtrl = TextEditingController();
+  final _taxRateCtrl = TextEditingController();
+  final _printerNameCtrl = TextEditingController();
+  bool _printerEnabled = false;
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _businessNameCtrl.dispose();
+    _storeNameCtrl.dispose();
+    _addressCtrl.dispose();
+    _phoneCtrl.dispose();
+    _currencyCtrl.dispose();
+    _timezoneCtrl.dispose();
+    _taxNameCtrl.dispose();
+    _taxRateCtrl.dispose();
+    _printerNameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final s = await ref.read(storeSettingsProvider.future);
+      _businessNameCtrl.text = s.businessName;
+      _storeNameCtrl.text = s.storeName;
+      _addressCtrl.text = s.storeAddress;
+      _phoneCtrl.text = s.storePhone;
+      _currencyCtrl.text = s.currency;
+      _timezoneCtrl.text = s.timezone;
+      _taxNameCtrl.text = s.taxName;
+      _taxRateCtrl.text = s.taxRate.toStringAsFixed(2);
+      _printerNameCtrl.text = s.printerName;
+      _printerEnabled = s.printerEnabled;
+    } catch (e) {
+      // Jika belum ada data, biarkan kosong dengan default
+    }
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _save() async {
+    if (!_businessNameCtrl.text.isNotEmpty) return;
+    setState(() => _isSaving = true);
+
+    try {
+      await ref.read(storeSettingsRepositoryProvider).saveSettings(
+        StoreSetting(
+          businessId: 'local-business',
+          storeId: 'local-store',
+          businessName: _businessNameCtrl.text.trim(),
+          storeName: _storeNameCtrl.text.trim(),
+          storeAddress: _addressCtrl.text.trim(),
+          storePhone: _phoneCtrl.text.trim(),
+          currency: _currencyCtrl.text.trim().isNotEmpty
+              ? _currencyCtrl.text.trim()
+              : 'IDR',
+          timezone: _timezoneCtrl.text.trim().isNotEmpty
+              ? _timezoneCtrl.text.trim()
+              : 'Asia/Jakarta',
+          taxRate: double.tryParse(_taxRateCtrl.text) ?? 0,
+          taxName: _taxNameCtrl.text.trim().isNotEmpty
+              ? _taxNameCtrl.text.trim()
+              : 'PPN',
+          printerName: _printerNameCtrl.text.trim().isNotEmpty
+              ? _printerNameCtrl.text.trim()
+              : 'Thermal Printer',
+          printerEnabled: _printerEnabled,
+          printerAddress: '',
+        ),
+      );
+
+      await ref.read(storeSettingsProvider.future); // refresh
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pengaturan toko disimpan')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TextField(label: l10n.businessName, controller: _businessNameCtrl),
+              const SizedBox(height: AppSpacing.md),
+              _TextField(label: l10n.storeName, controller: _storeNameCtrl),
+              const SizedBox(height: AppSpacing.md),
+              _TextField(label: l10n.storeAddress, controller: _addressCtrl),
+              const SizedBox(height: AppSpacing.md),
+              _TextField(label: l10n.storePhone, controller: _phoneCtrl),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(child: _TextField(label: l10n.currency, controller: _currencyCtrl)),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _TextField(label: l10n.timezone, controller: _timezoneCtrl)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(child: _TextField(label: l10n.taxName, controller: _taxNameCtrl)),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _TextField(
+                      label: l10n.taxRate,
+                      controller: _taxRateCtrl,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(child: _TextField(label: l10n.printerName, controller: _printerNameCtrl)),
+                  const SizedBox(width: AppSpacing.md),
+                  CheckboxListTile(
+                    title: Text(l10n.printerEnabled),
+                    value: _printerEnabled,
+                    onChanged: (v) => setState(() => _printerEnabled = v ?? false),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _isSaving ? null : _save,
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(l10n.save),
+                ),
+              ),
+            ],
+          );
+  }
+}
+
+class _TextField extends StatelessWidget {
+  const _TextField({required this.label, required this.controller, this.keyboardType});
+
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
     );
   }

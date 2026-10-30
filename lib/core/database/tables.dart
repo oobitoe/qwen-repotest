@@ -125,6 +125,7 @@ class Products extends Table {
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  TextColumn get imageUrl => text().nullable()(); // URL/gambar produk
 
   @override
   Set<Column> get primaryKey => {id};
@@ -865,6 +866,88 @@ class DebtPayments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+
+// ---------- Manajemen Role & Izin ----------
+
+class Roles extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+  BoolColumn get isSystem => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Permissions extends Table {
+  TextColumn get id => text()();
+  TextColumn get code => text().unique()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class RolePermissions extends Table {
+  TextColumn get id => text()();
+  TextColumn get roleId => text().references(Roles, #id)();
+  TextColumn get permissionId => text().references(Permissions, #id)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class BusinessMembers extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().references(Businesses, #id)();
+  TextColumn get userId => text()();
+  TextColumn get role => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class UserStoreAccess extends Table {
+  TextColumn get id => text()();
+  TextColumn get userId => text()();
+  TextColumn get storeId => text().references(Stores, #id)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Nomor Struk ----------
+
+class SaleSequences extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().nullable().references(Stores, #id)();
+  TextColumn get prefix => text().withDefault(const Constant('INV'))();
+  IntColumn get lastNumber => integer().withDefault(const Constant(0))();
+  DateTimeColumn get date => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
 
 // ---------- Antrean Sinkronisasi (outbox) ----------
 

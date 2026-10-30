@@ -80,4 +80,8 @@ class AppIcons {
   static const IconData clearRounded = Icons.clear_rounded;
   static const IconData clockRounded = Icons.access_alarm_rounded;
   static const IconData playArrowRounded = Icons.play_arrow_rounded;
+  static const IconData printerRounded = Icons.print_rounded;
+  static const IconData bluetoothRounded = Icons.bluetooth_rounded;
+  static const IconData linkRounded = Icons.link_rounded;
+  static const IconData checkCircleRounded = Icons.check_circle_rounded;
 }

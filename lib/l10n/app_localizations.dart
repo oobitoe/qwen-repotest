@@ -1519,6 +1519,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume Transaction'**
   String get lanjutkanTransaksi;
+
+  /// No description provided for @storeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Settings'**
+  String get storeSettings;
+
+  /// No description provided for @storeSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure store, business, tax, and printer'**
+  String get storeSettingsSubtitle;
+
+  /// No description provided for @businessName.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Name'**
+  String get businessName;
+
+  /// No description provided for @storeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Name'**
+  String get storeName;
+
+  /// No description provided for @storeAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Address'**
+  String get storeAddress;
+
+  /// No description provided for @storePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Phone'**
+  String get storePhone;
+
+  /// No description provided for @currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @timezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get timezone;
+
+  /// No description provided for @taxName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax Name'**
+  String get taxName;
+
+  /// No description provided for @taxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax Rate (%)'**
+  String get taxRate;
+
+  /// No description provided for @printerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer Name'**
+  String get printerName;
+
+  /// No description provided for @printerEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Thermal Printer'**
+  String get printerEnabled;
+
+  /// No description provided for @printerSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer Settings'**
+  String get printerSettings;
+
+  /// No description provided for @printerSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure thermal Bluetooth printer'**
+  String get printerSettingsSubtitle;
+
+  /// No description provided for @scanPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Bluetooth Printer'**
+  String get scanPrinter;
+
+  /// No description provided for @scanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning…'**
+  String get scanning;
+
+  /// No description provided for @printerConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get printerConnected;
+
+  /// No description provided for @printerDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get printerDisconnected;
+
+  /// No description provided for @disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnect;
+
+  /// No description provided for @printTestReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Test Receipt'**
+  String get printTestReceipt;
+
+  /// No description provided for @noPrinterFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Printer Found'**
+  String get noPrinterFound;
 }
 
 class _AppLocalizationsDelegate

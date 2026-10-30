@@ -752,4 +752,68 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lanjutkanTransaksi => 'Lanjutkan Transaksi';
+
+  @override
+  String get storeSettings => 'Pengaturan Toko';
+
+  @override
+  String get storeSettingsSubtitle =>
+      'Konfigurasi toko, bisnis, pajak, dan printer';
+
+  @override
+  String get businessName => 'Nama Bisnis';
+
+  @override
+  String get storeName => 'Nama Toko';
+
+  @override
+  String get storeAddress => 'Alamat Toko';
+
+  @override
+  String get storePhone => 'Telepon Toko';
+
+  @override
+  String get currency => 'Mata Uang';
+
+  @override
+  String get timezone => 'Zona Waktu';
+
+  @override
+  String get taxName => 'Nama Pajak';
+
+  @override
+  String get taxRate => 'Tarif Pajak (%)';
+
+  @override
+  String get printerName => 'Nama Printer';
+
+  @override
+  String get printerEnabled => 'Aktifkan Printer Thermal';
+
+  @override
+  String get printerSettings => 'Pengaturan Printer';
+
+  @override
+  String get printerSettingsSubtitle => 'Konfigurasi printer thermal Bluetooth';
+
+  @override
+  String get scanPrinter => 'Scan Printer Bluetooth';
+
+  @override
+  String get scanning => 'Sedang Memindai…';
+
+  @override
+  String get printerConnected => 'Terhubung';
+
+  @override
+  String get printerDisconnected => 'Tidak Terhubung';
+
+  @override
+  String get disconnect => 'Putuskan';
+
+  @override
+  String get printTestReceipt => 'Cetak Struk Uji';
+
+  @override
+  String get noPrinterFound => 'Tidak Ada Printer Ditemukan';
 }

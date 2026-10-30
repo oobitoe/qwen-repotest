@@ -152,6 +152,7 @@ void registerAllSyncMetas([AppDatabase? db]) {
         deletedAt: Value(dt(j['deleted_at'])),
         version: Value(i(j['version'])),
         syncStatus: const Value(SyncStatuses.synced),
+        imageUrl: Value(sn(j['image_url'])),
       )));
 
   SyncableDao.register(
@@ -673,6 +674,66 @@ void registerAllSyncMetas([AppDatabase? db]) {
         type: Value(s(j['type'])),
         createdBy: Value(sn(j['created_by'])),
         createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('role', db_.roles, (j) => RolesCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
+        name: Value(s(j['name'])),
+        description: Value(sn(j['description'])),
+        isSystem: Value(b(j['is_system'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        deletedAt: Value(dt(j['deleted_at'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('permission', db_.permissions, (j) => PermissionsCompanion(
+        id: Value(s(j['id'])),
+        code: Value(s(j['code'])),
+        description: Value(sn(j['description'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('role_permission', db_.rolePermissions, (j) => RolePermissionsCompanion(
+        id: Value(s(j['id'])),
+        roleId: Value(s(j['role_id'])),
+        permissionId: Value(s(j['permission_id'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('business_member', db_.businessMembers, (j) => BusinessMembersCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(s(j['business_id'])),
+        userId: Value(s(j['user_id'])),
+        role: Value(s(j['role'])),
+        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
+        updatedAt: Value(dt(j['updated_at']) ?? DateTime.now().toUtc()),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('user_store_access', db_.userStoreAccess, (j) => UserStoreAccessCompanion(
+        id: Value(s(j['id'])),
+        userId: Value(s(j['user_id'])),
+        storeId: Value(s(j['store_id'])),
+        version: Value(i(j['version'])),
+        syncStatus: const Value(SyncStatuses.synced),
+      )));
+
+  SyncableDao.register(_meta('sale_sequence', db_.saleSequences, (j) => SaleSequencesCompanion(
+        id: Value(s(j['id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
+        storeId: Value(sn(j['store_id'])),
+        prefix: Value(s(j['prefix'])),
+        lastNumber: Value(i(j['lastNumber'])),
+        date: Value(dt(j['date']) ?? DateTime.now().toUtc()),
         version: Value(i(j['version'])),
         syncStatus: const Value(SyncStatuses.synced),
       )));

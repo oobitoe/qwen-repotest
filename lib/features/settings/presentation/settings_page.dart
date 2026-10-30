@@ -400,13 +400,12 @@ class _StoreSettingsSectionState extends ConsumerState<_StoreSettingsSection> {
                 children: [
                   Expanded(child: _TextField(label: l10n.printerName, controller: _printerNameCtrl)),
                   const SizedBox(width: AppSpacing.md),
-                  CheckboxListTile(
-                    title: Text(l10n.printerEnabled),
+                  Checkbox(
                     value: _printerEnabled,
                     onChanged: (v) => setState(() => _printerEnabled = v ?? false),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
                   ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(l10n.printerEnabled),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),

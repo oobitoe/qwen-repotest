@@ -25,7 +25,6 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final sync = ref.watch(syncStatusProvider);
     final role = ref.watch(currentRoleProvider);
     final isMobile = MediaQuery.sizeOf(context).width < AppBreakpoints.tablet;
 
@@ -35,14 +34,16 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (isMobile && onMenuTap != null) ...[
-            IconButton(
-              tooltip: 'Menu',
-              onPressed: onMenuTap,
-              icon: const Icon(menu, size: 14),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
+           if (isMobile && onMenuTap != null) ...[
+             IconButton(
+               tooltip: 'Menu',
+               onPressed: onMenuTap,
+               padding: EdgeInsets.zero,
+               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+               icon: const Icon(menu, size: 14),
+             ),
+             const SizedBox(width: AppSpacing.sm),
+           ],
           Expanded(
             child: Text(
               title,
@@ -53,13 +54,14 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
             ),
           ),
-          const Spacer(),
           IconButton(
             tooltip: l10n.logout,
             onPressed: () => ref.read(authProvider.notifier).signOut(),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             icon: const Icon(AppIcons.logout, size: 12),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
     );

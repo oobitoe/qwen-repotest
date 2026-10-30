@@ -1,17 +1,15 @@
 import 'dart:async';
 
-
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
 import 'app_database.dart';
 import 'sync_dao.dart';
 import 'sync_registry.dart';
 
-/// Kontrak pengiriman batch operasi ke server. Implementasi nyata memakai
-/// Supabase; implementasi in-memory dipakai pada pengujian & mode offline.
+/// Kontrak pengiriman batch operasi ke server.
+/// Implementasi in-memory dipakai pada pengujian & mode offline.
 abstract class SyncTransport {
   /// Kirim daftar operasi outbox. Kembalikan id operasi yang diterima server.
   Future<List<String>> push(List<OutboxItem> batch);
@@ -29,65 +27,6 @@ typedef OutboxItem = ({
   Map<String, dynamic> payload,
   int retryCount,
 });
-
-/// Transport nyata berbasis Supabase (upsert per tabel via REST).
-class SupabaseSyncTransport implements SyncTransport {
-  SupabaseSyncTransport(this._client);
-
-  final SupabaseClient _client;
-
-  @override
-  Future<List<String>> push(List<OutboxItem> batch) async {
-    final accepted = <String>[];
-    for (final item in batch) {
-      final meta = SyncableDao.metaFor(item.entityType);
-      if (meta == null) {
-        throw StateError('Tipe entitas tidak terdaftar untuk sync: '
-            '${item.entityType}');
-      }
-      final table = _client.from(meta.tableName);
-      if (item.operation == SyncOperations.delete) {
-        await table
-            .update({
-              'deleted_at': item.payload['deleted_at'],
-              'updated_at': item.payload['updated_at'],
-              'version': item.payload['version'],
-            })
-            .eq('id', item.entityId);
-      } else {
-        await table.upsert(_remoteRow(meta, item.payload));
-      }
-      accepted.add(item.id);
-    }
-    return accepted;
-  }
-
-  /// Buang kolom lokal-only (sync_status) dan konversi camelCase->snake bila
-  /// diperlukan. Payload sudah dibuat dalam format snake_case oleh repository.
-  Map<String, dynamic> _remoteRow(TableMeta meta, Map<String, dynamic> payload) {
-    final allowed = meta.columns.map((c) => c.$1).toSet();
-    return {
-      for (final e in payload.entries)
-        if (allowed.contains(e.key) && e.key != 'sync_status') e.key: e.value,
-    };
-  }
-
-  @override
-  Future<Map<String, List<Map<String, dynamic>>>> pull(DateTime since) async {
-    registerAllSyncMetas();
-    final result = <String, List<Map<String, dynamic>>>{};
-    for (final meta in SyncableDao.knownMetas) {
-      final rows = await _client
-          .from(meta.tableName)
-          .select()
-          .gt('updated_at', since.toUtc().toIso8601String())
-          .limit(500);
-      result[meta.entityType] =
-          rows.cast<Map<String, dynamic>>().toList(growable: false);
-    }
-    return result;
-  }
-}
 
 /// Transport tandingan untuk pengujian: mencatat semua push, mengembalikan
 /// antrian pull manual. Pada mode offline transport ini selalu "gagal" secara

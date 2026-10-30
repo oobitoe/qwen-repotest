@@ -130,7 +130,66 @@ class Products extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Ledger pergerakan stok — satu-satunya sumber kebenaran perubahan stok.
+// ---------- Produk Lanjutan ----------
+
+class ProductVariants extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text().references(Products, #id)();
+  TextColumn get name => text()();
+  TextColumn get sku => text().nullable()();
+  RealColumn get priceModifier => real().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class ProductBarcodes extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text().references(Products, #id)();
+  TextColumn get barcode => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class ProductPrices extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text().references(Products, #id)();
+  RealColumn get price => real()();
+  DateTimeColumn get startDate => dateTime().nullable()();
+  DateTimeColumn get endDate => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class ProductImages extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text().references(Products, #id)();
+  TextColumn get url => text()();
+  TextColumn get storagePath => text().nullable()();
+  BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Ledger pergerakan stok — satu-satunya sumber kebenaran perubahan stok.
 class StockMovements extends Table {
   TextColumn get id => text()();
   TextColumn get productId => text().references(Products, #id)();
@@ -289,7 +348,208 @@ class SaleItems extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ---------- Pengeluaran & Pemasukan ----------
+// ---------- Sale Payments ----------
+
+class SalePayments extends Table {
+  TextColumn get id => text()();
+  TextColumn get saleId => text().references(Sales, #id)();
+  RealColumn get amount => real()();
+  TextColumn get paymentMethod => text()();
+  DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get createdBy => text().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Sale Returns (RETOR PENJUALAN) ----------
+
+class SaleReturns extends Table {
+  TextColumn get id => text()();
+  TextColumn get saleId => text().references(Sales, #id)();
+  TextColumn get referenceNumber => text()();
+  RealColumn get total => real().withDefault(const Constant(0))();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class SaleReturnItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get returnId => text().references(SaleReturns, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  RealColumn get quantity => real()();
+  RealColumn get unitPrice => real()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Stock Transfers ----------
+
+class StockTransfers extends Table {
+  TextColumn get id => text()();
+  @ReferenceName('fromStore')
+  TextColumn get fromStoreId => text().nullable().references(Stores, #id)();
+  @ReferenceName('toStore')
+  TextColumn get toStoreId => text().nullable().references(Stores, #id)();
+  TextColumn get referenceNumber => text()();
+  TextColumn get status => text().withDefault(const Constant('pending'))(); // pending | shipped | received | cancelled
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StockTransferItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get transferId => text().references(StockTransfers, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  RealColumn get quantity => real()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Customer Addresses ----------
+
+class CustomerAddresses extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId => text().references(Customers, #id)();
+  TextColumn get label => text()();
+  TextColumn get address => text()();
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Konfigurasi & Pengaturan ----------
+
+class BusinessSettings extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get key => text()();
+  TextColumn get value => text().withDefault(const Constant('{}'))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StoreSettings extends Table {
+  TextColumn get id => text()();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
+  TextColumn get key => text()();
+  TextColumn get value => text().withDefault(const Constant('{}'))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class TaxSettings extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get name => text()();
+  RealColumn get rate => real().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PaymentMethodsConfig extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get code => text()();
+  TextColumn get name => text()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Devices extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().nullable()();
+  TextColumn get deviceId => text()();
+  TextColumn get name => text().nullable()();
+  DateTimeColumn get lastSeenAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Financial Adjustments ----------
+
+class FinancialAdjustments extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get description => text()();
+  RealColumn get amount => real()();
+  TextColumn get type => text()(); // credit | debit
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Audit Log ----------
+
+class AuditLogs extends Table {
+  TextColumn get id => text()();
+  TextColumn get userId => text().named('user_id')();
+  TextColumn get userName => text().named('user_name')();
+  TextColumn get action => text().named('action')();
+  TextColumn get entityType => text().named('entity_type')();
+  TextColumn get entityId => text().named('entity_id')();
+  TextColumn get description => text().named('description')();
+  TextColumn get oldValue => text().named('old_value').nullable()();
+  TextColumn get newValue => text().named('new_value').nullable()();
+  TextColumn get ipAddress => text().named('ip_address').nullable()();
+  TextColumn get deviceInfo => text().named('device_info').nullable()();
+  DateTimeColumn get createdAt => dateTime().named('created_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
 
 class ExpenseCategories extends Table {
   TextColumn get id => text()();
@@ -500,6 +760,77 @@ class PurchasePayments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ---------- Purchase Orders ----------
+
+class PurchaseOrders extends Table {
+  TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get supplierId => text().references(Suppliers, #id)();
+  TextColumn get referenceNumber => text()();
+  TextColumn get status => text().withDefault(const Constant('draft'))(); // draft | ordered | received | cancelled
+  RealColumn get subtotal => real().withDefault(const Constant(0))();
+  RealColumn get discount => real().withDefault(const Constant(0))();
+  RealColumn get tax => real().withDefault(const Constant(0))();
+  RealColumn get total => real()();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PurchaseOrderItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get orderId => text().references(PurchaseOrders, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  TextColumn get productNameSnapshot => text()();
+  TextColumn get sku => text().nullable()();
+  RealColumn get unitPrice => real()();
+  RealColumn get quantity => real()();
+  RealColumn get receivedQuantity => real().withDefault(const Constant(0))();
+  RealColumn get lineTotal => real()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------- Purchase Returns (RETOR PEMBELIAN) ----------
+
+class PurchaseReturns extends Table {
+  TextColumn get id => text()();
+  TextColumn get purchaseId => text().references(Purchases, #id)();
+  TextColumn get referenceNumber => text()();
+  RealColumn get total => real().withDefault(const Constant(0))();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PurchaseReturnItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get returnId => text().references(PurchaseReturns, #id)();
+  TextColumn get productId => text().references(Products, #id)();
+  RealColumn get quantity => real()();
+  RealColumn get unitPrice => real()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ---------- Hutang & Piutang ----------
 
 class Debts extends Table {
@@ -534,24 +865,6 @@ class DebtPayments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ---------- Audit Log ----------
-class AuditLogs extends Table {
-  TextColumn get id => text()();
-  TextColumn get userId => text().named('user_id')();
-  TextColumn get userName => text().named('user_name')();
-  TextColumn get action => text().named('action')(); // create | update | delete | login | logout | payment | refund | stockAdjustment | priceChange | permissionChange | settingsChange | dataExport | dataImport | sync
-  TextColumn get entityType => text().named('entity_type')(); // products | sales | expenses | users | etc
-  TextColumn get entityId => text().named('entity_id')();
-  TextColumn get description => text().named('description')();
-  TextColumn get oldValue => text().named('old_value').nullable()();
-  TextColumn get newValue => text().named('new_value').nullable()();
-  TextColumn get ipAddress => text().named('ip_address').nullable()();
-  TextColumn get deviceInfo => text().named('device_info').nullable()();
-  DateTimeColumn get createdAt => dateTime().named('created_at').withDefault(currentDateAndTime)();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
 
 // ---------- Antrean Sinkronisasi (outbox) ----------
 

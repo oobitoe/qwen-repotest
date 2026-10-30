@@ -24,8 +24,7 @@ dependencies:
   drift_flutter: ^0.2.0
 
   # Remote database / auth
-  supabase: ^2.5.0
-  supabase_flutter: ^2.8.0
+  # (PocketBase integration will be added later)
 
   # Charts
   fl_chart: ^0.68.0

@@ -1,11 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' as sb;
-
-import '../../../core/network/supabase_config.dart';
-
-export 'package:supabase_flutter/supabase_flutter.dart' show User, Session;
 
 /// Role pengguna awal sesuai PRD.
 enum UserRole { owner, admin, manager, kasir, staffGudang }
@@ -66,77 +61,42 @@ class AuthSignedOut extends AuthState {
 }
 
 class AuthSignedIn extends AuthState {
-  const AuthSignedIn(this.user, this.role);
-  final sb.User user;
+  const AuthSignedIn(this.userId, this.role);
+  final String userId;
   final UserRole role;
 }
 
-/// Pengguna lokal untuk mode offline-only (Supabase belum dikonfigurasi).
-final localDeviceUser = sb.User(
-  id: 'local-device-owner',
-  appMetadata: const {},
-  userMetadata: const {'role': 'owner'},
-  aud: 'authenticated',
-  createdAt: DateTime.utc(2024).toIso8601String(),
-  email: null,
-);
+/// Pengguna lokal untuk mode offline-only (tanpa backend autentikasi).
+final localDeviceUserId = 'local-device-owner';
 
 /// Mode offline-only: aplikasi tetap dapat dipakai penuh sebagai owner lokal.
-final localOfflineUser = AuthSignedIn(localDeviceUser, UserRole.owner);
+final localOfflineUser = AuthSignedIn(localDeviceUserId, UserRole.owner);
 
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
-    final client = SupabaseConfig.client;
-    if (client == null) {
-      return localOfflineUser;
-    }
-    _listen(client);
-    return _fromSession(client.auth.currentSession);
-  }
-
-  StreamSubscription<sb.AuthState>? _sub;
-
-  void _listen(sb.SupabaseClient client) {
-    final stream = client.auth.onAuthStateChange;
-    _sub?.cancel();
-    _sub = stream.listen((data) {
-      state = _fromSession(data.session);
-    });
-  }
-
-  AuthState _fromSession(sb.Session? session) {
-    if (session == null) return const AuthSignedOut();
-    final role = roleFromName(
-      session.user.userMetadata?['role'] as String?,
-    );
-    return AuthSignedIn(session.user, role);
+    // Tanpa backend auth (Supabase/PocketBase belum diintegrasi),
+    // aplikasi berjalan sebagai owner lokal.
+    return localOfflineUser;
   }
 
   Future<void> signIn(String email, String password) async {
-    final client = SupabaseConfig.client;
-    if (client == null) return; // mode lokal, tidak perlu login
-    await client.auth.signInWithPassword(email: email, password: password);
+    // Tidak ada backend auth saat ini; mode lokal selalu sukses sebagai owner.
+    return;
   }
 
   Future<void> signUp(String email, String password, String fullName) async {
-    final client = SupabaseConfig.client;
-    if (client == null) return;
-    await client.auth.signUp(
-      email: email,
-      password: password,
-      data: {'full_name': fullName, 'role': 'kasir'},
-    );
+    // Tidak ada backend auth saat ini.
+    return;
   }
 
   Future<void> signOut() async {
-    final client = SupabaseConfig.client;
-    if (client == null) return;
-    await client.auth.signOut();
+    // Tidak ada backend auth untuk di-sign-out.
+    return;
   }
 
   void dispose() {
-    _sub?.cancel();
+    // Tidak ada subscription untuk dibatalkan.
   }
 }
 

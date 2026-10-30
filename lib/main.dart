@@ -5,17 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 import 'core/database/sync_registry.dart';
-import 'core/network/supabase_config.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/providers/core_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Supabase dari berkas .env (mode offline-only jika .env belum diisi)
-  await SupabaseConfig.initialize();
-
-  // Initialize database singleton BEFORE runApp to avoid multiple instances
+  // Initialize database singleton BEFORE runApp to avoid multiple instances warning Drift.
   final db = initializeDatabase();
 
   // Register sync metas once at app startup

@@ -5,12 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/network/supabase_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/auth_controller.dart';
 
-/// Halaman login Supabase. Bila Supabase tidak dikonfigurasi, aplikasi berada
-/// dalam mode offline-only dan tombol "Masuk lokal" tersedia.
+/// Halaman login. Saat ini berjalan dalam mode lokal (tanpa backend auth).
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -53,7 +51,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final offlineOnly = !SupabaseConfig.isValid;
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
@@ -79,41 +76,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: AppSpacing.xxs),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            offlineOnly
-                                ? AppIcons.cloudOffRounded
-                                : AppIcons.cloudDoneRounded,
-                            size: 18,
-                            color: offlineOnly
-                                ? scheme.onSurfaceVariant
-                                : scheme.primary,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Text(
-                            offlineOnly
-                                ? l10n.offlineMode
-                                : l10n.onlineMode,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: offlineOnly
-                                      ? scheme.onSurfaceVariant
-                                      : scheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
                       Text(
-                        offlineOnly
-                            ? l10n.offlineSubtitle
-                            : l10n.loginSubtitle,
+                        l10n.loginSubtitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: scheme.onSurfaceVariant),
@@ -121,7 +85,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       const SizedBox(height: AppSpacing.xl),
                       TextFormField(
                         controller: _email,
-                        enabled: !offlineOnly && !_busy,
+                        enabled: !_busy,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: l10n.email,
@@ -134,7 +98,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: _password,
-                        enabled: !offlineOnly && !_busy,
+                        enabled: !_busy,
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: l10n.password,
@@ -147,7 +111,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       const SizedBox(height: AppSpacing.lg),
                       FilledButton(
                         onPressed:
-                            _busy || offlineOnly ? null : () => _submit(),
+                            _busy ? null : () => _submit(),
                         child: _busy
                             ? const SizedBox(
                                 height: 20,
@@ -158,7 +122,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       OutlinedButton(
-                        onPressed: _busy || offlineOnly
+                        onPressed: _busy
                             ? null
                             : () => GoRouter.of(context).push(AppRoutes.register),
                         child: Text(l10n.registerAccount),

@@ -52,7 +52,7 @@ class _PosPageState extends ConsumerState<PosPage> {
 
   String? _getCashierId(WidgetRef ref) {
     final auth = ref.read(authProvider);
-    if (auth is AuthSignedIn) return auth.user.id;
+    if (auth is AuthSignedIn) return auth.userId;
     return null;
   }
 

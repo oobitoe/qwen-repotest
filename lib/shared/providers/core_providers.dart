@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/sync_dao.dart';
 import '../../core/database/sync_engine.dart';
-import '../../core/network/supabase_config.dart';
 
 /// Global singleton database instance.
 /// Dibuat sekali saat aplikasi start untuk menghindari multiple instances warning Drift.
@@ -35,16 +34,9 @@ final uuidProvider = Provider<Uuid>((ref) => uuid);
 /// Locale saat ini (id / en). Diubah dari halaman Settings.
 final localeProvider = StateProvider<Locale>((ref) => const Locale('id', 'ID'));
 
-/// True bila Supabase tersedia (kredensial terisi & SDK aktif).
-final supabaseAvailableProvider = Provider<bool>((ref) =>
-    SupabaseConfig.isValid && SupabaseConfig.client != null);
-
-/// Transport sinkronisasi: Supabase bila tersedia, selain itu in-memory
-/// (mode offline-only — push/pull tidak pernah benar-benar dilakukan).
+/// Transport sinkronisasi: saat ini hanya in-memory (mode offline-only).
+/// Integrasi PocketBase akan ditambahkan nanti.
 final syncTransportProvider = Provider<SyncTransport>((ref) {
-  if (SupabaseConfig.isValid && SupabaseConfig.client != null) {
-    return SupabaseSyncTransport(SupabaseConfig.client!);
-  }
   return InMemorySyncTransport(online: false);
 });
 

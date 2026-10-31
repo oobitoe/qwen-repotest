@@ -308,7 +308,7 @@ class _SalesReportContent extends StatelessWidget {
                           if (i < 0 || i >= data.length) return const SizedBox.shrink();
                           return SideTitleWidget(
                             axisSide: meta.axisSide,
-                            child: Text(DateFormat('d/M').format(DateTime.parse('${data[i].period} 00:00:00')), style: theme.textTheme.labelSmall),
+                            child: Text(data[i].period, style: theme.textTheme.labelSmall),
                           );
                         },
                       ),

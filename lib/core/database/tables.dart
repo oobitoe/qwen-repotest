@@ -35,6 +35,7 @@ class Businesses extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -51,6 +52,7 @@ class Stores extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -68,6 +70,7 @@ class Profiles extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -85,6 +88,7 @@ class Categories extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -99,6 +103,7 @@ class Units extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -109,29 +114,33 @@ class Products extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
   TextColumn get sku => text().unique()();
+  /// Barcode produk (digabung dari ProductBarcodes — satu barcode primer per produk)
   TextColumn get barcode => text().nullable()();
   TextColumn get name => text()();
   TextColumn get description => text().nullable()();
   TextColumn get categoryId => text().nullable().references(Categories, #id)();
   TextColumn get unitId => text().nullable().references(Units, #id)();
   RealColumn get costPrice => real().withDefault(const Constant(0))();
+  /// Harga jual tunggal (digabung dari ProductPrices — harga berlaku saat ini)
   RealColumn get sellPrice => real()();
   RealColumn get wholesalePrice => real().nullable()();
   RealColumn get minStock => real().withDefault(const Constant(0))();
   RealColumn get stock => real().withDefault(const Constant(0))(); // cache; sumber: stock_movements
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  /// URL gambar produk utama (digabung dari ProductImages)
+  TextColumn get imageUrl => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
-  TextColumn get imageUrl => text().nullable()(); // URL/gambar produk
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
-// ---------- Produk Lanjutan ----------
+// ---------- Produk Varian (DIPisah — satu produk bisa punya banyak varian, misal ukuran/warna) ----------
 
 class ProductVariants extends Table {
   TextColumn get id => text()();
@@ -144,46 +153,7 @@ class ProductVariants extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
-  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
-class ProductBarcodes extends Table {
-  TextColumn get id => text()();
-  TextColumn get productId => text().references(Products, #id)();
-  TextColumn get barcode => text()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  IntColumn get version => integer().withDefault(const Constant(1))();
-  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
-class ProductPrices extends Table {
-  TextColumn get id => text()();
-  TextColumn get productId => text().references(Products, #id)();
-  RealColumn get price => real()();
-  DateTimeColumn get startDate => dateTime().nullable()();
-  DateTimeColumn get endDate => dateTime().nullable()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  IntColumn get version => integer().withDefault(const Constant(1))();
-  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
-class ProductImages extends Table {
-  TextColumn get id => text()();
-  TextColumn get productId => text().references(Products, #id)();
-  TextColumn get url => text()();
-  TextColumn get storagePath => text().nullable()();
-  BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -204,6 +174,7 @@ class StockMovements extends Table {
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -224,6 +195,7 @@ class Suppliers extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -245,6 +217,7 @@ class Customers extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -261,6 +234,7 @@ class StockAdjustments extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -323,6 +297,7 @@ class Sales extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -343,6 +318,7 @@ class SaleItems extends Table {
   RealColumn get lineTotal => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -359,6 +335,7 @@ class SalePayments extends Table {
   DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdBy => text().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -375,6 +352,7 @@ class SaleReturns extends Table {
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -389,6 +367,7 @@ class SaleReturnItems extends Table {
   RealColumn get unitPrice => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -410,6 +389,7 @@ class StockTransfers extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -423,6 +403,7 @@ class StockTransferItems extends Table {
   RealColumn get quantity => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -439,6 +420,7 @@ class CustomerAddresses extends Table {
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -454,6 +436,7 @@ class BusinessSettings extends Table {
   TextColumn get value => text().withDefault(const Constant('{}'))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -467,6 +450,7 @@ class StoreSettings extends Table {
   TextColumn get value => text().withDefault(const Constant('{}'))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -481,6 +465,7 @@ class TaxSettings extends Table {
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -495,6 +480,7 @@ class PaymentMethodsConfig extends Table {
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -509,6 +495,7 @@ class Devices extends Table {
   DateTimeColumn get lastSeenAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -526,6 +513,7 @@ class FinancialAdjustments extends Table {
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -560,6 +548,7 @@ class ExpenseCategories extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -577,6 +566,7 @@ class Expenses extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -591,6 +581,7 @@ class IncomeCategories extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -608,6 +599,7 @@ class IncomeEntries extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -626,6 +618,7 @@ class CashRegisters extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -646,6 +639,7 @@ class CashSessions extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -663,6 +657,7 @@ class CashMovements extends Table {
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -679,6 +674,7 @@ class Accounts extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -695,6 +691,7 @@ class AccountTransactions extends Table {
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -721,6 +718,7 @@ class Purchases extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -741,6 +739,7 @@ class PurchaseItems extends Table {
   RealColumn get lineTotal => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -755,6 +754,7 @@ class PurchasePayments extends Table {
   DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdBy => text().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -778,6 +778,7 @@ class PurchaseOrders extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -796,6 +797,7 @@ class PurchaseOrderItems extends Table {
   RealColumn get lineTotal => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -812,6 +814,7 @@ class PurchaseReturns extends Table {
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -826,6 +829,7 @@ class PurchaseReturnItems extends Table {
   RealColumn get unitPrice => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -847,6 +851,7 @@ class Debts extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -860,6 +865,7 @@ class DebtPayments extends Table {
   DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdBy => text().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -879,6 +885,7 @@ class Roles extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -891,6 +898,7 @@ class Permissions extends Table {
   TextColumn get description => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -902,6 +910,7 @@ class RolePermissions extends Table {
   TextColumn get roleId => text().references(Roles, #id)();
   TextColumn get permissionId => text().references(Permissions, #id)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -916,6 +925,7 @@ class BusinessMembers extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -927,6 +937,7 @@ class UserStoreAccess extends Table {
   TextColumn get userId => text()();
   TextColumn get storeId => text().references(Stores, #id)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
@@ -943,6 +954,7 @@ class SaleSequences extends Table {
   IntColumn get lastNumber => integer().withDefault(const Constant(0))();
   DateTimeColumn get date => dateTime().withDefault(currentDateAndTime)();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override

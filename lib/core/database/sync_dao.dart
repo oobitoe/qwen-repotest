@@ -278,6 +278,24 @@ class SyncableDao {
     return true;
   }
 
+  /// Simpan remoteId (ID di PocketBase) ke baris lokal untuk mapping
+  /// lokal <-> PocketBase. Dipakai setelah create() berhasil di server.
+  Future<void> updateRemoteId(
+    String entityType,
+    String localId,
+    String remoteId,
+  ) async {
+    final meta = _require(entityType);
+    await _db.customUpdate(
+      'UPDATE "${meta.tableName}" SET "remote_id" = ?, "sync_status" = ? WHERE "id" = ?',
+      variables: [
+        Variable.withString(remoteId),
+        Variable.withString(SyncStatuses.synced),
+        Variable.withString(localId),
+      ],
+    );
+  }
+
   /// Drift menyimpan DateTime sebagai integer ms-since-epoch (UTC) pada
   /// SQLite; bacaan mentah customSelect mengembalikan bentuk tersebut.
   /// Aman terhadap integer detik (Unix epoch) dan ISO8601 string.

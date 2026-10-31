@@ -102,8 +102,8 @@ class PocketBaseSyncTransport implements SyncTransport {
   final PocketBase _pb;
 
   @override
-  Future<List<String>> push(List<OutboxItem> batch) async {
-    final accepted = <String>[];
+  Future<List<PushResult>> push(List<OutboxItem> batch) async {
+    final accepted = <PushResult>[];
     for (final item in batch) {
       try {
         final collection = _collectionMap[item.entityType];
@@ -119,18 +119,27 @@ class PocketBaseSyncTransport implements SyncTransport {
         payload.remove('created_at');
         payload.remove('updated_at');
 
+        String? remoteId;
+
         try {
           // Coba update record yang sudah ada di PocketBase.
           await _pb.collection(collection).update(item.entityId, body: payload);
+          // Update existing — remoteId sama dengan entityId lokal (sudah ada mapping).
+          remoteId = item.entityId;
         } on ClientException catch (e) {
           // 404 = record belum ada di server, buat baru.
           if (e.statusCode == 404) {
-            await _pb.collection(collection).create(body: payload);
+            final record = await _pb.collection(collection).create(body: payload);
+            remoteId = record.id;
           } else {
             rethrow;
           }
         }
-        accepted.add(item.id);
+        accepted.add(PushResult(
+          queueId: item.id,
+          entityId: item.entityId,
+          remoteId: remoteId,
+        ));
       } catch (e) {
         throw PocketBaseSyncException(
           'Gagal push ${item.entityType}/${item.entityId}: $e',

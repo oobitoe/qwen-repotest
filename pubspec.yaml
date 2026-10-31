@@ -59,5 +59,6 @@ flutter:
   generate: true
 
   assets:
+    - .env
     - assets/images/products/
     - assets/images/logo/

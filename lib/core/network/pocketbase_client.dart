@@ -20,7 +20,9 @@ class PocketBaseClient {
   }
 
   static PocketBase _createClient() {
-    final baseUrl = dotenv.env['POCKETBASE_URL'] ?? 'http://127.0.0.1:8090';
+    final baseUrl = dotenv.isInitialized
+        ? (dotenv.maybeGet('POCKETBASE_URL') ?? 'http://127.0.0.1:8090')
+        : 'http://127.0.0.1:8090';
     return PocketBase(baseUrl);
   }
 

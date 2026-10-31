@@ -11,10 +11,11 @@ import 'sync_registry.dart';
 /// Kontrak pengiriman batch operasi ke server.
 /// Implementasi in-memory dipakai pada pengujian & mode offline.
 abstract class SyncTransport {
-  /// Kirim daftar operasi outbox. Kembalikan id operasi yang diterima server.
-  Future<List<String>> push(List<OutboxItem> batch);
+  /// Kirim daftar operasi outbox. Kembalikan hasil push per item,
+  /// termasuk remoteId yang dihasilkan server (jika ada).
+  Future<List<PushResult>> push(List<OutboxItem> batch);
 
-  /// Unduh perubahan sejak [since] per tabel. Map: tableName -> rows JSON.
+  /// Unduh perubahan remote sejak [since] per tabel. Map: tableName -> rows JSON.
   Future<Map<String, List<Map<String, dynamic>>>> pull(DateTime since);
 }
 
@@ -28,6 +29,19 @@ typedef OutboxItem = ({
   int retryCount,
 });
 
+/// Hasil push satu item outbox: queueId + entityId (lokal) + remoteId (PocketBase).
+class PushResult {
+  const PushResult({
+    required this.queueId,
+    required this.entityId,
+    this.remoteId,
+  });
+
+  final String queueId;   // id baris di sync_queue
+  final String entityId;  // id entitas lokal (Drift)
+  final String? remoteId; // id yang dihasilkan PocketBase (base58url 22 krn), null bila update existing
+}
+
 /// Transport tandingan untuk pengujian: mencatat semua push, mengembalikan
 /// antrian pull manual. Pada mode offline transport ini selalu "gagal" secara
 /// halus (tidak melempar) sehingga aplikasi tetap berjalan penuh.
@@ -40,15 +54,19 @@ class InMemorySyncTransport implements SyncTransport {
   final Map<String, List<Map<String, dynamic>>> remoteData = {};
 
   @override
-  Future<List<String>> push(List<OutboxItem> batch) async {
+  Future<List<PushResult>> push(List<OutboxItem> batch) async {
     if (!online) {
       throw const SyncNetworkException('offline (mode uji)');
     }
-    final accepted = <String>[];
+    final accepted = <PushResult>[];
     for (final item in batch) {
       if (rejectIds.contains(item.id)) continue;
       pushed.add(item);
-      accepted.add(item.id);
+      accepted.add(PushResult(
+        queueId: item.id,
+        entityId: item.entityId,
+        remoteId: item.entityId, // in-memory: remoteId sama dengan lokal
+      ));
     }
     return accepted;
   }
@@ -206,10 +224,15 @@ class SyncEngine {
       if (items.isEmpty) return;
       for (final item in items) {
         try {
-          final accepted = await _transport.push([_toRecord(item)]);
-          if (accepted.contains(item.id)) {
+          final results = await _transport.push([_toRecord(item)]);
+          final result = results.first;
+          if (result.remoteId != null || result.entityId == item.entityId) {
             await _dao.markQueueItemDone(item.id);
             await _markEntitySynced(item.entityType, item.entityId);
+            // Simpan remoteId ke tabel lokal agar mapping lokal <-> PocketBase tersimpan.
+            if (result.remoteId != null && result.remoteId != item.entityId) {
+              await _dao.updateRemoteId(item.entityType, item.entityId, result.remoteId!);
+            }
           } else {
             await _scheduleRetry(item, 'ditolak server');
           }

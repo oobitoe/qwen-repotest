@@ -459,37 +459,6 @@ void registerAllSyncMetas([AppDatabase? db]) {
         syncStatus: const Value(SyncStatuses.synced),
       )));
 
-  SyncableDao.register(_meta('product_barcode', db_.productBarcodes, (j) => ProductBarcodesCompanion(
-        id: Value(s(j['id'])),
-        productId: Value(s(j['product_id'])),
-        barcode: Value(s(j['barcode'])),
-        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
-        version: Value(i(j['version'])),
-        syncStatus: const Value(SyncStatuses.synced),
-      )));
-
-  SyncableDao.register(_meta('product_price', db_.productPrices, (j) => ProductPricesCompanion(
-        id: Value(s(j['id'])),
-        productId: Value(s(j['product_id'])),
-        price: Value(d(j['price'])),
-        startDate: Value(dt(j['start_date'])),
-        endDate: Value(dt(j['end_date'])),
-        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
-        version: Value(i(j['version'])),
-        syncStatus: const Value(SyncStatuses.synced),
-      )));
-
-  SyncableDao.register(_meta('product_image', db_.productImages, (j) => ProductImagesCompanion(
-        id: Value(s(j['id'])),
-        productId: Value(s(j['product_id'])),
-        url: Value(s(j['url'])),
-        storagePath: Value(sn(j['storage_path'])),
-        isPrimary: Value(b(j['is_primary'])),
-        createdAt: Value(dt(j['created_at']) ?? DateTime.now().toUtc()),
-        version: Value(i(j['version'])),
-        syncStatus: const Value(SyncStatuses.synced),
-      )));
-
   SyncableDao.register(_meta('purchase_order', db_.purchaseOrders, (j) => PurchaseOrdersCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),

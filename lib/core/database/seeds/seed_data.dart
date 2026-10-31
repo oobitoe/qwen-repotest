@@ -1,11 +1,20 @@
+import 'dart:math';
+
 import 'package:drift/drift.dart';
-import 'package:uuid/uuid.dart';
 import '../app_database.dart';
+
+/// PocketBase pakai ID base58url 22 karakter (tanpa strip),
+/// bukan UUID standar 36 karakter dengan strip seperti Supabase.
+/// Generator ini menghasilkan ID 22 karakter yang aman untuk kolom
+/// teks di Drift dan cocok dengan format ID PocketBase.
+const _pbAlphabet =
+    '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+final _pbRandom = Random.secure();
+
+String _pbId() => List.generate(22, (_) => _pbAlphabet[_pbRandom.nextInt(_pbAlphabet.length)]).join();
 
 /// Seed data alat listrik — dijalankan sekali saat DB pertama kali dibuat.
 /// Minimal 3 bulan transaksi agar laporan/reporting bisa dites.
-const _uuid = Uuid();
-
 Future<void> seedDatabase(AppDatabase db) async {
   // Cek apakah sudah ada data
   final existingProducts = await db.select(db.products).get();
@@ -16,12 +25,12 @@ Future<void> seedDatabase(AppDatabase db) async {
 
   // ---------- Kategori ----------
   final categoryIds = {
-    'Kabel & Konduktor': _uuid.v4(),
-    'Saklar & Stop Kontak': _uuid.v4(),
-    'Lampu & Pencahayaan': _uuid.v4(),
-    'MCB & Proteksi': _uuid.v4(),
-    'Alat Ukur': _uuid.v4(),
-    'Aksesoris Instalasi': _uuid.v4(),
+    'Kabel & Konduktor': _pbId(),
+    'Saklar & Stop Kontak': _pbId(),
+    'Lampu & Pencahayaan': _pbId(),
+    'MCB & Proteksi': _pbId(),
+    'Alat Ukur': _pbId(),
+    'Aksesoris Instalasi': _pbId(),
   };
   for (final entry in categoryIds.entries) {
     await db.into(db.categories).insert(CategoriesCompanion.insert(
@@ -32,11 +41,11 @@ Future<void> seedDatabase(AppDatabase db) async {
 
   // ---------- Unit ----------
   final unitIds = {
-    'pcs': _uuid.v4(),
-    'meter': _uuid.v4(),
-    'roll': _uuid.v4(),
-    'box': _uuid.v4(),
-    'set': _uuid.v4(),
+    'pcs': _pbId(),
+    'meter': _pbId(),
+    'roll': _pbId(),
+    'box': _pbId(),
+    'set': _pbId(),
   };
   for (final entry in unitIds.entries) {
     await db.into(db.units).insert(UnitsCompanion.insert(
@@ -48,15 +57,15 @@ Future<void> seedDatabase(AppDatabase db) async {
 
   // ---------- Supplier ----------
   final supplierIds = {
-    'PT Sinar Jaya Elektrik': _uuid.v4(),
-    'CV Mega Listrik': _uuid.v4(),
-    'UD Berkah Elektrik': _uuid.v4(),
+    'PT Sinar Jaya Elektrik': _pbId(),
+    'CV Mega Listrik': _pbId(),
+    'UD Berkah Elektrik': _pbId(),
   };
   for (final entry in supplierIds.entries) {
     await db.into(db.suppliers).insert(SuppliersCompanion.insert(
           id: entry.value,
           name: entry.key,
-          phone: Value('08${_uuid.v4().substring(0, 8)}'),
+          phone: Value('08${_pbId().substring(0, 8)}'),
           email: Value('${entry.key.toLowerCase().replaceAll(' ', '')}@email.com'),
           address: const Value('Jakarta'),
         ));
@@ -103,7 +112,7 @@ Future<void> seedDatabase(AppDatabase db) async {
 
   final productIds = <String, String>{};
   for (final p in products) {
-    final id = _uuid.v4();
+    final id = _pbId();
     productIds[p['sku'] as String] = id;
     await db.into(db.products).insert(ProductsCompanion.insert(
           id: id,
@@ -132,23 +141,23 @@ Future<void> seedDatabase(AppDatabase db) async {
     'Hesti Rahayu',
   ];
   for (final name in customerNames) {
-    final id = _uuid.v4();
+    final id = _pbId();
     customerIds.add(id);
     await db.into(db.customers).insert(CustomersCompanion.insert(
           id: id,
           name: name,
-          phone: Value('08${_uuid.v4().substring(0, 8)}'),
-          tier: Value(['Regular', 'VIP', 'Wholesale'][_uuid.v4().hashCode % 3]),
+          phone: Value('08${_pbId().substring(0, 8)}'),
+          tier: Value(['Regular', 'VIP', 'Wholesale'][_pbId().hashCode % 3]),
         ));
   }
 
   // ---------- Expense Categories ----------
   final expenseCatIds = {
-    'Listrik & Air': _uuid.v4(),
-    'Gaji Karyawan': _uuid.v4(),
-    'Sewa Toko': _uuid.v4(),
-    'Transportasi': _uuid.v4(),
-    'Peralatan': _uuid.v4(),
+    'Listrik & Air': _pbId(),
+    'Gaji Karyawan': _pbId(),
+    'Sewa Toko': _pbId(),
+    'Transportasi': _pbId(),
+    'Peralatan': _pbId(),
   };
   for (final entry in expenseCatIds.entries) {
     await db.into(db.expenseCategories).insert(ExpenseCategoriesCompanion.insert(
@@ -159,9 +168,9 @@ Future<void> seedDatabase(AppDatabase db) async {
 
   // ---------- Income Categories ----------
   final incomeCatIds = {
-    'Penjualan': _uuid.v4(),
-    'Jasa Instalasi': _uuid.v4(),
-    'Lain-lain': _uuid.v4(),
+    'Penjualan': _pbId(),
+    'Jasa Instalasi': _pbId(),
+    'Lain-lain': _pbId(),
   };
   for (final entry in incomeCatIds.entries) {
     await db.into(db.incomeCategories).insert(IncomeCategoriesCompanion.insert(
@@ -171,7 +180,7 @@ Future<void> seedDatabase(AppDatabase db) async {
   }
 
   // ---------- Cash Register ----------
-  final registerId = _uuid.v4();
+  final registerId = _pbId();
   await db.into(db.cashRegisters).insert(CashRegistersCompanion.insert(
         id: registerId,
         name: 'Kasir Utama',
@@ -189,7 +198,7 @@ Future<void> seedDatabase(AppDatabase db) async {
   while (currentDate.isBefore(now)) {
     final txCount = 3 + random.nextInt(6);
     for (int t = 0; t < txCount; t++) {
-      final saleId = _uuid.v4();
+      final saleId = _pbId();
       final invoiceNumber = 'INV-${currentDate.year}${currentDate.month.toString().padLeft(2, '0')}${currentDate.day.toString().padLeft(2, '0')}-${invoiceCounter.toString().padLeft(4, '0')}';
       invoiceCounter++;
 
@@ -211,7 +220,7 @@ Future<void> seedDatabase(AppDatabase db) async {
         subtotal += lineTotal;
 
         saleItemsCompanions.add(SaleItemsCompanion.insert(
-              id: _uuid.v4(),
+              id: _pbId(),
               saleId: saleId,
               productId: productId,
               productName: product['name'] as String,
@@ -263,7 +272,7 @@ Future<void> seedDatabase(AppDatabase db) async {
             .quantity
             .value;
         await db.into(db.stockMovements).insert(StockMovementsCompanion.insert(
-              id: _uuid.v4(),
+              id: _pbId(),
               productId: productIds[sku]!,
               type: 'sale',
               quantity: -qty,
@@ -276,7 +285,7 @@ Future<void> seedDatabase(AppDatabase db) async {
 
       // Cash movement
       await db.into(db.cashMovements).insert(CashMovementsCompanion.insert(
-            id: _uuid.v4(),
+            id: _pbId(),
             type: 'sale',
             amount: total,
             referenceType: const Value('sale'),
@@ -305,7 +314,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       final catKey = catKeys[random.nextInt(catKeys.length)];
       final amount = (50000 + random.nextInt(500000)).toDouble();
       await db.into(db.expenses).insert(ExpensesCompanion.insert(
-            id: _uuid.v4(),
+            id: _pbId(),
             categoryId: Value(expenseCatIds[catKey]),
             description: expenseDescs[random.nextInt(expenseDescs.length)],
             amount: amount,
@@ -320,7 +329,7 @@ Future<void> seedDatabase(AppDatabase db) async {
     final catKey = catKeys[random.nextInt(catKeys.length)];
     final amount = (100000 + random.nextInt(1000000)).toDouble();
     await db.into(db.incomeEntries).insert(IncomeEntriesCompanion.insert(
-          id: _uuid.v4(),
+          id: _pbId(),
           categoryId: Value(incomeCatIds[catKey]),
           description: 'Pemasukan ${catKey.toLowerCase()}',
           amount: amount,
@@ -329,7 +338,7 @@ Future<void> seedDatabase(AppDatabase db) async {
   }
 
   // ---------- Hutang/Piutang sample ----------
-  final debtId = _uuid.v4();
+  final debtId = _pbId();
   await db.into(db.debts).insert(DebtsCompanion.insert(
         id: debtId,
         supplierId: Value(supplierIds.values.first),
@@ -340,7 +349,7 @@ Future<void> seedDatabase(AppDatabase db) async {
         dueDate: Value(now.add(const Duration(days: 30))),
       ));
   await db.into(db.debtPayments).insert(DebtPaymentsCompanion.insert(
-        id: _uuid.v4(),
+        id: _pbId(),
         debtId: debtId,
         amount: 2000000.0,
       ));
@@ -361,7 +370,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'create',
       'entityType': 'supplier',
-      'entityId': 'supplier-001',
+      'entityId': supplierIds.values.first,
       'description': 'Menambahkan supplier PT Sinar Jaya Elektrik',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 5)),
     },
@@ -370,7 +379,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'create',
       'entityType': 'supplier',
-      'entityId': 'supplier-002',
+      'entityId': supplierIds.values.elementAt(1),
       'description': 'Menambahkan supplier CV Mega Listrik',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 4)),
     },
@@ -379,7 +388,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'update',
       'entityType': 'product',
-      'entityId': 'product-001',
+      'entityId': productIds.values.first,
       'description': 'Mengubah harga jual Kabel NYA 1.5mm dari Rp 4.500 menjadi Rp 5.000',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 3)),
     },
@@ -388,7 +397,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'login',
       'entityType': 'auth',
-      'entityId': 'session-001',
+      'entityId': _pbId(),
       'description': 'Admin masuk ke aplikasi',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 2)),
     },
@@ -397,8 +406,8 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'sale',
       'entityType': 'sale',
-      'entityId': 'sale-001',
-      'description': 'Transaksi penjualan INV-0001 sebesar Rp 125.000',
+      'entityId': _pbId(),
+      'description': 'Transaksi penjualan sebesar Rp 125.000',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(hours: 1)),
     },
     {
@@ -406,7 +415,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'stockAdjustment',
       'entityType': 'stock_adjustment',
-      'entityId': 'adj-001',
+      'entityId': _pbId(),
       'description': 'Penyesuaian stok Multimeter Digital: 15 → 12',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 45)),
     },
@@ -415,7 +424,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'logout',
       'entityType': 'auth',
-      'entityId': 'session-001',
+      'entityId': _pbId(),
       'description': 'Admin keluar dari aplikasi',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 30)),
     },
@@ -424,7 +433,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'create',
       'entityType': 'customer',
-      'entityId': 'customer-001',
+      'entityId': customerIds.first,
       'description': 'Menambahkan pelanggan Budi Santoso',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 15)),
     },
@@ -433,7 +442,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       'userName': 'Admin',
       'action': 'settingsChange',
       'entityType': 'settings',
-      'entityId': 'theme',
+      'entityId': _pbId(),
       'description': 'Mengubah preset tema dari forest menjadi sunset',
       'createdAt': DateTime.now().toUtc().subtract(const Duration(minutes: 5)),
     },
@@ -441,7 +450,7 @@ Future<void> seedDatabase(AppDatabase db) async {
 
   for (final entry in auditEntries) {
     await db.into(db.auditLogs).insert(AuditLogsCompanion.insert(
-      id: _uuid.v4(),
+      id: _pbId(),
       userId: entry['userId'] as String,
       userName: entry['userName'] as String,
       action: entry['action'] as String,

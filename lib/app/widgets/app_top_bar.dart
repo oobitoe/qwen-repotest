@@ -51,6 +51,7 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
     final phase = syncStatus?.phase ?? SyncPhase.idle;
     final isOffline = phase == SyncPhase.offline;
     final pendingCount = syncStatus?.pendingCount ?? 0;
+    final failedCount = syncStatus?.failedCount ?? 0;
 
     final (iconData, iconColor) = switch (phase) {
       SyncPhase.offline => (AppIcons.cloudOffRounded, AppTheme.warning),
@@ -128,6 +129,7 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
                 phase: phase,
                 isOffline: isOffline,
                 pendingCount: pendingCount,
+                failedCount: failedCount,
                 badgeColor: scheme.error,
               ),
             ),
@@ -158,6 +160,7 @@ class _SyncIconWithBadge extends StatefulWidget {
     required this.phase,
     required this.isOffline,
     required this.pendingCount,
+    this.failedCount = 0,
     required this.badgeColor,
   });
 
@@ -166,6 +169,7 @@ class _SyncIconWithBadge extends StatefulWidget {
   final SyncPhase phase;
   final bool isOffline;
   final int pendingCount;
+  final int failedCount;
   final Color badgeColor;
 
   @override
@@ -179,17 +183,20 @@ class _SyncIconWithBadgeState extends State<_SyncIconWithBadge>
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController.unbounded(vsync: this);
+    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 2));
+    if (widget.phase == SyncPhase.syncing) {
+      _anim.repeat();
+    }
   }
 
   @override
   void didUpdateWidget(covariant _SyncIconWithBadge old) {
     super.didUpdateWidget(old);
-    // Mulai/jatikan animasi berputar hanya saat phase berubah.
     if (widget.phase == SyncPhase.syncing && !_anim.isAnimating) {
-      _anim.repeat(period: const Duration(seconds: 2));
+      _anim.repeat();
     } else if (widget.phase != SyncPhase.syncing && _anim.isAnimating) {
       _anim.stop();
+      _anim.value = 0.0;
     }
   }
 
@@ -197,6 +204,18 @@ class _SyncIconWithBadgeState extends State<_SyncIconWithBadge>
   void dispose() {
     _anim.dispose();
     super.dispose();
+  }
+
+  /// Warna badge menyesuaikan fase sinkronisasi.
+  Color _badgeColor() {
+    switch (widget.phase) {
+      case SyncPhase.syncing:
+        return AppTheme.info;
+      case SyncPhase.error:
+      case SyncPhase.offline:
+      default:
+        return widget.badgeColor;
+    }
   }
 
   @override
@@ -207,20 +226,22 @@ class _SyncIconWithBadgeState extends State<_SyncIconWithBadge>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned.fill(
-            child: RotationTransition(
-              turns: _anim,
-              child: Icon(widget.icon, size: 18, color: widget.color),
-            ),
-          ),
-          if (widget.isOffline && widget.pendingCount > 0)
+        Positioned.fill(
+          child: widget.phase == SyncPhase.syncing
+              ? RotationTransition(
+                  turns: _anim,
+                  child: Icon(widget.icon, size: 18, color: widget.color),
+                )
+              : Icon(widget.icon, size: 18, color: widget.color),
+        ),
+          if (widget.pendingCount > 0 || widget.failedCount > 0)
             Positioned(
               top: 0,
               right: 0,
               child: Badge(
-                backgroundColor: widget.badgeColor,
+                backgroundColor: _badgeColor(),
                 label: Text(
-                  '${widget.pendingCount}',
+                  '${widget.pendingCount > 0 ? widget.pendingCount : widget.failedCount}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.white,

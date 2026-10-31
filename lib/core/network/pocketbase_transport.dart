@@ -38,9 +38,6 @@ const Map<String, String> _collectionMap = {
   'product': 'products',
   'stock_movement': 'stock_movements',
   'product_variant': 'product_variants',
-  'product_barcode': 'product_barcodes',
-  'product_price': 'product_prices',
-  'product_image': 'product_images',
   // Pelanggan & Supplier
   'supplier': 'suppliers',
   'customer': 'customers',
@@ -122,11 +119,16 @@ class PocketBaseSyncTransport implements SyncTransport {
         String? remoteId;
 
         try {
-          // Coba update record yang sudah ada di PocketBase.
-          await _pb.collection(collection).update(item.entityId, body: payload);
-          // Update existing — remoteId sama dengan entityId lokal (sudah ada mapping).
-          remoteId = item.entityId;
+          // Gunakan remoteId yang tersimpan (kalau ada) buat update di PocketBase,
+          // agar tidak bikin duplikat record. Fallback ke entityId lokal.
+          final pbId = item.remoteId ?? item.entityId;
+          await _pb.collection(collection).update(pbId, body: payload);
+          remoteId = pbId;
         } on ClientException catch (e) {
+          // 401/403 = masalah autentikasi — biarkan SyncEngine tangani.
+          if (e.statusCode == 401 || e.statusCode == 403) {
+            rethrow;
+          }
           // 404 = record belum ada di server, buat baru.
           if (e.statusCode == 404) {
             final record = await _pb.collection(collection).create(body: payload);
@@ -141,6 +143,7 @@ class PocketBaseSyncTransport implements SyncTransport {
           remoteId: remoteId,
         ));
       } catch (e) {
+        if (e is ClientException) rethrow;
         throw PocketBaseSyncException(
           'Gagal push ${item.entityType}/${item.entityId}: $e',
         );
@@ -165,13 +168,38 @@ class PocketBaseSyncTransport implements SyncTransport {
             Map<String, dynamic>.from(record.toJson()),
         ];
       } on ClientException catch (e) {
-        // Koleksi mungkin belum ada di server — treat sebagai kosong.
-        if (e.statusCode == 400 || e.statusCode == 404) {
+        // 401/403 = masalah autentikasi — biarkan SyncEngine tangani.
+        if (e.statusCode == 401 || e.statusCode == 403) {
+          rethrow;
+        }
+        // Koleksi mungkin belum ada di server atau tidak punya field 'updated' —
+        // coba pakai 'created' sebagai fallback, kalau masih 400/404 treat sebagai kosong.
+        if (e.statusCode == 400) {
+          try {
+            final records = await _pb.collection(entry.value).getFullList(
+              filter: 'created > "$sinceStr"',
+              sort: '-created',
+            );
+            result[entry.key] = [
+              for (final record in records)
+                Map<String, dynamic>.from(record.toJson()),
+            ];
+            continue;
+          } on ClientException catch (e2) {
+            if (e2.statusCode == 400 || e2.statusCode == 404) {
+              result[entry.key] = [];
+              continue;
+            }
+            rethrow;
+          }
+        }
+        if (e.statusCode == 404) {
           result[entry.key] = [];
         } else {
           rethrow;
         }
       } catch (e) {
+        if (e is ClientException) rethrow;
         throw PocketBaseSyncException(
           'Gagal pull koleksi ${entry.value}: $e',
         );

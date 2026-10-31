@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/network/pocketbase_client.dart';
+
 /// Role pengguna awal sesuai PRD.
 enum UserRole { owner, admin, manager, kasir, staffGudang }
 
@@ -75,24 +77,59 @@ const localOfflineUser = AuthSignedIn(localDeviceUserId, UserRole.owner);
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // Tanpa backend auth (Supabase/PocketBase belum diintegrasi),
-    // aplikasi berjalan sebagai owner lokal.
-    return localOfflineUser;
+    // Awalnya tidak ada sesi (AuthUnknown).
+    // Setelah login PocketBase sukses, berubah menjadi AuthSignedIn.
+    return const AuthUnknown();
   }
 
+  /// Daftarkan user baru ke PocketBase collection `users`.
+  /// Setelah sukses, PocketBase otomatis menyimpan token di `authStore`.
+  Future<void> signUp(
+    String email,
+    String password,
+    String fullName, {
+    UserRole role = UserRole.kasir,
+  }) async {
+    final pb = PocketBaseClient.client;
+
+    // Pastikan server reachable sebelum mencoba daftar.
+    final reachable = await pb.healthCheck();
+    if (!reachable) {
+      throw Exception('Tidak dapat menghubungi server PocketBase. Periksa koneksi internet.');
+    }
+
+    // Daftarkan ke PocketBase `users` collection.
+    await pb.registerUser(
+      email: email,
+      password: password,
+      name: fullName,
+    );
+
+    // Login otomatis setelah daftar agar token tersimpan di authStore.
+    await pb.loginUser(email: email, password: password);
+
+    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, role);
+  }
+
+  /// Login user ke PocketBase via email + password.
   Future<void> signIn(String email, String password) async {
-    // Tidak ada backend auth saat ini; mode lokal selalu sukses sebagai owner.
-    return;
-  }
+    final pb = PocketBaseClient.client;
 
-  Future<void> signUp(String email, String password, String fullName) async {
-    // Tidak ada backend auth saat ini.
-    return;
+    final reachable = await pb.healthCheck();
+    if (!reachable) {
+      throw Exception('Tidak dapat menghubungi server PocketBase. Periksa koneksi internet.');
+    }
+
+    await pb.loginUser(email: email, password: password);
+
+    // Ambil role dari profil lokal (Drift) jika ada, default kasir.
+    // Untuk sekarang, default role = kasir; nanti bisa diambil dari `profiles` tabel.
+    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, UserRole.kasir);
   }
 
   Future<void> signOut() async {
-    // Tidak ada backend auth untuk di-sign-out.
-    return;
+    await PocketBaseClient.client.logout();
+    state = const AuthSignedOut();
   }
 
   void dispose() {

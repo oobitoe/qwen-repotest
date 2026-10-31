@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/setup/application/setup_controller.dart';
+import '../../features/setup/presentation/startup_page.dart';
+import '../../features/setup/presentation/setup_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
@@ -26,8 +29,10 @@ import '../responsive/responsive_shell.dart';
 /// Rute utama aplikasi.
 class AppRoutes {
   const AppRoutes._();
+  static const startup = '/startup';
   static const login = '/login';
   static const register = '/register';
+  static const setup = '/setup';
   static const dashboard = '/dashboard';
   static const products = '/products';
   static const categories = '/categories';
@@ -58,24 +63,52 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
 
   ref.listen(authProvider, (_, __) => refresh.poke());
+  ref.listen(setupControllerProvider, (_, __) => refresh.poke());
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.startup,
     refreshListenable: refresh,
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final auth = ref.read(authProvider);
       final signedIn = auth is AuthSignedIn;
       final goingTo = state.matchedLocation;
-      // Guard route: belum login -> paksa ke halaman login (kecuali /register),
-      // dan sebaliknya.
-      if (!signedIn && goingTo != AppRoutes.login && goingTo != AppRoutes.register) {
+      final setupState = ref.read(setupControllerProvider);
+
+      // Jika sedang memeriksa atau error, biarkan StartupPage menangani
+      if (setupState.status == SetupStatus.checking ||
+          setupState.status == SetupStatus.error) {
+        if (goingTo != AppRoutes.startup) {
+          return AppRoutes.startup;
+        }
+        return null;
+      }
+
+      // Jika perlu setup → arahkan ke /setup
+      if (setupState.status == SetupStatus.needsSetup) {
+        if (goingTo != AppRoutes.setup) {
+          return AppRoutes.setup;
+        }
+        return null;
+      }
+
+      // Setup sudah selesai → cek auth
+      if (!signedIn &&
+          goingTo != AppRoutes.login &&
+          goingTo != AppRoutes.register) {
         return AppRoutes.login;
       }
+
+      // Sudah login tapi buka halaman login → dashboard
       if (signedIn && goingTo == AppRoutes.login) return AppRoutes.dashboard;
+
       return null;
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.startup,
+        builder: (context, state) => const StartupPage(),
+      ),
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
@@ -152,6 +185,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SettingsPage(),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.setup,
+        builder: (context, state) => const SetupPage(),
       ),
     ],
   );

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:pocketbase/pocketbase.dart';
 
 import '../constants/app_constants.dart';
 import 'app_database.dart';
@@ -27,6 +28,7 @@ typedef OutboxItem = ({
   String operation,
   Map<String, dynamic> payload,
   int retryCount,
+  String? remoteId,
 });
 
 /// Hasil push satu item outbox: queueId + entityId (lokal) + remoteId (PocketBase).
@@ -203,6 +205,12 @@ class SyncEngine {
     } on SyncNetworkException catch (e) {
       phase = SyncPhase.offline;
       message = e.message;
+    } on ClientException catch (e) {
+      // 401/403 = masalah autentikasi PocketBase — tandai sebagai error auth
+      // agar UI bisa memicu re-login.
+      phase = SyncPhase.error;
+      message = 'Autentikasi PocketBase gagal (HTTP ${e.statusCode}). Silakan login ulang.';
+      debugPrint('SyncEngine auth error: $e');
     } catch (e) {
       phase = SyncPhase.error;
       message = '$e';
@@ -224,7 +232,9 @@ class SyncEngine {
       if (items.isEmpty) return;
       for (final item in items) {
         try {
-          final results = await _transport.push([_toRecord(item)]);
+          final remoteId = await _dao.getRemoteId(item.entityType, item.entityId);
+          final results =
+              await _transport.push([_toRecord(item, remoteId: remoteId)]);
           final result = results.first;
           if (result.remoteId != null || result.entityId == item.entityId) {
             await _dao.markQueueItemDone(item.id);
@@ -244,13 +254,14 @@ class SyncEngine {
     }
   }
 
-  OutboxItem _toRecord(OutboxItemData d) => (
+  OutboxItem _toRecord(OutboxItemData d, {String? remoteId}) => (
         id: d.id,
         entityType: d.entityType,
         entityId: d.entityId,
         operation: d.operation,
         payload: d.payload,
         retryCount: d.retryCount,
+        remoteId: remoteId,
       );
 
   Future<void> _scheduleRetry(OutboxItemData item, String error) async {

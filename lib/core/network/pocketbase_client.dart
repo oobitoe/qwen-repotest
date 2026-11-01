@@ -1,7 +1,5 @@
 library pocketbase_client;
 
-import 'dart:io';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pocketbase/pocketbase.dart';
 
@@ -40,17 +38,14 @@ class PocketBaseClient {
   String get baseUrl => _instance!.baseUrl;
 
   /// Cek apakah server PocketBase reachable (online).
-  /// Coba ambil 1 record dari koleksi `users` — bila server mati (SocketException)
-  /// return false. Bila server nyala (meski 401 karena belum auth) return true.
+  /// Coba ambil 1 record dari koleksi `users`.
+  /// Bila server online return true, bila offline return false.
   Future<bool> healthCheck() async {
     try {
-      await _instance!.collection('users').getList(page: 1, perPage: 1);
+      await instance.collection('users').getList(page: 1, perPage: 1);
       return true;
-    } on SocketException {
-      return false;
     } catch (_) {
-      // ClientException (401, 403, dst) berarti server reachable tapi butuh auth.
-      return true;
+      return false;
     }
   }
 

@@ -74,7 +74,11 @@ class _SetupPageState extends ConsumerState<SetupPage> {
           backgroundColor: Colors.green,
         ),
       );
-      if (mounted) context.go(AppRoutes.register);
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) context.go(AppRoutes.register);
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -45,7 +45,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           content: Text('Akun berhasil dibuat. Silakan masuk.'),
         ),
       );
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.of(context).pop();
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;

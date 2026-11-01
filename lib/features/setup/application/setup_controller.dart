@@ -84,8 +84,7 @@ class SetupController extends Notifier<SetupState> {
       final setupCompleted = await _isSetupCompleted();
       final needsSetup = businessCount == 0 || !setupCompleted;
 
-      // Jika sudah ada bisnis (tidak perlu setup), langsung siap —
-      // tidak perlu cek internet/PB karena setup sudah pernah dilakukan.
+      // Jika tidak perlu setup, langsung siap — tidak perlu cek internet/PB
       if (!needsSetup) {
         state = const SetupState(
           status: SetupStatus.ready,
@@ -96,7 +95,8 @@ class SetupController extends Notifier<SetupState> {
         return;
       }
 
-      // 2. Perlu setup — periksa koneksi internet dulu
+      // 2. Periksa koneksi internet
+      await Future.delayed(const Duration(milliseconds: 500));
       final connectivity = await Connectivity().checkConnectivity();
       final isOnline = connectivity.any((r) => r != ConnectivityResult.none);
       state = state.copyWith(online: isOnline);
@@ -112,6 +112,7 @@ class SetupController extends Notifier<SetupState> {
       }
 
       // 3. Periksa PocketBase reachable
+      await Future.delayed(const Duration(milliseconds: 500));
       final pbReachable = await PocketBaseClient.client.healthCheck();
       state = state.copyWith(pocketbaseReachable: pbReachable);
 
@@ -119,13 +120,14 @@ class SetupController extends Notifier<SetupState> {
         state = state.copyWith(
           status: SetupStatus.error,
           error:
-              'Server PocketBase tidak dapat dihubungi. Pastikan server berjalan di http://127.0.0.1:8090.',
+              'Database server tidak dapat dihubungi. Setup pertama kali membutuhkan koneksi ke Database server.',
           needsSetup: true,
         );
         return;
       }
 
       // 4. Sudah online + PB reachable → siap untuk setup
+      await Future.delayed(const Duration(milliseconds: 500));
       state = state.copyWith(
         status: SetupStatus.needsSetup,
         needsSetup: true,

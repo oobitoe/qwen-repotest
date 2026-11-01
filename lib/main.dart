@@ -45,7 +45,7 @@ class PosApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
-      title: AppLocalizations.of(context)?.appDisplayName ?? 'POSku',
+      title: AppLocalizations.of(context)?.appDisplayName ?? 'PrimePOS',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,

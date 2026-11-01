@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessDenied.
   ///
   /// In en, this message translates to:
-  /// **'Access denied. You do not have permission to access this feature.'**
+  /// **'Access restricted. Only Owner can manage users.'**
   String get accessDenied;
 
   /// No description provided for @appDisplayName.
@@ -989,7 +989,7 @@ abstract class AppLocalizations {
   /// No description provided for @nameRequired.
   ///
   /// In en, this message translates to:
-  /// **'Name required'**
+  /// **'Name is required'**
   String get nameRequired;
 
   /// No description provided for @noCategory.
@@ -1645,6 +1645,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Printer Found'**
   String get noPrinterFound;
+
+  /// No description provided for @userManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'User Management'**
+  String get userManagement;
+
+  /// No description provided for @userManagementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage users and access roles'**
+  String get userManagementSubtitle;
+
+  /// No description provided for @addUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Add User'**
+  String get addUser;
+
+  /// No description provided for @editUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit User'**
+  String get editUser;
+
+  /// No description provided for @deleteUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete User'**
+  String get deleteUser;
+
+  /// No description provided for @userList.
+  ///
+  /// In en, this message translates to:
+  /// **'User List'**
+  String get userList;
+
+  /// No description provided for @noUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No Users'**
+  String get noUsers;
+
+  /// No description provided for @noUsersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first user for this business.'**
+  String get noUsersSubtitle;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get roleOwner;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @roleManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager'**
+  String get roleManager;
+
+  /// No description provided for @roleKasir.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasir'**
+  String get roleKasir;
+
+  /// No description provided for @roleStaffGudang.
+  ///
+  /// In en, this message translates to:
+  /// **'Staff Gudang'**
+  String get roleStaffGudang;
+
+  /// No description provided for @roleLockedOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Role Owner is locked'**
+  String get roleLockedOwner;
+
+  /// No description provided for @confirmDeleteUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to deactivate this user?'**
+  String get confirmDeleteUser;
+
+  /// No description provided for @userCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'User created successfully.'**
+  String get userCreated;
+
+  /// No description provided for @userUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'User updated successfully.'**
+  String get userUpdated;
+
+  /// No description provided for @userDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been deactivated.'**
+  String get userDeleted;
+
+  /// No description provided for @ownerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Owner can manage users.'**
+  String get ownerOnly;
+
+  /// No description provided for @userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found.'**
+  String get userNotFound;
 }
 
 class _AppLocalizationsDelegate

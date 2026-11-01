@@ -61,6 +61,8 @@ const appNavItems = <NavItem>[
       AppIcons.historyRounded),
   NavItem('/settings', 'settings', AppIcons.settingsRounded,
       AppIcons.settingsRounded),
+  NavItem('/users', 'users', AppIcons.personRounded,
+      AppIcons.personRounded),
 ];
 
 /// Resolve label tujuan navigasi ke string terlokalisasi.
@@ -81,6 +83,7 @@ String _navLabel(AppLocalizations l10n, String key) => switch (key) {
       'reports' => l10n.reports,
       'auditLog' => l10n.auditLog,
       'settings' => l10n.settings,
+      'users' => l10n.users,
       _ => key,
     };
 
@@ -119,6 +122,8 @@ String _pageTitle(String location, AppLocalizations l10n) {
       return l10n.auditLog;
     case '/settings':
       return l10n.settings;
+    case '/users':
+      return l10n.userManagement;
     case '/login':
       return l10n.appDisplayName;
     default:

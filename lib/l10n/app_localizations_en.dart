@@ -198,8 +198,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionFailed => 'Transaction failed';
 
   @override
-  String get accessDenied =>
-      'Access denied. You do not have permission to access this feature.';
+  String get accessDenied => 'Access restricted. Only Owner can manage users.';
 
   @override
   String get appDisplayName => 'PrimePOS';
@@ -477,7 +476,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amountInvalid => 'Invalid amount';
 
   @override
-  String get nameRequired => 'Name required';
+  String get nameRequired => 'Name is required';
 
   @override
   String get noCategory => 'No Category';
@@ -815,4 +814,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noPrinterFound => 'No Printer Found';
+
+  @override
+  String get userManagement => 'User Management';
+
+  @override
+  String get userManagementSubtitle => 'Manage users and access roles';
+
+  @override
+  String get addUser => 'Add User';
+
+  @override
+  String get editUser => 'Edit User';
+
+  @override
+  String get deleteUser => 'Delete User';
+
+  @override
+  String get userList => 'User List';
+
+  @override
+  String get noUsers => 'No Users';
+
+  @override
+  String get noUsersSubtitle => 'Add your first user for this business.';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleManager => 'Manager';
+
+  @override
+  String get roleKasir => 'Kasir';
+
+  @override
+  String get roleStaffGudang => 'Staff Gudang';
+
+  @override
+  String get roleLockedOwner => 'Role Owner is locked';
+
+  @override
+  String get confirmDeleteUser =>
+      'Are you sure you want to deactivate this user?';
+
+  @override
+  String get userCreated => 'User created successfully.';
+
+  @override
+  String get userUpdated => 'User updated successfully.';
+
+  @override
+  String get userDeleted => 'User has been deactivated.';
+
+  @override
+  String get ownerOnly => 'Only Owner can manage users.';
+
+  @override
+  String get userNotFound => 'User not found.';
 }

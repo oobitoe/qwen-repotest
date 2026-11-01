@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
@@ -119,13 +117,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Text(l10n.login),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      OutlinedButton(
-                        onPressed: _busy
-                            ? null
-                            : () => GoRouter.of(context).push(AppRoutes.register),
-                        child: Text(l10n.registerAccount),
                       ),
                     ],
                   ),

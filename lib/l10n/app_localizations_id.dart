@@ -199,7 +199,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get accessDenied =>
-      'Akses ditolak. Anda tidak memiliki izin untuk mengakses fitur ini.';
+      'Akses dibatasi. Hanya Owner yang dapat mengelola pengguna.';
 
   @override
   String get appDisplayName => 'PrimePOS';
@@ -816,4 +816,65 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get noPrinterFound => 'Tidak Ada Printer Ditemukan';
+
+  @override
+  String get userManagement => 'Manajemen Pengguna';
+
+  @override
+  String get userManagementSubtitle => 'Kelola pengguna dan peran akses';
+
+  @override
+  String get addUser => 'Tambah Pengguna';
+
+  @override
+  String get editUser => 'Ubah Pengguna';
+
+  @override
+  String get deleteUser => 'Hapus Pengguna';
+
+  @override
+  String get userList => 'Daftar Pengguna';
+
+  @override
+  String get noUsers => 'Belum Ada Pengguna';
+
+  @override
+  String get noUsersSubtitle => 'Tambah pengguna pertama untuk bisnis Anda.';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleManager => 'Manager';
+
+  @override
+  String get roleKasir => 'Kasir';
+
+  @override
+  String get roleStaffGudang => 'Staff Gudang';
+
+  @override
+  String get roleLockedOwner => 'Peran Owner dikunci';
+
+  @override
+  String get confirmDeleteUser =>
+      'Apakah Anda yakin ingin menonaktifkan pengguna ini?';
+
+  @override
+  String get userCreated => 'Pengguna berhasil dibuat.';
+
+  @override
+  String get userUpdated => 'Pengguna berhasil diperbarui.';
+
+  @override
+  String get userDeleted => 'Pengguna telah dinonaktifkan.';
+
+  @override
+  String get ownerOnly => 'Hanya Owner yang dapat mengelola pengguna.';
+
+  @override
+  String get userNotFound => 'User tidak ditemukan.';
 }

@@ -62,6 +62,7 @@ class Stores extends Table {
 /// Profil pengguna lokal (autentikasi utama lewat Supabase Auth).
 class Profiles extends Table {
   TextColumn get id => text()(); // uid Supabase Auth
+  TextColumn get businessId => text().withDefault(const Constant('local'))(); // Bisnis yang memiliki user ini
   TextColumn get email => text()();
   TextColumn get fullName => text()();
   TextColumn get role => text()(); // owner|admin|manager|kasir|staff_gudang

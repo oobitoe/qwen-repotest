@@ -1064,6 +1064,14 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _businessIdMeta =
+      const VerificationMeta('businessId');
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+      'business_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('local'));
   static const VerificationMeta _emailMeta = const VerificationMeta('email');
   @override
   late final GeneratedColumn<String> email = GeneratedColumn<String>(
@@ -1137,6 +1145,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
   @override
   List<GeneratedColumn> get $columns => [
         id,
+        businessId,
         email,
         fullName,
         role,
@@ -1162,6 +1171,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+          _businessIdMeta,
+          businessId.isAcceptableOrUnknown(
+              data['business_id']!, _businessIdMeta));
     }
     if (data.containsKey('email')) {
       context.handle(
@@ -1222,6 +1237,8 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     return Profile(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      businessId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}business_id'])!,
       email: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
       fullName: attachedDatabase.typeMapping
@@ -1253,6 +1270,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
 
 class Profile extends DataClass implements Insertable<Profile> {
   final String id;
+  final String businessId;
   final String email;
   final String fullName;
   final String role;
@@ -1265,6 +1283,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   final String syncStatus;
   const Profile(
       {required this.id,
+      required this.businessId,
       required this.email,
       required this.fullName,
       required this.role,
@@ -1279,6 +1298,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
     map['email'] = Variable<String>(email);
     map['full_name'] = Variable<String>(fullName);
     map['role'] = Variable<String>(role);
@@ -1299,6 +1319,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   ProfilesCompanion toCompanion(bool nullToAbsent) {
     return ProfilesCompanion(
       id: Value(id),
+      businessId: Value(businessId),
       email: Value(email),
       fullName: Value(fullName),
       role: Value(role),
@@ -1321,6 +1342,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Profile(
       id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
       email: serializer.fromJson<String>(json['email']),
       fullName: serializer.fromJson<String>(json['fullName']),
       role: serializer.fromJson<String>(json['role']),
@@ -1338,6 +1360,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
       'email': serializer.toJson<String>(email),
       'fullName': serializer.toJson<String>(fullName),
       'role': serializer.toJson<String>(role),
@@ -1353,6 +1376,7 @@ class Profile extends DataClass implements Insertable<Profile> {
 
   Profile copyWith(
           {String? id,
+          String? businessId,
           String? email,
           String? fullName,
           String? role,
@@ -1365,6 +1389,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           String? syncStatus}) =>
       Profile(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
         email: email ?? this.email,
         fullName: fullName ?? this.fullName,
         role: role ?? this.role,
@@ -1379,6 +1404,8 @@ class Profile extends DataClass implements Insertable<Profile> {
   Profile copyWithCompanion(ProfilesCompanion data) {
     return Profile(
       id: data.id.present ? data.id.value : this.id,
+      businessId:
+          data.businessId.present ? data.businessId.value : this.businessId,
       email: data.email.present ? data.email.value : this.email,
       fullName: data.fullName.present ? data.fullName.value : this.fullName,
       role: data.role.present ? data.role.value : this.role,
@@ -1397,6 +1424,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   String toString() {
     return (StringBuffer('Profile(')
           ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
           ..write('email: $email, ')
           ..write('fullName: $fullName, ')
           ..write('role: $role, ')
@@ -1412,13 +1440,14 @@ class Profile extends DataClass implements Insertable<Profile> {
   }
 
   @override
-  int get hashCode => Object.hash(id, email, fullName, role, isActive,
-      createdAt, updatedAt, deletedAt, version, remoteId, syncStatus);
+  int get hashCode => Object.hash(id, businessId, email, fullName, role,
+      isActive, createdAt, updatedAt, deletedAt, version, remoteId, syncStatus);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Profile &&
           other.id == this.id &&
+          other.businessId == this.businessId &&
           other.email == this.email &&
           other.fullName == this.fullName &&
           other.role == this.role &&
@@ -1433,6 +1462,7 @@ class Profile extends DataClass implements Insertable<Profile> {
 
 class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<String> id;
+  final Value<String> businessId;
   final Value<String> email;
   final Value<String> fullName;
   final Value<String> role;
@@ -1446,6 +1476,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<int> rowid;
   const ProfilesCompanion({
     this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
     this.email = const Value.absent(),
     this.fullName = const Value.absent(),
     this.role = const Value.absent(),
@@ -1460,6 +1491,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   });
   ProfilesCompanion.insert({
     required String id,
+    this.businessId = const Value.absent(),
     required String email,
     required String fullName,
     required String role,
@@ -1477,6 +1509,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
         role = Value(role);
   static Insertable<Profile> custom({
     Expression<String>? id,
+    Expression<String>? businessId,
     Expression<String>? email,
     Expression<String>? fullName,
     Expression<String>? role,
@@ -1491,6 +1524,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
       if (email != null) 'email': email,
       if (fullName != null) 'full_name': fullName,
       if (role != null) 'role': role,
@@ -1507,6 +1541,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
 
   ProfilesCompanion copyWith(
       {Value<String>? id,
+      Value<String>? businessId,
       Value<String>? email,
       Value<String>? fullName,
       Value<String>? role,
@@ -1520,6 +1555,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       Value<int>? rowid}) {
     return ProfilesCompanion(
       id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
       email: email ?? this.email,
       fullName: fullName ?? this.fullName,
       role: role ?? this.role,
@@ -1539,6 +1575,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
     }
     if (email.present) {
       map['email'] = Variable<String>(email.value);
@@ -1580,6 +1619,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   String toString() {
     return (StringBuffer('ProfilesCompanion(')
           ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
           ..write('email: $email, ')
           ..write('fullName: $fullName, ')
           ..write('role: $role, ')
@@ -30691,6 +30731,7 @@ typedef $$StoresTableProcessedTableManager = ProcessedTableManager<
         bool saleSequencesRefs})>;
 typedef $$ProfilesTableCreateCompanionBuilder = ProfilesCompanion Function({
   required String id,
+  Value<String> businessId,
   required String email,
   required String fullName,
   required String role,
@@ -30705,6 +30746,7 @@ typedef $$ProfilesTableCreateCompanionBuilder = ProfilesCompanion Function({
 });
 typedef $$ProfilesTableUpdateCompanionBuilder = ProfilesCompanion Function({
   Value<String> id,
+  Value<String> businessId,
   Value<String> email,
   Value<String> fullName,
   Value<String> role,
@@ -30729,6 +30771,9 @@ class $$ProfilesTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+      column: $table.businessId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get email => $composableBuilder(
       column: $table.email, builder: (column) => ColumnFilters(column));
@@ -30773,6 +30818,9 @@ class $$ProfilesTableOrderingComposer
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get businessId => $composableBuilder(
+      column: $table.businessId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get email => $composableBuilder(
       column: $table.email, builder: (column) => ColumnOrderings(column));
 
@@ -30815,6 +30863,9 @@ class $$ProfilesTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+      column: $table.businessId, builder: (column) => column);
 
   GeneratedColumn<String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
@@ -30871,6 +30922,7 @@ class $$ProfilesTableTableManager extends RootTableManager<
               $$ProfilesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
+            Value<String> businessId = const Value.absent(),
             Value<String> email = const Value.absent(),
             Value<String> fullName = const Value.absent(),
             Value<String> role = const Value.absent(),
@@ -30885,6 +30937,7 @@ class $$ProfilesTableTableManager extends RootTableManager<
           }) =>
               ProfilesCompanion(
             id: id,
+            businessId: businessId,
             email: email,
             fullName: fullName,
             role: role,
@@ -30899,6 +30952,7 @@ class $$ProfilesTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             required String id,
+            Value<String> businessId = const Value.absent(),
             required String email,
             required String fullName,
             required String role,
@@ -30913,6 +30967,7 @@ class $$ProfilesTableTableManager extends RootTableManager<
           }) =>
               ProfilesCompanion.insert(
             id: id,
+            businessId: businessId,
             email: email,
             fullName: fullName,
             role: role,

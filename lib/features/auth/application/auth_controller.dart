@@ -111,6 +111,35 @@ class AuthController extends Notifier<AuthState> {
     state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, role);
   }
 
+  /// Daftarkan **Owner pertama** saat setup pertama kali.
+  /// Role dikunci menjadi `owner` dan tidak dapat diubah.
+  Future<void> registerFirstOwner(
+    String email,
+    String password,
+    String fullName,
+  ) async {
+    final pb = PocketBaseClient.client;
+
+    // Pastikan server reachable sebelum mencoba daftar.
+    final reachable = await pb.healthCheck();
+    if (!reachable) {
+      throw Exception('Tidak dapat menghubungi server PocketBase. Periksa koneksi internet.');
+    }
+
+    // Daftarkan ke PocketBase `users` collection dengan role Owner.
+    await pb.registerUser(
+      email: email,
+      password: password,
+      name: fullName,
+    );
+
+    // Login otomatis setelah daftar agar token tersimpan di authStore.
+    await pb.loginUser(email: email, password: password);
+
+    // Selalu Owner — tidak boleh diubah.
+    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, UserRole.owner);
+  }
+
   /// Login user ke PocketBase via email + password.
   Future<void> signIn(String email, String password) async {
     final pb = PocketBaseClient.client;

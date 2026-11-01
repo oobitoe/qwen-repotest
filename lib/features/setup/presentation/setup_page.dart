@@ -8,9 +8,15 @@ import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/setup_controller.dart';
 
-/// Halaman setup pertama kali: konfigurasi bisnis & toko.
+/// Halaman setup pertama kali: konfigurasi bisnis & toko, lalu akun Owner pertama.
 ///
-/// Hanya muncul saat tabel `businesses` kosong (belum pernah setup).
+/// Alur:
+/// 1. Jika tabel `businesses` kosong → isi form bisnis & toko.
+/// 2. Setelah bisnis tersimpan, cek apakah sudah ada user (PocketBase + lokal).
+/// 3. Jika BELUM ada user sama sekali → wajib daftar Owner pertama.
+///    Role dikunci menjadi Owner dan tidak dapat diubah.
+/// 4. Setelah Owner terdaftar → arahkan ke halaman Login.
+///
 /// Wajib online + PocketBase reachable sebelum dapat melanjutkan.
 class SetupPage extends ConsumerStatefulWidget {
   const SetupPage({super.key});
@@ -27,6 +33,14 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   final _storeName = TextEditingController();
   final _storeAddress = TextEditingController();
   final _storePhone = TextEditingController();
+
+  // Form Owner pertama
+  final _ownerFormKey = GlobalKey<FormState>();
+  final _ownerFullName = TextEditingController();
+  final _ownerEmail = TextEditingController();
+  final _ownerPassword = TextEditingController();
+
+  int _step = 0; // 0 = bisnis, 1 = owner pertama
   bool _busy = false;
 
   @override
@@ -46,44 +60,86 @@ class _SetupPageState extends ConsumerState<SetupPage> {
     _storeName.dispose();
     _storeAddress.dispose();
     _storePhone.dispose();
+    _ownerFullName.dispose();
+    _ownerEmail.dispose();
+    _ownerPassword.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  /// Langkah 0: Simpan bisnis & toko, lalu lanjut ke langkah Owner pertama jika diperlukan.
+  Future<void> _submitBusiness() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _busy = true);
 
     try {
       await ref.read(setupControllerProvider.notifier).completeSetup(
-        businessName: _businessName.text.trim(),
-        businessCurrency: _businessCurrency.text.trim(),
-        businessTimezone: _businessTimezone.text.trim(),
-        storeName: _storeName.text.trim(),
-        storeAddress: _storeAddress.text.trim().isEmpty
-            ? null
-            : _storeAddress.text.trim(),
-        storePhone: _storePhone.text.trim().isEmpty
-            ? null
-            : _storePhone.text.trim(),
-      );
+            businessName: _businessName.text.trim(),
+            businessCurrency: _businessCurrency.text.trim(),
+            businessTimezone: _businessTimezone.text.trim(),
+            storeName: _storeName.text.trim(),
+            storeAddress: _storeAddress.text.trim().isEmpty
+                ? null
+                : _storeAddress.text.trim(),
+            storePhone: _storePhone.text.trim().isEmpty
+                ? null
+                : _storePhone.text.trim(),
+          );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Setup selesai. Bisnis dan toko telah disimpan.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) context.go(AppRoutes.register);
+
+      final setupState = ref.read(setupControllerProvider);
+      if (setupState.status == SetupStatus.ready) {
+        // Tidak perlu Owner pertama (user sudah ada) → langsung ke login
+        if (mounted) {
+          context.go(AppRoutes.login);
+        }
+      } else {
+        // Perlu daftar Owner pertama → pindah ke langkah 1
+        setState(() {
+          _step = 1;
+          _busy = false;
         });
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal setup: $e'),
+          content: Text('Gagal setup bisnis: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Langkah 1: Daftar Owner pertama (role selalu Owner, tidak bisa diubah).
+  Future<void> _submitOwner() async {
+    if (!(_ownerFormKey.currentState?.validate() ?? false)) return;
+    setState(() => _busy = true);
+
+    try {
+      await ref.read(setupControllerProvider.notifier).registerFirstOwner(
+            email: _ownerEmail.text.trim(),
+            password: _ownerPassword.text.trim(),
+            fullName: _ownerFullName.text.trim(),
+          );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Akun Owner pertama berhasil dibuat. Silakan masuk.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      if (mounted) {
+        context.go(AppRoutes.login);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal daftar Owner: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -165,11 +221,40 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       );
     }
 
-    // Jika siap dan perlu setup, tampilkan form
-    if (setupState.status == SetupStatus.needsSetup) {
+    // Jika siap dan tidak perlu setup, kembali ke route (harus redirect otomatis)
+    if (setupState.status == SetupStatus.ready && !setupState.needsSetup) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Setup tidak diperlukan. Mengarahkan ke login...'),
+        ),
+      );
+    }
+
+    // Jika perlu setup tapi belum Online/PB reachable, tunggu (tidak boleh melanjutkan)
+    if (setupState.status == SetupStatus.needsSetup &&
+        (!setupState.online || !setupState.pocketbaseReachable)) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Menunggu koneksi online dan database server…',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Langkah 1: Form Daftar Owner Pertama
+    if (_step == 1 && setupState.needsFirstOwner) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Setup Pertama Kali'),
+          title: const Text('Daftar Owner Pertama'),
           leading: const BackButton(),
         ),
         body: Center(
@@ -181,22 +266,23 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.xl),
                   child: Form(
-                    key: _formKey,
+                    key: _ownerFormKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(AppIcons.storefrontRounded,
+                        Icon(AppIcons.personAddRounded,
                             size: 56, color: scheme.primary),
                         const SizedBox(height: AppSpacing.md),
                         Text(
-                          'Setup Bisnis & Toko',
+                          'Buat Akun Owner Pertama',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: AppSpacing.xxs),
                         Text(
-                          'Isi data bisnis dan toko sebelum membuat akun pengguna.',
+                          'Akun ini akan memiliki peran Owner dan tidak dapat diubah. '
+                          'Owner bertanggung jawab mengelola pengguna lain di dalam aplikasi.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
@@ -205,83 +291,52 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         TextFormField(
-                          controller: _businessName,
+                          controller: _ownerFullName,
                           enabled: !_busy,
-                          keyboardType: TextInputType.text,
+                          keyboardType: TextInputType.name,
                           decoration: InputDecoration(
-                            labelText: l10n.businessName,
-                            prefixIcon: const Icon(AppIcons.storefrontRounded),
+                            labelText: l10n.fullName,
+                            prefixIcon: const Icon(AppIcons.personRounded),
                           ),
                           validator: (v) =>
                               (v == null || v.isEmpty) ? l10n.nameRequired : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
-                          controller: _businessCurrency,
+                          controller: _ownerEmail,
                           enabled: !_busy,
-                          keyboardType: TextInputType.text,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: l10n.currency,
-                            prefixIcon: const Icon(AppIcons.attachMoneyRounded),
+                            labelText: l10n.email,
+                            prefixIcon: const Icon(AppIcons.mailOutline),
                           ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? l10n.nameRequired : null,
+                          validator: (v) => (v == null || !v.contains('@'))
+                              ? l10n.invalidEmail
+                              : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
-                          controller: _businessTimezone,
+                          controller: _ownerPassword,
                           enabled: !_busy,
-                          keyboardType: TextInputType.text,
+                          obscureText: true,
                           decoration: InputDecoration(
-                            labelText: l10n.timezone,
-                            prefixIcon: const Icon(AppIcons.clockRounded),
+                            labelText: l10n.password,
+                            prefixIcon: const Icon(AppIcons.lockOutline),
                           ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? l10n.nameRequired : null,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'Detail Toko',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          validator: (v) => (v == null || v.length < 6)
+                              ? l10n.minPasswordLength
+                              : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _storeName,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            labelText: l10n.storeName,
-                            prefixIcon: const Icon(AppIcons.storefrontRounded),
-                          ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? l10n.nameRequired : null,
+                        // Role dikunci ke Owner — hanya ditampilkan, tidak bisa diubah
+                        InputDecoratorField(
+                          label: l10n.role,
+                          value: 'Owner',
+                          icon: const Icon(AppIcons.lockOutline),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _storeAddress,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.text,
-                          decoration: const InputDecoration(
-                            labelText: 'Alamat Toko',
-                            prefixIcon: Icon(Icons.location_on),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _storePhone,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            labelText: 'Telepon Toko',
-                            prefixIcon: Icon(Icons.phone),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.xl),
                         FilledButton(
-                          onPressed: _busy ? null : _submit,
+                          onPressed: _busy ? null : _submitOwner,
                           child: _busy
                               ? const SizedBox(
                                   height: 20,
@@ -290,8 +345,9 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Simpan & Lanjutkan'),
+                              : const Text('Daftar sebagai Owner'),
                         ),
+                        const SizedBox(height: AppSpacing.md),
                       ],
                     ),
                   ),
@@ -303,18 +359,171 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       );
     }
 
-    // Jika siap dan tidak perlu setup, kembali ke route (should redirect automatically)
-    if (setupState.status == SetupStatus.ready && !setupState.needsSetup) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Setup tidak diperlukan. Mengarahkan ke login...'),
-        ),
-      );
-    }
-
+    // Langkah 0: Form Bisnis & Toko
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Setup Pertama Kali'),
+        leading: const BackButton(),
+      ),
       body: Center(
-        child: CircularProgressIndicator(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(AppIcons.storefrontRounded,
+                          size: 56, color: scheme.primary),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Setup Bisnis & Toko',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        'Isi data bisnis dan toko sebelum membuat akun pengguna.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      TextFormField(
+                        controller: _businessName,
+                        enabled: !_busy,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: l10n.businessName,
+                          prefixIcon: const Icon(AppIcons.storefrontRounded),
+                        ),
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? l10n.nameRequired : null,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _businessCurrency,
+                        enabled: !_busy,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: l10n.currency,
+                          prefixIcon: const Icon(AppIcons.attachMoneyRounded),
+                        ),
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? l10n.nameRequired : null,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _businessTimezone,
+                        enabled: !_busy,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: l10n.timezone,
+                          prefixIcon: const Icon(AppIcons.clockRounded),
+                        ),
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? l10n.nameRequired : null,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const Divider(),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Detail Toko',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _storeName,
+                        enabled: !_busy,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: l10n.storeName,
+                          prefixIcon: const Icon(AppIcons.storefrontRounded),
+                        ),
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? l10n.nameRequired : null,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _storeAddress,
+                        enabled: !_busy,
+                        keyboardType: TextInputType.text,
+                        decoration: const InputDecoration(
+                          labelText: 'Alamat Toko',
+                          prefixIcon: Icon(Icons.location_on),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _storePhone,
+                        enabled: !_busy,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Telepon Toko',
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      FilledButton(
+                        onPressed: _busy ? null : _submitBusiness,
+                        child: _busy
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Simpan & Lanjutkan'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Helper widget untuk menampilkan label role yang dikunci (bukan dropdown).
+class InputDecoratorField extends StatelessWidget {
+  final String label;
+  final String value;
+  final Widget icon;
+
+  const InputDecoratorField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: icon,
+      ),
+      child: Text(
+        value,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
       ),
     );
   }

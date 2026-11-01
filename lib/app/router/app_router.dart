@@ -8,6 +8,7 @@ import '../../features/setup/presentation/setup_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
+import '../../features/users/presentation/user_page.dart';
 import '../../features/categories/presentation/category_page.dart';
 import '../../features/customers/presentation/customer_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
@@ -49,6 +50,7 @@ class AppRoutes {
   static const reports = '/reports';
   static const auditLog = '/audit-log';
   static const settings = '/settings';
+  static const users = '/users';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -183,6 +185,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.settings,
             builder: (context, state) => const SettingsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.users,
+            builder: (context, state) => const UserPage(),
           ),
         ],
       ),

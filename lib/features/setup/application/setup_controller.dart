@@ -2,6 +2,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/database/sync_dao.dart';
 import '../../../core/network/pocketbase_client.dart';
 import '../../../shared/providers/core_providers.dart';
+import '../../auth/application/auth_controller.dart';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
@@ -21,6 +22,7 @@ class SetupState {
   const SetupState({
     this.status = SetupStatus.initial,
     this.needsSetup = false,
+    this.needsFirstOwner = false,
     this.error,
     this.online = false,
     this.pocketbaseReachable = false,
@@ -28,6 +30,8 @@ class SetupState {
 
   final SetupStatus status;
   final bool needsSetup;
+  /// Apakah setup pertama kali perlu membuat akun Owner pertama (belum ada user sama sekali).
+  final bool needsFirstOwner;
   final String? error;
   final bool online;
   final bool pocketbaseReachable;
@@ -35,6 +39,7 @@ class SetupState {
   SetupState copyWith({
     SetupStatus? status,
     bool? needsSetup,
+    bool? needsFirstOwner,
     String? error,
     bool? online,
     bool? pocketbaseReachable,
@@ -42,6 +47,7 @@ class SetupState {
     return SetupState(
       status: status ?? this.status,
       needsSetup: needsSetup ?? this.needsSetup,
+      needsFirstOwner: needsFirstOwner ?? this.needsFirstOwner,
       error: error ?? this.error,
       online: online ?? this.online,
       pocketbaseReachable: pocketbaseReachable ?? this.pocketbaseReachable,
@@ -126,11 +132,16 @@ class SetupController extends Notifier<SetupState> {
         return;
       }
 
-      // 4. Sudah online + PB reachable → siap untuk setup
+      // 4. Sudah online + PB reachable → cek apakah sudah ada user (PB + lokal)
+      final pbUserCount = await _countPocketBaseUsers();
+      final localUserCount = await _countLocalUsers();
+      final needsFirstOwner = pbUserCount == 0 && localUserCount == 0;
+
       await Future.delayed(const Duration(milliseconds: 500));
       state = state.copyWith(
         status: SetupStatus.needsSetup,
         needsSetup: true,
+        needsFirstOwner: needsFirstOwner,
         online: isOnline,
         pocketbaseReachable: pbReachable,
       );
@@ -141,6 +152,64 @@ class SetupController extends Notifier<SetupState> {
         needsSetup: true,
       );
     }
+  }
+
+  /// Daftarkan Owner pertama saat setup pertama kali.
+  /// Role selalu Owner dan tidak dapat diubah.
+  Future<void> registerFirstOwner({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
+    state = state.copyWith(status: SetupStatus.checking, error: null);
+    try {
+      await ref.read(authProvider.notifier).registerFirstOwner(
+            email,
+            password,
+            fullName,
+          );
+
+      // Tandai setup selesai di sync_metadata
+      await _setSetupCompleted(true);
+
+      state = const SetupState(
+        status: SetupStatus.ready,
+        needsSetup: false,
+        needsFirstOwner: false,
+        online: true,
+        pocketbaseReachable: true,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        status: SetupStatus.error,
+        error: 'Gagal daftar Owner pertama: $e',
+        needsFirstOwner: true,
+      );
+    }
+  }
+
+  /// Jumlah bisnis di tabel lokal.
+  Future<int> _countBusinesses() async {
+    final count = await (db.selectOnly(db.businesses)
+          ..addColumns([db.businesses.id.count()]))
+        .getSingle();
+    return count.read(db.businesses.id.count()) ?? 0;
+  }
+
+  /// Jumlah user di tabel Profiles lokal (Drift).
+  Future<int> _countLocalUsers() async {
+    final count = await (db.selectOnly(db.profiles)
+          ..addColumns([db.profiles.id.count()]))
+        .getSingle();
+    return count.read(db.profiles.id.count()) ?? 0;
+  }
+
+  /// Jumlah user di PocketBase collection `users`.
+  Future<int> _countPocketBaseUsers() async {
+    final page = await PocketBaseClient.instance
+        .collection('users')
+        .getList(page: 1, perPage: 1);
+    return page.totalItems;
   }
 
   /// Simpan bisnis dan toko pertama kali, lalu tandai setup selesai.
@@ -244,14 +313,6 @@ class SetupController extends Notifier<SetupState> {
         error: 'Gagal menyimpan setup: $e',
       );
     }
-  }
-
-  /// Jumlah bisnis di tabel lokal.
-  Future<int> _countBusinesses() async {
-    final count = await (db.selectOnly(db.businesses)
-          ..addColumns([db.businesses.id.count()]))
-        .getSingle();
-    return count.read(db.businesses.id.count()) ?? 0;
   }
 
   /// Cek apakah `setup_completed` sudah ditandai di sync_metadata.

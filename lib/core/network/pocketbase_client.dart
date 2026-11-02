@@ -2,6 +2,7 @@ library pocketbase_client;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Singleton klien PocketBase. Gunakan [instance] di seluruh aplikasi.
 class PocketBaseClient {
@@ -9,6 +10,8 @@ class PocketBaseClient {
 
   static PocketBase? _instance;
   static PocketBaseClient? _client;
+
+  static const String _pbTokenKey = 'pb_auth_token';
 
   /// Instance klien PocketBase (buat sekali, gunakan ulang).
   static PocketBase get instance {
@@ -71,7 +74,7 @@ class PocketBaseClient {
   }
 
   /// Login user ke PocketBase via email + password.
-  /// Token otomatis tersimpan di `authStore` oleh SDK.
+  /// Token otomatis tersimpan di `authStore` oleh SDK dan di-persist ke SharedPreferences.
   /// Return `RecordModel` user yang login.
   Future<RecordModel> loginUser({
     required String email,
@@ -84,7 +87,31 @@ class PocketBaseClient {
     if (record == null) {
       throw Exception('Login berhasil tapi tidak menerima data user dari server.');
     }
+    // Persist token agar bisa login offline (token masih valid dari login online sebelumnya)
+    await persistToken(_instance?.authStore.token);
     return record;
+  }
+
+  /// Simpan token ke SharedPreferences (untuk login offline).
+  static Future<void> persistToken(String? token) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (token != null && token.isNotEmpty) {
+      await prefs.setString(_pbTokenKey, token);
+    } else {
+      await prefs.remove(_pbTokenKey);
+    }
+  }
+
+  /// Muat token dari SharedPreferences.
+  static Future<String?> loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_pbTokenKey);
+  }
+
+  /// Cek apakah ada token yang disimpan di SharedPreferences (untuk login offline).
+  static Future<bool> hasStoredToken() async {
+    final token = await loadToken();
+    return token != null && token.isNotEmpty;
   }
 
   /// Ambil token autentikasi saat ini (jika ada).
@@ -93,9 +120,10 @@ class PocketBaseClient {
   /// Cek apakah user sudah ter-autentikasi (token masih valid).
   bool get isAuthenticated => _instance?.authStore.isValid ?? false;
 
-  /// Keluar dan hapus token autentikasi.
+  /// Keluar dan hapus token autentikasi (SharedPreferences + authStore).
   Future<void> logout() async {
     await _instance?.collection('users').authRefresh();
     _instance?.authStore.clear();
+    await persistToken(null);
   }
 }

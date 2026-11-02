@@ -171,9 +171,10 @@ class AuthController extends Notifier<AuthState> {
     if (reachable) {
       await pb.loginUser(email: email, password: password);
     } else {
-      // Offline: hanya boleh login jika ada token PocketBase yang masih valid
+      // Offline: cek apakah ada token PocketBase yang tersimpan di SharedPreferences
       // dari login online sebelumnya. Tidak bisa verifikasi password offline.
-      if (!PocketBaseClient.client.isAuthenticated) {
+      final hasToken = await PocketBaseClient.hasStoredToken();
+      if (!hasToken) {
         throw Exception(
           'Tidak dapat login offline. Silakan login online sekali terlebih dahulu '
           'agar token autentikasi tersimpan.',

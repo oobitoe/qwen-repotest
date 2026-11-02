@@ -195,11 +195,13 @@ class ReportsRepository {
   final AppDatabase _db;
 
   /// Laporan penjualan per hari/minggu/bulan.
-  Future<List<SalesReportData>> getSalesReport(ReportFilter filter) async {
+  Future<List<SalesReportData>> getSalesReport(ReportFilter filter, {required String businessId, required String storeId}) async {
     // Query penjualan dengan grouping berdasarkan periode
-    final query = _db.select(_db.sales).join([
-      innerJoin(_db.saleItems, _db.saleItems.saleId.equalsExp(_db.sales.id)),
-    ]);
+    final query = _db.select(_db.sales)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId))
+      .join([
+        innerJoin(_db.saleItems, _db.saleItems.saleId.equalsExp(_db.sales.id)),
+      ]);
 
     // Apply filters
     if (filter.startDate != null) {
@@ -256,12 +258,14 @@ class ReportsRepository {
   }
 
   /// Top produk terjual.
-  Future<List<TopProductReportData>> getTopProductsReport(ReportFilter filter, {int limit = 20}) async {
-    final query = _db.select(_db.saleItems).join([
-      innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
-      leftOuterJoin(_db.products, _db.products.id.equalsExp(_db.saleItems.productId)),
-      leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.products.categoryId)),
-    ]);
+  Future<List<TopProductReportData>> getTopProductsReport(ReportFilter filter, {required String businessId, required String storeId, int limit = 20}) async {
+    final query = _db.select(_db.saleItems)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId))
+      .join([
+        innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
+        leftOuterJoin(_db.products, _db.products.id.equalsExp(_db.saleItems.productId)),
+        leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.products.categoryId)),
+      ]);
 
     if (filter.startDate != null) {
       query.where(_db.sales.createdAt.isBiggerOrEqualValue(filter.startDate!));
@@ -314,10 +318,12 @@ class ReportsRepository {
   }
 
   /// Laporan stok (produk dengan stok rendah/habis).
-  Future<List<StockReportData>> getStockReport(ReportFilter filter) async {
-    final query = _db.select(_db.products).join([
-      leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.products.categoryId)),
-    ]);
+  Future<List<StockReportData>> getStockReport(ReportFilter filter, {required String businessId, required String storeId}) async {
+    final query = _db.select(_db.products)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId))
+      .join([
+        leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.products.categoryId)),
+      ]);
 
     if (filter.categoryId != null) {
       query.where(_db.products.categoryId.equals(filter.categoryId!));
@@ -364,14 +370,14 @@ class ReportsRepository {
   }
 
   /// Laporan arus kas.
-  Future<List<CashFlowReportData>> getCashFlowReport(ReportFilter filter) async {
+  Future<List<CashFlowReportData>> getCashFlowReport(ReportFilter filter, {required String businessId, required String storeId}) async {
     // This would aggregate cash_movements, expenses, income, sales payments
     // Simplified implementation
     return [];
   }
 
   /// Laporan laba rugi.
-  Future<List<ProfitLossReportData>> getProfitLossReport(ReportFilter filter) async {
+  Future<List<ProfitLossReportData>> getProfitLossReport(ReportFilter filter, {required String businessId, required String storeId}) async {
     // This would calculate revenue, cogs, expenses, etc.
     // Simplified implementation
     return [];

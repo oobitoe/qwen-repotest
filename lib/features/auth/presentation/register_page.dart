@@ -19,7 +19,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _fullName = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  String _selectedRole = 'kasir';
+  final String _selectedRole = 'owner';
   bool _busy = false;
 
   @override
@@ -170,8 +170,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             child: Text('Staff Gudang'),
                           ),
                         ],
-                        onChanged: (v) =>
-                            setState(() => _selectedRole = v ?? 'kasir'),
+                        onChanged: null, // Role dikunci Owner — tidak dapat diubah
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       FilledButton(

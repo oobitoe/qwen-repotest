@@ -170,6 +170,15 @@ class AuthController extends Notifier<AuthState> {
     final reachable = await pb.healthCheck();
     if (reachable) {
       await pb.loginUser(email: email, password: password);
+    } else {
+      // Offline: hanya boleh login jika ada token PocketBase yang masih valid
+      // dari login online sebelumnya. Tidak bisa verifikasi password offline.
+      if (!PocketBaseClient.client.isAuthenticated) {
+        throw Exception(
+          'Tidak dapat login offline. Silakan login online sekali terlebih dahulu '
+          'agar token autentikasi tersimpan.',
+        );
+      }
     }
 
     // Role dan businessId diambil dari profil lokal (sumber kebenaran untuk akses)

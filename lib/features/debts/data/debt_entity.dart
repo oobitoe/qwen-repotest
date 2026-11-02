@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 class DebtEntity {
   const DebtEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     this.supplierId,
     this.customerId,
     required this.type, // payable | receivable
@@ -16,6 +18,8 @@ class DebtEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String? supplierId;
   final String? customerId;
   final String type;
@@ -69,6 +73,8 @@ class DebtEntity {
   /// Copy with untuk update.
   DebtEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? supplierId,
     String? customerId,
     String? type,
@@ -81,6 +87,8 @@ class DebtEntity {
   }) =>
       DebtEntity(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
         supplierId: supplierId ?? this.supplierId,
         customerId: customerId ?? this.customerId,
         type: type ?? this.type,

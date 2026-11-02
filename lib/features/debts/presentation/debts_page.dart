@@ -7,6 +7,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../suppliers/data/supplier_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/debt_entity.dart';
@@ -25,8 +26,6 @@ class _DebtsPageState extends ConsumerState<DebtsPage>
   late final TabController _tabController;
   final _searchController = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -133,9 +132,12 @@ class _DebtsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
     final debtsAsync = type == 'payable'
-        ? ref.watch(payablesProvider((b: _businessId, s: _storeId)))
-        : ref.watch(receivablesProvider((b: _businessId, s: _storeId)));
+        ? ref.watch(payablesProvider((businessId: _businessId, storeId: _storeId)))
+        : ref.watch(receivablesProvider((businessId: _businessId, storeId: _storeId)));
 
     return debtsAsync.when(
       data: (items) {
@@ -247,7 +249,15 @@ class _DebtsTab extends ConsumerWidget {
 
   Future<void> _showDebtDetail(
       BuildContext context, WidgetRef ref, DebtEntity debt) async {
-    final payments = await ref.watch(debtRepositoryProvider).watchDebtPayments(debt.id).first;
+    final profile = ref.read(userProfileProvider);
+    final payments = await ref
+        .watch(debtRepositoryProvider)
+        .watchDebtPayments(
+          debtId: debt.id,
+          businessId: profile.value?.businessId ?? 'local',
+          storeId: profile.value?.storeId ?? 'local',
+        )
+        .first;
     
     if (!context.mounted) return;
 
@@ -321,10 +331,12 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final debt = DebtEntity(
+    final profile = ref.read(userProfileProvider);
+
+    await ref.read(debtRepositoryProvider).saveDebt(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       type: _type,
       supplierId: _type == 'payable' ? _supplierId : null,
       customerId: _type == 'receivable' ? _customerId : null,
@@ -334,19 +346,18 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
       dueDate: _dueDateCtrl.text.isNotEmpty
           ? DateFormat('yyyy-MM-dd').parse(_dueDateCtrl.text)
           : null,
-      createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
     );
-
-    await ref.read(debtRepositoryProvider).saveDebt(debt);
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final suppliers = ref.watch(suppliersProvider);
-    final customers = ref.watch(customersProvider);
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final suppliers = ref.watch(suppliersProvider((businessId: _businessId, storeId: _storeId)));
+    final customers = ref.watch(customersProvider((businessId: _businessId, storeId: _storeId)));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -601,10 +612,14 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final profile = ref.read(userProfileProvider);
+
     await ref.read(debtRepositoryProvider).addPayment(
           debtId: widget.debt.id,
           amount: double.tryParse(_amountCtrl.text) ?? 0,
           createdBy: 'kasir',
+          businessId: profile.value?.businessId ?? 'local',
+          storeId: profile.value?.storeId ?? 'local',
         );
     if (mounted) Navigator.of(context).pop();
   }

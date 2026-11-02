@@ -174,8 +174,8 @@ class AuditLogRepository {
     );
 
     await _db.into(_db.auditLogs).insert(
-      AuditLogsCompanion.insert(
-        id: entry.id,
+      AuditLogsCompanion(
+        id: Value(entry.id),
         businessId: Value(businessId),
         storeId: Value(storeId),
         userId: Value(entry.userId),

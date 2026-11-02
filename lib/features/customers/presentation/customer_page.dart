@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../customers/data/customer_entity.dart';
 import '../../customers/data/customer_repository.dart';
 
@@ -19,8 +20,6 @@ class CustomersPage extends ConsumerStatefulWidget {
 class _CustomersPageState extends ConsumerState<CustomersPage> {
   final _searchController = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -32,7 +31,10 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final customers = ref.watch(customersProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final customers = ref.watch(customersProvider((businessId: _businessId, storeId: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -175,10 +177,11 @@ class _CustomerFormState extends ConsumerState<_CustomerForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(customerRepositoryProvider);
+    final profile = ref.read(userProfileProvider);
     await repo.saveCustomer(
       id: const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       code: _codeCtrl.text.trim().isEmpty ? null : _codeCtrl.text.trim(),
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),

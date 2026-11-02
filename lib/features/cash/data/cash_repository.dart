@@ -51,6 +51,8 @@ class CashRepository {
         for (final r in rows)
           CashSessionEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             registerId: r.registerId,
             openedBy: r.openedBy,
             openedAt: r.openedAt,

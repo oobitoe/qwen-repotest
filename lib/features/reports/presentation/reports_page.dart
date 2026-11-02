@@ -7,6 +7,7 @@ import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/providers/user_profile_provider.dart';
 import '../data/reports_repository.dart';
 
 /// Halaman laporan keuangan dan operasional.
@@ -24,8 +25,6 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
   final _endDateCtrl = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {

@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../suppliers/data/supplier_entity.dart';
 import '../../suppliers/data/supplier_repository.dart';
 
@@ -19,8 +20,6 @@ class SuppliersPage extends ConsumerStatefulWidget {
 class _SuppliersPageState extends ConsumerState<SuppliersPage> {
   final _searchController = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -32,7 +31,10 @@ class _SuppliersPageState extends ConsumerState<SuppliersPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final suppliers = ref.watch(suppliersProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final suppliers = ref.watch(suppliersProvider((businessId: _businessId, storeId: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -176,10 +178,11 @@ class _SupplierFormState extends ConsumerState<_SupplierForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(supplierRepositoryProvider);
+    final profile = ref.read(userProfileProvider);
     await repo.saveSupplier(
       id: const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),

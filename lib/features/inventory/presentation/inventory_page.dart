@@ -5,6 +5,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../products/data/product_repository.dart';
 import '../data/inventory_repository.dart';
 
@@ -128,7 +129,10 @@ class _MovementsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final movements = ref.watch(stockMovementsProvider((b: 'local', s: 'local')));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final movements = ref.watch(stockMovementsProvider((businessId: _businessId, storeId: _storeId)));
 
     return movements.when(
       data: (items) {
@@ -253,6 +257,7 @@ class _AdjustmentDialogState extends ConsumerState<_AdjustmentDialog> {
     if (_productId == null) return;
 
     final repo = ref.read(inventoryRepositoryProvider);
+    final profile = ref.read(userProfileProvider);
     await repo.recordMovement(
       productId: _productId!,
       type: 'adjustment',
@@ -261,8 +266,8 @@ class _AdjustmentDialogState extends ConsumerState<_AdjustmentDialog> {
       referenceId: 'manual',
       note: _reasonCtrl.text.trim().isEmpty ? null : _reasonCtrl.text.trim(),
       createdBy: 'kasir',
-      businessId: 'local',
-      storeId: 'local',
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
     );
     if (mounted) Navigator.of(context).pop();
   }

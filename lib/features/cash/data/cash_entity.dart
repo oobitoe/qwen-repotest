@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 class CashSessionEntity {
   const CashSessionEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.registerId,
     this.openedBy,
     required this.openedAt,
@@ -16,6 +18,8 @@ class CashSessionEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String registerId;
   final String? openedBy;
   final DateTime openedAt;
@@ -71,6 +75,8 @@ class CashSessionEntity {
   /// Copy with untuk update.
   CashSessionEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? registerId,
     String? openedBy,
     DateTime? openedAt,
@@ -83,6 +89,8 @@ class CashSessionEntity {
   }) =>
       CashSessionEntity(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
         registerId: registerId ?? this.registerId,
         openedBy: openedBy ?? this.openedBy,
         openedAt: openedAt ?? this.openedAt,
@@ -99,12 +107,16 @@ class CashSessionEntity {
 class CashRegisterEntity {
   const CashRegisterEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.name,
     this.openingBalance = 0,
     this.isActive = true,
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String name;
   final double openingBalance;
   final bool isActive;
@@ -118,12 +130,16 @@ class CashRegisterEntity {
   /// Copy with untuk update.
   CashRegisterEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? name,
     double? openingBalance,
     bool? isActive,
   }) =>
       CashRegisterEntity(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
         name: name ?? this.name,
         openingBalance: openingBalance ?? this.openingBalance,
         isActive: isActive ?? this.isActive,
@@ -134,6 +150,8 @@ class CashRegisterEntity {
 class AccountEntity {
   const AccountEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.name,
     required this.type, // cash | bank | e_wallet
     this.balance = 0,
@@ -143,6 +161,8 @@ class AccountEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String name;
   final String type;
   final double balance;
@@ -174,6 +194,8 @@ class AccountEntity {
   /// Copy with untuk update.
   AccountEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? name,
     String? type,
     double? balance,
@@ -183,6 +205,8 @@ class AccountEntity {
   }) =>
       AccountEntity(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
         name: name ?? this.name,
         type: type ?? this.type,
         balance: balance ?? this.balance,

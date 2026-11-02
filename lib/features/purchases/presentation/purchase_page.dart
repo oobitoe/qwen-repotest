@@ -5,6 +5,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../suppliers/data/supplier_repository.dart';
 import '../data/purchase_repository.dart';
 import 'package:intl/intl.dart';
@@ -20,8 +21,6 @@ class PurchasesPage extends ConsumerStatefulWidget {
 class _PurchasesPageState extends ConsumerState<PurchasesPage> {
   final _searchController = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -33,7 +32,10 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final purchases = ref.watch(purchasesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final purchases = ref.watch(purchasesProvider((businessId: _businessId, storeId: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -182,6 +184,7 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
     if (_supplierId == null) return;
 
     final repo = ref.read(purchaseRepositoryProvider);
+    final profile = ref.read(userProfileProvider);
     await repo.savePurchase(
       referenceNumber: _refCtrl.text.trim(),
       supplierId: _supplierId!,
@@ -194,8 +197,8 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
       paymentMethod: _paymentMethod,
       isCredit: _isCredit,
       createdBy: 'kasir',
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
     );
     if (mounted) Navigator.of(context).pop();
   }

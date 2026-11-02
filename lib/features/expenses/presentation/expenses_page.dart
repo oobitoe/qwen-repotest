@@ -6,6 +6,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../data/expense_entity.dart';
 import '../data/expense_repository.dart';
 
@@ -22,8 +23,6 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
   late final TabController _tabController;
   final _searchController = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -98,7 +97,10 @@ class _ExpensesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final expenses = ref.watch(expensesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final expenses = ref.watch(expensesProvider((businessId: _businessId, storeId: _storeId)));
 
     return expenses.when(
       data: (items) {
@@ -205,7 +207,10 @@ class _ExpenseCategoriesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final categories = ref.watch(expenseCategoriesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final categories = ref.watch(expenseCategoriesProvider((businessId: _businessId, storeId: _storeId)));
 
     return categories.when(
       data: (items) {
@@ -256,7 +261,11 @@ class _ExpenseCategoriesTab extends ConsumerWidget {
 
   void _toggleCategory(WidgetRef ref, ExpenseCategoryEntity category) {
     ref.read(expenseRepositoryProvider).saveExpenseCategory(
-          category.copyWith(isActive: !category.isActive),
+          id: category.id,
+          businessId: category.businessId,
+          storeId: category.storeId,
+          name: category.name,
+          isActive: !category.isActive,
         );
   }
 
@@ -315,27 +324,28 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final expense = ExpenseEntity(
+    final profile = ref.read(userProfileProvider);
+
+    await ref.read(expenseRepositoryProvider).saveExpense(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       categoryId: _categoryId,
       description: _descCtrl.text.trim(),
       amount: double.tryParse(_amountCtrl.text) ?? 0,
       paymentMethod: _paymentMethod,
       createdBy: 'kasir', // TODO: ambil dari auth
-      createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
     );
-
-    await ref.read(expenseRepositoryProvider).saveExpense(expense);
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final categories = ref.watch(expenseCategoriesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final categories = ref.watch(expenseCategoriesProvider((businessId: _businessId, storeId: _storeId)));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -463,17 +473,15 @@ class _ExpenseCategoryFormState extends ConsumerState<_ExpenseCategoryForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final category = ExpenseCategoryEntity(
+    final profile = ref.read(userProfileProvider);
+
+    await ref.read(expenseRepositoryProvider).saveExpenseCategory(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       name: _nameCtrl.text.trim(),
       isActive: true,
-      createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
     );
-
-    await ref.read(expenseRepositoryProvider).saveExpenseCategory(category);
     if (mounted) Navigator.of(context).pop();
   }
 

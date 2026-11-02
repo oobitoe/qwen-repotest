@@ -10,6 +10,7 @@ class UserProfile {
     required this.fullName,
     required this.role,
     required this.businessId,
+    required this.storeId,
   });
 
   final String id;
@@ -17,6 +18,7 @@ class UserProfile {
   final String fullName;
   final UserRole role;
   final String businessId;
+  final String storeId;
 
   String get roleLabel => switch (role) {
         UserRole.owner => 'Owner',
@@ -32,6 +34,7 @@ class UserProfile {
     String? fullName,
     UserRole? role,
     String? businessId,
+    String? storeId,
   }) =>
       UserProfile(
         id: id ?? this.id,
@@ -39,6 +42,7 @@ class UserProfile {
         fullName: fullName ?? this.fullName,
         role: role ?? this.role,
         businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
       );
 }
 
@@ -60,6 +64,7 @@ final userProfileProvider = StreamProvider.autoDispose<UserProfile>((ref) {
         fullName: 'Owner',
         role: authState.role,
         businessId: authState.businessId,
+        storeId: 'local',
       );
     }
     return UserProfile(
@@ -68,6 +73,7 @@ final userProfileProvider = StreamProvider.autoDispose<UserProfile>((ref) {
       fullName: profile.fullName,
       role: roleFromName(profile.role),
       businessId: profile.businessId,
+      storeId: profile.storeId,
     );
   });
 });

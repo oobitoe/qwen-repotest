@@ -7,6 +7,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../categories/data/category_repository.dart';
 import '../../products/data/product_entity.dart';
 import '../../products/data/product_repository.dart';
@@ -26,8 +27,6 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   int _currentPage = 1;
   final int _pageSize = 20;
   String? _selectedCategoryId;
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -39,6 +38,9 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
     final productsAsync = ref.watch(paginatedProductsStreamProvider(
       page: _currentPage,
       pageSize: _pageSize,
@@ -312,10 +314,11 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(productRepositoryProvider);
+    final profile = ref.read(userProfileProvider);
     await repo.saveProduct(ProductEntity(
       id: const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       sku: _skuCtrl.text.trim(),
       barcode: _barcodeCtrl.text.trim().isEmpty
           ? null

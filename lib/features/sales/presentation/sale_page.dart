@@ -7,6 +7,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/sale_repository.dart';
 
@@ -21,8 +22,6 @@ class SalesPage extends ConsumerStatefulWidget {
 class _SalesPageState extends ConsumerState<SalesPage> {
   final _searchCtrl = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -34,7 +33,10 @@ class _SalesPageState extends ConsumerState<SalesPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final sales = ref.watch(salesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final sales = ref.watch(salesProvider((businessId: _businessId, storeId: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -184,6 +186,7 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
     if (_customerId == null) return;
 
     final repo = ref.read(saleRepositoryProvider);
+    final profile = ref.read(userProfileProvider);
     await repo.saveSale(
       invoiceNumber: _invoiceCtrl.text.trim(),
       customerId: _customerId!,
@@ -196,8 +199,8 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
       isCredit: _isCredit,
       status: 'completed',
       cashierId: 'kasir',
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
     );
     if (mounted) Navigator.of(context).pop();
   }

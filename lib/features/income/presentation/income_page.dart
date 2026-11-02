@@ -6,6 +6,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../data/income_entity.dart';
 import '../data/income_repository.dart';
 
@@ -22,8 +23,6 @@ class _IncomePageState extends ConsumerState<IncomePage>
   late final TabController _tabController;
   final _searchController = TextEditingController();
   String _query = '';
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -99,7 +98,10 @@ class _IncomesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final incomes = ref.watch(incomesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final incomes = ref.watch(incomesProvider((businessId: _businessId, storeId: _storeId)));
 
     return incomes.when(
       data: (items) {
@@ -199,7 +201,10 @@ class _IncomeCategoriesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final categories = ref.watch(incomeCategoriesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final categories = ref.watch(incomeCategoriesProvider((businessId: _businessId, storeId: _storeId)));
 
     return categories.when(
       data: (items) {
@@ -250,7 +255,11 @@ class _IncomeCategoriesTab extends ConsumerWidget {
 
   void _toggleCategory(WidgetRef ref, IncomeCategoryEntity category) {
     ref.read(incomeRepositoryProvider).saveIncomeCategory(
-          category.copyWith(isActive: !category.isActive),
+          id: category.id,
+          businessId: category.businessId,
+          storeId: category.storeId,
+          name: category.name,
+          isActive: !category.isActive,
         );
   }
 
@@ -309,27 +318,28 @@ class _IncomeFormState extends ConsumerState<_IncomeForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final income = IncomeEntity(
+    final profile = ref.read(userProfileProvider);
+
+    await ref.read(incomeRepositoryProvider).saveIncome(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       categoryId: _categoryId,
       description: _descCtrl.text.trim(),
       amount: double.tryParse(_amountCtrl.text) ?? 0,
       paymentMethod: _paymentMethod,
       createdBy: 'kasir', // TODO: ambil dari auth
-      createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
     );
-
-    await ref.read(incomeRepositoryProvider).saveIncome(income);
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final categories = ref.watch(incomeCategoriesProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final categories = ref.watch(incomeCategoriesProvider((businessId: _businessId, storeId: _storeId)));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -457,17 +467,15 @@ class _IncomeCategoryFormState extends ConsumerState<_IncomeCategoryForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final category = IncomeCategoryEntity(
+    final profile = ref.read(userProfileProvider);
+
+    await ref.read(incomeRepositoryProvider).saveIncomeCategory(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       name: _nameCtrl.text.trim(),
       isActive: true,
-      createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
     );
-
-    await ref.read(incomeRepositoryProvider).saveIncomeCategory(category);
     if (mounted) Navigator.of(context).pop();
   }
 

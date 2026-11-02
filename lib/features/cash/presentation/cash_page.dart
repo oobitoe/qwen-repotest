@@ -6,6 +6,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../data/cash_entity.dart';
 import '../data/cash_repository.dart';
 
@@ -20,8 +21,6 @@ class CashPage extends ConsumerStatefulWidget {
 class _CashPageState extends ConsumerState<CashPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
-  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -122,7 +121,10 @@ class _CashRegisterTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final registers = ref.watch(cashRegistersProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final registers = ref.watch(cashRegistersProvider((businessId: _businessId, storeId: _storeId)));
 
     return registers.when(
       data: (items) {
@@ -164,7 +166,12 @@ class _CashRegisterTab extends ConsumerWidget {
 
   void _toggleRegister(WidgetRef ref, CashRegisterEntity register) {
     ref.read(cashRepositoryProvider).saveCashRegister(
-          register.copyWith(isActive: !register.isActive),
+          id: register.id,
+          businessId: register.businessId,
+          storeId: register.storeId,
+          name: register.name,
+          openingBalance: register.openingBalance,
+          isActive: !register.isActive,
         );
   }
 
@@ -183,7 +190,10 @@ class _AccountsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final accounts = ref.watch(accountsProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final accounts = ref.watch(accountsProvider((businessId: _businessId, storeId: _storeId)));
 
     return accounts.when(
       data: (items) {
@@ -264,7 +274,10 @@ class _CashSessionsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final sessions = ref.watch(cashSessionsProvider((b: _businessId, s: _storeId)));
+    final profile = ref.watch(userProfileProvider);
+    final _businessId = profile.value?.businessId ?? 'local';
+    final _storeId = profile.value?.storeId ?? 'local';
+    final sessions = ref.watch(cashSessionsProvider((businessId: _businessId, storeId: _storeId)));
 
     return sessions.when(
       data: (items) {
@@ -413,17 +426,16 @@ class _CashRegisterFormState extends ConsumerState<_CashRegisterForm> {
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final profile = ref.read(userProfileProvider);
 
-    final register = CashRegisterEntity(
+    await ref.read(cashRepositoryProvider).saveCashRegister(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       name: _nameCtrl.text.trim(),
       openingBalance: double.tryParse(_balanceCtrl.text) ?? 0,
       isActive: true,
     );
-
-    await ref.read(cashRepositoryProvider).saveCashRegister(register);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -525,19 +537,17 @@ class _AccountFormState extends ConsumerState<_AccountForm> {
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final profile = ref.read(userProfileProvider);
 
-    final account = AccountEntity(
+    await ref.read(cashRepositoryProvider).saveAccount(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
-      businessId: _businessId,
-      storeId: _storeId,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       name: _nameCtrl.text.trim(),
       type: _type,
+      balance: isEditing ? widget.existing!.balance : 0,
       isActive: true,
-      createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
     );
-
-    await ref.read(cashRepositoryProvider).saveAccount(account);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -625,13 +635,14 @@ class _OpenSessionFormState extends ConsumerState<_OpenSessionForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_registerId == null) return;
+    final profile = ref.read(userProfileProvider);
 
     await ref.read(cashRepositoryProvider).openSession(
           registerId: _registerId!,
           openingBalance: double.tryParse(_balanceCtrl.text) ?? 0,
           openedBy: 'kasir', // TODO: ambil dari auth
-          businessId: _businessId,
-          storeId: _storeId,
+          businessId: profile.value?.businessId ?? 'local',
+          storeId: profile.value?.storeId ?? 'local',
         );
     if (mounted) Navigator.of(context).pop();
   }

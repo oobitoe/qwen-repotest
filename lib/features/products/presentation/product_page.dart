@@ -26,6 +26,8 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   int _currentPage = 1;
   final int _pageSize = 20;
   String? _selectedCategoryId;
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -37,12 +39,14 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final productsAsync = ref.watch(paginatedProductsStreamProvider((
+    final productsAsync = ref.watch(paginatedProductsStreamProvider(
       page: _currentPage,
       pageSize: _pageSize,
       query: _query,
       categoryId: _selectedCategoryId,
-    )));
+      businessId: _businessId,
+      storeId: _storeId,
+    ));
 
     return Scaffold(
       body: Column(
@@ -310,6 +314,8 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     final repo = ref.read(productRepositoryProvider);
     await repo.saveProduct(ProductEntity(
       id: const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       sku: _skuCtrl.text.trim(),
       barcode: _barcodeCtrl.text.trim().isEmpty
           ? null

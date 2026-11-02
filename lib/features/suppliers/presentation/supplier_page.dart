@@ -19,6 +19,8 @@ class SuppliersPage extends ConsumerStatefulWidget {
 class _SuppliersPageState extends ConsumerState<SuppliersPage> {
   final _searchController = TextEditingController();
   String _query = '';
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -30,7 +32,7 @@ class _SuppliersPageState extends ConsumerState<SuppliersPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final suppliers = ref.watch(suppliersProvider);
+    final suppliers = ref.watch(suppliersProvider((b: _businessId, s: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -174,8 +176,10 @@ class _SupplierFormState extends ConsumerState<_SupplierForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(supplierRepositoryProvider);
-    await repo.saveSupplier(SupplierEntity(
+    await repo.saveSupplier(
       id: const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),

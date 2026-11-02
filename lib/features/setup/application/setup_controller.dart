@@ -90,11 +90,16 @@ class SetupController extends Notifier<SetupState> {
       final setupCompleted = await _isSetupCompleted();
       final needsSetup = businessCount == 0 || !setupCompleted;
 
-      // Jika tidak perlu setup, langsung siap — tidak perlu cek internet/PB
+      // Jika tidak perlu setup bisnis, langsung siap
       if (!needsSetup) {
-        state = const SetupState(
+        // Tapi cek apakah sudah ada Owner — kalau belum, perlu daftar Owner pertama
+        final localOwnerCount = await _countLocalOwners();
+        final needsFirstOwner = localOwnerCount == 0;
+
+        state = SetupState(
           status: SetupStatus.ready,
           needsSetup: false,
+          needsFirstOwner: needsFirstOwner,
           online: true,
           pocketbaseReachable: true,
         );
@@ -133,7 +138,9 @@ class SetupController extends Notifier<SetupState> {
       }
 
       // 4. Sudah online + PB reachable → cek apakah sudah ada Owner (PB + lokal)
-      final pbUserCount = await _countPocketBaseUsers();
+      final existingBusinessId = await _getFirstBusinessId();
+      final pbUserCount =
+          await _countPocketBaseUsers(businessId: existingBusinessId);
       final localOwnerCount = await _countLocalOwners();
       final needsFirstOwner = pbUserCount == 0 && localOwnerCount == 0;
 
@@ -205,6 +212,13 @@ class SetupController extends Notifier<SetupState> {
           ..where((t) => t.role.equals('owner')))
         .get();
     return owners.length;
+  }
+
+  /// Ambil ID bisnis pertama yang ada di tabel lokal.
+  /// Digunakan untuk filter user per bisnis di PocketBase.
+  Future<String?> _getFirstBusinessId() async {
+    final row = await (db.select(db.businesses)..limit(1)).getSingleOrNull();
+    return row?.id;
   }
 
   /// Jumlah user di PocketBase collection `users`.
@@ -310,6 +324,7 @@ class SetupController extends Notifier<SetupState> {
       state = state.copyWith(
         status: SetupStatus.ready,
         needsSetup: false,
+        needsFirstOwner: true, // Belum ada Owner, harus daftar Owner pertama
         online: true,
         pocketbaseReachable: true,
       );

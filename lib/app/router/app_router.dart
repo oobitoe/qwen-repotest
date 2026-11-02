@@ -94,6 +94,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
+      // Setup selesai tapi belum ada Owner → arahkan ke /setup untuk daftar Owner pertama
+      if (setupState.needsFirstOwner && !signedIn) {
+        if (goingTo != AppRoutes.setup) {
+          return AppRoutes.setup;
+        }
+        return null;
+      }
+
       // Setup sudah selesai → cek auth
       if (!signedIn &&
           goingTo != AppRoutes.login &&

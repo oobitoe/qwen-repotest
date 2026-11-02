@@ -221,6 +221,9 @@ class SetupController extends Notifier<SetupState> {
     return row?.id;
   }
 
+  /// Publik wrapper untuk [_getFirstBusinessId] agar diakses dari UI.
+  Future<String?> getFirstBusinessId() => _getFirstBusinessId();
+
   /// Jumlah user di PocketBase collection `users`.
   /// Jika [businessId] disediakan, hanya hitung user milik bisnis tersebut.
   Future<int> _countPocketBaseUsers({String? businessId}) async {

@@ -39,8 +39,6 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   final _ownerFullName = TextEditingController();
   final _ownerEmail = TextEditingController();
   final _ownerPassword = TextEditingController();
-
-  int _step = 0; // 0 = bisnis, 1 = owner pertama
   String? _businessId; // ID bisnis yang baru dibuat (untuk tag user)
   bool _busy = false;
 
@@ -94,11 +92,8 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       if (!mounted) return;
       final setupState = ref.read(setupControllerProvider);
       if (setupState.needsFirstOwner) {
-        // Belum ada Owner di kedua database → lanjut ke pendaftaran Owner pertama (langkah 1)
-        setState(() {
-          _step = 1;
-          _busy = false;
-        });
+        // Belum ada Owner di kedua database → lanjut ke pendaftaran Owner pertama
+        setState(() => _busy = false);
       } else {
         // Owner sudah ada → langsung ke login
         context.go(AppRoutes.login);
@@ -227,11 +222,27 @@ class _SetupPageState extends ConsumerState<SetupPage> {
 
     // Jika siap dan tidak perlu setup, kembali ke route (harus redirect otomatis)
     if (setupState.status == SetupStatus.ready && !setupState.needsSetup) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Setup tidak diperlukan. Mengarahkan ke login...'),
-        ),
-      );
+      // Kalau belum ada Owner → tampilkan form Owner pertama, jangan ke login
+      if (setupState.needsFirstOwner) {
+        // Ambil businessId yang sudah ada untuk tag user Owner
+        if (_businessId == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) return;
+            final existingBusinessId =
+                await ref.read(setupControllerProvider.notifier).getFirstBusinessId();
+            if (mounted) {
+              setState(() => _businessId = existingBusinessId ?? '');
+            }
+          });
+        }
+        // Jatuh ke form Owner pertama di bawah (langkah 1)
+      } else {
+        return const Scaffold(
+          body: Center(
+            child: Text('Setup tidak diperlukan. Mengarahkan ke login...'),
+          ),
+        );
+      }
     }
 
     // Jika perlu setup tapi belum Online/PB reachable, tunggu (tidak boleh melanjutkan)
@@ -254,8 +265,8 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       );
     }
 
-    // Langkah 1: Form Daftar Owner Pertama
-    if (_step == 1 && setupState.needsFirstOwner) {
+    // Langkah 1: Form Daftar Owner Pertama (tambahan: bisnis sudah ada tapi belum ada Owner)
+    if (setupState.needsFirstOwner) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Daftar Owner Pertama'),
@@ -340,7 +351,8 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         FilledButton(
-                          onPressed: _busy ? null : _submitOwner,
+                          onPressed:
+                              (_busy || _businessId == null) ? null : _submitOwner,
                           child: _busy
                               ? const SizedBox(
                                   height: 20,

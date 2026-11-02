@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/pocketbase_client.dart';
+import '../../../shared/providers/core_providers.dart';
 
 /// Role pengguna awal sesuai PRD.
 enum UserRole { owner, admin, manager, kasir, staffGudang }
@@ -148,6 +149,8 @@ class AuthController extends Notifier<AuthState> {
   }
 
   /// Login user ke PocketBase via email + password.
+  /// Setelah sukses, ambil role dan businessId dari profil lokal (Drift)
+  /// agar user tidak selalu jadi kasir default.
   Future<void> signIn(String email, String password) async {
     final pb = PocketBaseClient.client;
 
@@ -158,9 +161,17 @@ class AuthController extends Notifier<AuthState> {
 
     await pb.loginUser(email: email, password: password);
 
-    // Ambil role dari profil lokal (Drift) jika ada, default kasir.
-    // Untuk sekarang, default role = kasir; nanti bisa diambil dari `profiles` tabel.
-    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, UserRole.kasir);
+    // Ambil role dari profil lokal (Drift) berdasarkan email,
+    /// default kasir jika profil belum ada di lokal.
+    final db = ref.read(databaseProvider);
+    final profile = await (db.select(db.profiles)
+          ..where((t) => t.email.equals(email)))
+        .getSingleOrNull();
+
+    final role = profile != null ? roleFromName(profile.role) : UserRole.kasir;
+    final userId = pb.currentToken ?? localDeviceUserId;
+
+    state = AuthSignedIn(userId, role);
   }
 
   Future<void> signOut() async {

@@ -149,18 +149,14 @@ class AuthController extends Notifier<AuthState> {
     return userId;
   }
 
-  /// Login user ke PocketBase via email + password.
-  /// Setelah sukses, ambil businessId dan role dari profil lokal (Drift)
-  /// untuk diverifikasi di lokal maupun PocketBase.
+  /// Login user ke PocketBase (online) atau lewat profil lokal (offline).
+  /// Aplikasi offline-first: login bisa dilakukan offline selama profil
+  /// pengguna sudah tersimpan di database lokal (Drift).
+  /// Hanya pembuatan akun Owner pertama (registerFirstOwner) yang butuh online.
   Future<void> signIn(String email, String password) async {
     final pb = PocketBaseClient.client;
 
-    final reachable = await pb.healthCheck();
-    if (!reachable) {
-      throw Exception('Tidak dapat menghubungi server PocketBase. Periksa koneksi internet.');
-    }
-
-    // Ambil profil lokal (Drift) berdasarkan email untuk dapatkan businessId dan role
+    // 1. Cek profil lokal (Drift) — wajib ada untuk login, online atau offline
     final db = ref.read(databaseProvider);
     final profile = await (db.select(db.profiles)
           ..where((t) => t.email.equals(email)))
@@ -170,12 +166,19 @@ class AuthController extends Notifier<AuthState> {
       throw Exception('Profil pengguna tidak ditemukan di database lokal. Hubungi Owner.');
     }
 
-    await pb.loginUser(email: email, password: password);
+    // 2. Jika online, verifikasi password ke PocketBase
+    final reachable = await pb.healthCheck();
+    if (reachable) {
+      await pb.loginUser(email: email, password: password);
+    }
 
-    // Role dan businessId diambil dari profil lokal — tidak dari parameter eksternal
+    // Role dan businessId diambil dari profil lokal (sumber kebenaran untuk akses)
     final role = roleFromName(profile.role);
     final businessId = profile.businessId;
-    final userId = pb.currentToken ?? localDeviceUserId;
+    // Pakai token PocketBase jika ada, kalau offline pakai id profil lokal
+    final userId = pb.currentToken?.isNotEmpty == true
+        ? pb.currentToken!
+        : profile.id;
 
     state = AuthSignedIn(userId, role, businessId);
   }

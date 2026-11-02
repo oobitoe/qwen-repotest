@@ -25,6 +25,8 @@ class _DebtsPageState extends ConsumerState<DebtsPage>
   late final TabController _tabController;
   final _searchController = TextEditingController();
   String _query = '';
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -132,8 +134,8 @@ class _DebtsTab extends ConsumerWidget {
     final theme = Theme.of(context);
     
     final debtsAsync = type == 'payable'
-        ? ref.watch(payablesProvider)
-        : ref.watch(receivablesProvider);
+        ? ref.watch(payablesProvider((b: _businessId, s: _storeId)))
+        : ref.watch(receivablesProvider((b: _businessId, s: _storeId)));
 
     return debtsAsync.when(
       data: (items) {
@@ -321,6 +323,8 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
 
     final debt = DebtEntity(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       type: _type,
       supplierId: _type == 'payable' ? _supplierId : null,
       customerId: _type == 'receivable' ? _customerId : null,

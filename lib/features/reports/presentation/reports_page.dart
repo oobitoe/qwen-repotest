@@ -24,6 +24,8 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
   final _endDateCtrl = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {

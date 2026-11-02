@@ -22,6 +22,8 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
   late final TabController _tabController;
   final _searchController = TextEditingController();
   String _query = '';
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -96,7 +98,7 @@ class _ExpensesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final expenses = ref.watch(expensesProvider);
+    final expenses = ref.watch(expensesProvider((b: _businessId, s: _storeId)));
 
     return expenses.when(
       data: (items) {
@@ -203,7 +205,7 @@ class _ExpenseCategoriesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final categories = ref.watch(expenseCategoriesProvider);
+    final categories = ref.watch(expenseCategoriesProvider((b: _businessId, s: _storeId)));
 
     return categories.when(
       data: (items) {
@@ -315,6 +317,8 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
 
     final expense = ExpenseEntity(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       categoryId: _categoryId,
       description: _descCtrl.text.trim(),
       amount: double.tryParse(_amountCtrl.text) ?? 0,
@@ -331,7 +335,7 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final categories = ref.watch(expenseCategoriesProvider);
+    final categories = ref.watch(expenseCategoriesProvider((b: _businessId, s: _storeId)));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -461,6 +465,8 @@ class _ExpenseCategoryFormState extends ConsumerState<_ExpenseCategoryForm> {
 
     final category = ExpenseCategoryEntity(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       name: _nameCtrl.text.trim(),
       isActive: true,
       createdAt: isEditing ? widget.existing!.createdAt : DateTime.now(),

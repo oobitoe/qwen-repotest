@@ -20,6 +20,8 @@ class CashPage extends ConsumerStatefulWidget {
 class _CashPageState extends ConsumerState<CashPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void initState() {
@@ -120,7 +122,7 @@ class _CashRegisterTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final registers = ref.watch(cashRegistersProvider);
+    final registers = ref.watch(cashRegistersProvider((b: _businessId, s: _storeId)));
 
     return registers.when(
       data: (items) {
@@ -181,7 +183,7 @@ class _AccountsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final accounts = ref.watch(accountsProvider);
+    final accounts = ref.watch(accountsProvider((b: _businessId, s: _storeId)));
 
     return accounts.when(
       data: (items) {
@@ -262,7 +264,7 @@ class _CashSessionsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final sessions = ref.watch(cashSessionsProvider);
+    final sessions = ref.watch(cashSessionsProvider((b: _businessId, s: _storeId)));
 
     return sessions.when(
       data: (items) {
@@ -414,6 +416,8 @@ class _CashRegisterFormState extends ConsumerState<_CashRegisterForm> {
 
     final register = CashRegisterEntity(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       name: _nameCtrl.text.trim(),
       openingBalance: double.tryParse(_balanceCtrl.text) ?? 0,
       isActive: true,
@@ -524,6 +528,8 @@ class _AccountFormState extends ConsumerState<_AccountForm> {
 
     final account = AccountEntity(
       id: isEditing ? widget.existing!.id : const Uuid().v4(),
+      businessId: _businessId,
+      storeId: _storeId,
       name: _nameCtrl.text.trim(),
       type: _type,
       isActive: true,
@@ -624,6 +630,8 @@ class _OpenSessionFormState extends ConsumerState<_OpenSessionForm> {
           registerId: _registerId!,
           openingBalance: double.tryParse(_balanceCtrl.text) ?? 0,
           openedBy: 'kasir', // TODO: ambil dari auth
+          businessId: _businessId,
+          storeId: _storeId,
         );
     if (mounted) Navigator.of(context).pop();
   }

@@ -23,6 +23,8 @@ class _AuditLogPageState extends ConsumerState<AuditLogPage> {
   DateTime? _endDate;
   AuditAction? _selectedAction;
   String? _selectedEntityType;
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {

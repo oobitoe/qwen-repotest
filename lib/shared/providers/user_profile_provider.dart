@@ -9,12 +9,14 @@ class UserProfile {
     required this.email,
     required this.fullName,
     required this.role,
+    required this.businessId,
   });
 
   final String id;
   final String email;
   final String fullName;
   final UserRole role;
+  final String businessId;
 
   String get roleLabel => switch (role) {
         UserRole.owner => 'Owner',
@@ -29,12 +31,14 @@ class UserProfile {
     String? email,
     String? fullName,
     UserRole? role,
+    String? businessId,
   }) =>
       UserProfile(
         id: id ?? this.id,
         email: email ?? this.email,
         fullName: fullName ?? this.fullName,
         role: role ?? this.role,
+        businessId: businessId ?? this.businessId,
       );
 }
 
@@ -55,6 +59,7 @@ final userProfileProvider = StreamProvider.autoDispose<UserProfile>((ref) {
         email: 'offline@local',
         fullName: 'Owner',
         role: authState.role,
+        businessId: authState.businessId,
       );
     }
     return UserProfile(
@@ -62,6 +67,7 @@ final userProfileProvider = StreamProvider.autoDispose<UserProfile>((ref) {
       email: profile.email,
       fullName: profile.fullName,
       role: roleFromName(profile.role),
+      businessId: profile.businessId,
     );
   });
 });

@@ -64,16 +64,17 @@ class AuthSignedOut extends AuthState {
 }
 
 class AuthSignedIn extends AuthState {
-  const AuthSignedIn(this.userId, this.role);
+  const AuthSignedIn(this.userId, this.role, this.businessId);
   final String userId;
   final UserRole role;
+  final String businessId; // Bisnis yang memiliki user ini — difverifikasi di lokal + PocketBase
 }
 
 /// Pengguna lokal untuk mode offline-only (tanpa backend autentikasi).
 const String localDeviceUserId = 'local-device-owner';
 
 /// Mode offline-only: aplikasi tetap dapat dipakai penuh sebagai owner lokal.
-const localOfflineUser = AuthSignedIn(localDeviceUserId, UserRole.owner);
+const localOfflineUser = AuthSignedIn(localDeviceUserId, UserRole.owner, 'local');
 
 class AuthController extends Notifier<AuthState> {
   @override
@@ -111,7 +112,7 @@ class AuthController extends Notifier<AuthState> {
     // Login otomatis setelah daftar agar token tersimpan di authStore.
     await pb.loginUser(email: email, password: password);
 
-    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, role);
+    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, role, businessId ?? 'local');
   }
 
   /// Daftarkan **Owner pertama** saat setup pertama kali.
@@ -144,13 +145,13 @@ class AuthController extends Notifier<AuthState> {
 
     // Selalu Owner — tidak boleh diubah.
     final userId = record.id;
-    state = AuthSignedIn(userId, UserRole.owner);
+    state = AuthSignedIn(userId, UserRole.owner, businessId ?? 'local');
     return userId;
   }
 
   /// Login user ke PocketBase via email + password.
-  /// Setelah sukses, ambil role dan businessId dari profil lokal (Drift)
-  /// agar user tidak selalu jadi kasir default.
+  /// Setelah sukses, ambil businessId dan role dari profil lokal (Drift)
+  /// untuk diverifikasi di lokal maupun PocketBase.
   Future<void> signIn(String email, String password) async {
     final pb = PocketBaseClient.client;
 
@@ -159,19 +160,24 @@ class AuthController extends Notifier<AuthState> {
       throw Exception('Tidak dapat menghubungi server PocketBase. Periksa koneksi internet.');
     }
 
-    await pb.loginUser(email: email, password: password);
-
-    // Ambil role dari profil lokal (Drift) berdasarkan email,
-    /// default kasir jika profil belum ada di lokal.
+    // Ambil profil lokal (Drift) berdasarkan email untuk dapatkan businessId dan role
     final db = ref.read(databaseProvider);
     final profile = await (db.select(db.profiles)
           ..where((t) => t.email.equals(email)))
         .getSingleOrNull();
 
-    final role = profile != null ? roleFromName(profile.role) : UserRole.kasir;
+    if (profile == null) {
+      throw Exception('Profil pengguna tidak ditemukan di database lokal. Hubungi Owner.');
+    }
+
+    await pb.loginUser(email: email, password: password);
+
+    // Role dan businessId diambil dari profil lokal — tidak dari parameter eksternal
+    final role = roleFromName(profile.role);
+    final businessId = profile.businessId;
     final userId = pb.currentToken ?? localDeviceUserId;
 
-    state = AuthSignedIn(userId, role);
+    state = AuthSignedIn(userId, role, businessId);
   }
 
   Future<void> signOut() async {

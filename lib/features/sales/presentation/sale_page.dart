@@ -21,6 +21,8 @@ class SalesPage extends ConsumerStatefulWidget {
 class _SalesPageState extends ConsumerState<SalesPage> {
   final _searchCtrl = TextEditingController();
   String _query = '';
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -32,7 +34,7 @@ class _SalesPageState extends ConsumerState<SalesPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final sales = ref.watch(salesProvider);
+    final sales = ref.watch(salesProvider((b: _businessId, s: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -194,6 +196,8 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
       isCredit: _isCredit,
       status: 'completed',
       cashierId: 'kasir',
+      businessId: _businessId,
+      storeId: _storeId,
     );
     if (mounted) Navigator.of(context).pop();
   }

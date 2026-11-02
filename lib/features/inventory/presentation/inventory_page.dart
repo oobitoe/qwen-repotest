@@ -128,7 +128,7 @@ class _MovementsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final movements = ref.watch(stockMovementsProvider);
+    final movements = ref.watch(stockMovementsProvider((b: 'local', s: 'local')));
 
     return movements.when(
       data: (items) {
@@ -261,6 +261,8 @@ class _AdjustmentDialogState extends ConsumerState<_AdjustmentDialog> {
       referenceId: 'manual',
       note: _reasonCtrl.text.trim().isEmpty ? null : _reasonCtrl.text.trim(),
       createdBy: 'kasir',
+      businessId: 'local',
+      storeId: 'local',
     );
     if (mounted) Navigator.of(context).pop();
   }

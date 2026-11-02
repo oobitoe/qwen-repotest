@@ -20,6 +20,8 @@ class PurchasesPage extends ConsumerStatefulWidget {
 class _PurchasesPageState extends ConsumerState<PurchasesPage> {
   final _searchController = TextEditingController();
   String _query = '';
+  String _businessId = 'local'; // TODO: Ambil dari userProfileProvider
+  String _storeId = 'local'; // TODO: Ambil dari userProfileProvider
 
   @override
   void dispose() {
@@ -31,7 +33,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final purchases = ref.watch(purchasesProvider);
+    final purchases = ref.watch(purchasesProvider((b: _businessId, s: _storeId)));
 
     return Scaffold(
       body: Column(
@@ -192,6 +194,8 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
       paymentMethod: _paymentMethod,
       isCredit: _isCredit,
       createdBy: 'kasir',
+      businessId: _businessId,
+      storeId: _storeId,
     );
     if (mounted) Navigator.of(context).pop();
   }

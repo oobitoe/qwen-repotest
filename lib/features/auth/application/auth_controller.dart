@@ -115,7 +115,8 @@ class AuthController extends Notifier<AuthState> {
 
   /// Daftarkan **Owner pertama** saat setup pertama kali.
   /// Role dikunci menjadi `owner` dan tidak dapat diubah.
-  Future<void> registerFirstOwner(
+  /// Return user id dari PocketBase.
+  Future<String> registerFirstOwner(
     String email,
     String password,
     String fullName, {
@@ -130,7 +131,7 @@ class AuthController extends Notifier<AuthState> {
     }
 
     // Daftarkan ke PocketBase `users` collection dengan role Owner.
-    await pb.registerUser(
+    final record = await pb.registerUser(
       email: email,
       password: password,
       name: fullName,
@@ -141,7 +142,9 @@ class AuthController extends Notifier<AuthState> {
     await pb.loginUser(email: email, password: password);
 
     // Selalu Owner — tidak boleh diubah.
-    state = AuthSignedIn(pb.currentToken ?? localDeviceUserId, UserRole.owner);
+    final userId = record.id;
+    state = AuthSignedIn(userId, UserRole.owner);
+    return userId;
   }
 
   /// Login user ke PocketBase via email + password.

@@ -163,6 +163,8 @@ class SetupController extends Notifier<SetupState> {
 
   /// Daftarkan Owner pertama saat setup pertama kali.
   /// Role selalu Owner dan tidak dapat diubah.
+  /// Juga menyimpan profil ke database lokal (Drift) agar tidak perlu
+  /// daftar ulang saat aplikasi dibuka kembali.
   Future<void> registerFirstOwner({
     required String email,
     required String password,
@@ -171,12 +173,30 @@ class SetupController extends Notifier<SetupState> {
   }) async {
     state = state.copyWith(status: SetupStatus.checking, error: null);
     try {
-      await ref.read(authProvider.notifier).registerFirstOwner(
+      final userId = await ref.read(authProvider.notifier).registerFirstOwner(
             email,
             password,
             fullName,
             businessId: businessId,
           );
+
+      // Simpan profil Owner ke database lokal (Drift)
+      final now = DateTime.now().toUtc();
+      await db.into(db.profiles).insert(
+        ProfilesCompanion.insert(
+          id: userId,
+          businessId: Value(businessId ?? 'local'),
+          email: email,
+          fullName: fullName,
+          role: 'owner',
+          isActive: const Value(true),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          version: const Value(1),
+          remoteId: Value(userId),
+          syncStatus: const Value('synced'), // Sudah ada di PocketBase
+        ),
+      );
 
       // Tandai setup selesai di sync_metadata
       await _setSetupCompleted(true);

@@ -38,6 +38,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         _email.text.trim(),
         _password.text.trim(),
         _fullName.text.trim(),
+        role: UserRole.owner, // Role dikunci Owner sesuai dropdown
+        businessId: null, // Akan diisi oleh setup flow jika melalui first-run
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

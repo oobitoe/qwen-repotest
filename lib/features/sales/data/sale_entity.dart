@@ -2,6 +2,8 @@
 class SaleEntity {
   const SaleEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.invoiceNumber,
     required this.customerId,
     required this.customerName,
@@ -17,6 +19,8 @@ class SaleEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String invoiceNumber;
   final String customerId;
   final String customerName;

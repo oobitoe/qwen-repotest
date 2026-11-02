@@ -5,6 +5,8 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/auth_controller.dart';
+import '../../../app/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 /// Halaman registrasi akun baru via Supabase Auth.
 class RegisterPage extends ConsumerStatefulWidget {
@@ -48,9 +50,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
       );
       if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) Navigator.of(context).pop();
-        });
+        context.go(AppRoutes.login);
       }
     } catch (e) {
       if (!mounted) return;

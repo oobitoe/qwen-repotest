@@ -170,6 +170,7 @@ class SetupController extends Notifier<SetupState> {
     required String password,
     required String fullName,
     String? businessId, // Bisnis yang memiliki Owner ini (WAJIB untuk setup)
+    String? storeId, // Toko yang memiliki Owner ini (WAJIB untuk setup)
   }) async {
     state = state.copyWith(status: SetupStatus.checking, error: null);
     try {
@@ -178,6 +179,7 @@ class SetupController extends Notifier<SetupState> {
             password,
             fullName,
             businessId: businessId,
+            storeId: storeId,
           );
 
       // Simpan profil Owner ke database lokal (Drift)
@@ -186,6 +188,7 @@ class SetupController extends Notifier<SetupState> {
         ProfilesCompanion.insert(
           id: userId,
           businessId: Value(businessId ?? 'local'),
+          storeId: Value(storeId ?? 'local'),
           email: email,
           fullName: fullName,
           role: 'owner',

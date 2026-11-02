@@ -60,6 +60,7 @@ class PocketBaseClient {
     required String password,
     required String name,
     String? businessId, // Bisnis yang memiliki user ini (multi-business)
+    String? storeId, // Toko yang memiliki user ini (multi-store)
   }) async {
     final record = await _instance!
         .collection('users')
@@ -70,6 +71,7 @@ class PocketBaseClient {
           'name': name,
           'emailVisibility': true,
           if (businessId != null) 'businessId': businessId,
+          if (storeId != null) 'storeId': storeId,
         });
     return record;
   }

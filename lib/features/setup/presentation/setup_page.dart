@@ -40,6 +40,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   final _ownerEmail = TextEditingController();
   final _ownerPassword = TextEditingController();
   String? _businessId; // ID bisnis yang baru dibuat (untuk tag user)
+  String? _storeId; // ID toko yang baru dibuat (untuk tag user)
   bool _busy = false;
 
   @override
@@ -86,8 +87,12 @@ class _SetupPageState extends ConsumerState<SetupPage> {
 
       if (!mounted) return;
 
-      // Simpan businessId untuk langkah pendaftaran Owner pertama
+      // Simpan businessId dan storeId untuk langkah pendaftaran Owner pertama
       _businessId = businessId;
+      final storeRow = await (ref.read(setupControllerProvider.notifier).db.select(ref.read(setupControllerProvider.notifier).db.stores)
+            ..where((t) => t.businessId.equals(businessId) & t.deletedAt.isNull()))
+          .getSingleOrNull();
+      _storeId = storeRow?.id;
 
       if (!mounted) return;
       final setupState = ref.read(setupControllerProvider);
@@ -122,6 +127,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
             password: _ownerPassword.text.trim(),
             fullName: _ownerFullName.text.trim(),
             businessId: _businessId, // businessId sudah dijamin ada saat langkah 1
+            storeId: _storeId, // storeId sudah dijamin ada saat langkah 1
           );
 
       if (!mounted) return;

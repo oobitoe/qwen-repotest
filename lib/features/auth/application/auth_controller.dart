@@ -123,6 +123,7 @@ class AuthController extends Notifier<AuthState> {
     String password,
     String fullName, {
     String? businessId, // Bisnis yang memiliki Owner ini (WAJIB)
+    String? storeId, // Toko yang memiliki Owner ini (WAJIB)
   }) async {
     final pb = PocketBaseClient.client;
 
@@ -138,6 +139,7 @@ class AuthController extends Notifier<AuthState> {
       password: password,
       name: fullName,
       businessId: businessId,
+      storeId: storeId,
     );
 
     // Login otomatis setelah daftar agar token tersimpan di authStore.

@@ -12,6 +12,7 @@ class PocketBaseClient {
   static PocketBaseClient? _client;
 
   static const String _pbTokenKey = 'pb_auth_token';
+  static const String _pbLoginStatusKey = 'pb_login_status';
 
   /// Instance klien PocketBase (buat sekali, gunakan ulang).
   static PocketBase get instance {
@@ -75,6 +76,7 @@ class PocketBaseClient {
 
   /// Login user ke PocketBase via email + password.
   /// Token otomatis tersimpan di `authStore` oleh SDK dan di-persist ke SharedPreferences.
+  /// Juga menyimpan status login = 1 agar bisa diverifikasi saat login offline.
   /// Return `RecordModel` user yang login.
   Future<RecordModel> loginUser({
     required String email,
@@ -87,8 +89,9 @@ class PocketBaseClient {
     if (record == null) {
       throw Exception('Login berhasil tapi tidak menerima data user dari server.');
     }
-    // Persist token agar bisa login offline (token masih valid dari login online sebelumnya)
+    // Persist token dan status login agar bisa login offline
     await persistToken(_instance?.authStore.token);
+    await persistLoginStatus(true);
     return record;
   }
 
@@ -114,16 +117,28 @@ class PocketBaseClient {
     return token != null && token.isNotEmpty;
   }
 
+  /// Simpan status login ke SharedPreferences (1 = login, 0 = logout).
+  static Future<void> persistLoginStatus(bool isLoggedIn) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_pbLoginStatusKey, isLoggedIn ? 1 : 0);
+  }
+
+  /// Cek status login dari SharedPreferences (1 = login, 0 = logout).
+  static Future<bool> isLoggedInStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_pbLoginStatusKey) == 1;
+  }
+
   /// Ambil token autentikasi saat ini (jika ada).
   String? get currentToken => _instance?.authStore.token;
 
   /// Cek apakah user sudah ter-autentikasi (token masih valid).
   bool get isAuthenticated => _instance?.authStore.isValid ?? false;
 
-  /// Keluar dan hapus token autentikasi (SharedPreferences + authStore).
+  /// Keluar — set login = 0, **jangan hapus token** (biarkan expired sendiri 1 minggu).
   Future<void> logout() async {
     await _instance?.collection('users').authRefresh();
     _instance?.authStore.clear();
-    await persistToken(null);
+    await persistLoginStatus(false);
   }
 }

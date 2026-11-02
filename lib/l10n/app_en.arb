@@ -70,7 +70,7 @@
   "email": "Email",
   "password": "Password",
   "invalidEmail": "Invalid email",
-  "minPasswordLength": "Minimum 6 characters",
+  "minPasswordLength": "Minimum 8 characters",
   "loginFailed": "Login failed: {error}",
   "offlineMode": "Offline mode — data stored on this device.",
   "onlineMode": "Online — data stored in cloud.",
@@ -294,6 +294,6 @@
   "accessDenied": "Access restricted. Only Owner can manage users.",
   "nameRequired": "Name is required",
   "invalidEmail": "Invalid email",
-  "minPasswordLength": "Minimum 6 characters",
+  "minPasswordLength": "Minimum 8 characters",
   "userNotFound": "User not found."
 }

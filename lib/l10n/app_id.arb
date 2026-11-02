@@ -70,7 +70,7 @@
   "email": "Email",
   "password": "Kata sandi",
   "invalidEmail": "Email tidak valid",
-  "minPasswordLength": "Minimal 6 karakter",
+  "minPasswordLength": "Minimal 8 karakter",
   "loginFailed": "Gagal masuk: {error}",
   "offlineMode": "Mode offline — data tersimpan di perangkat ini.",
   "onlineMode": "Online — data tersimpan di awan.",
@@ -294,6 +294,6 @@
   "accessDenied": "Akses dibatasi. Hanya Owner yang dapat mengelola pengguna.",
   "nameRequired": "Nama wajib diisi",
   "invalidEmail": "Email tidak valid",
-  "minPasswordLength": "Minimal 6 karakter",
+  "minPasswordLength": "Minimal 8 karakter",
   "userNotFound": "User tidak ditemukan."
 }

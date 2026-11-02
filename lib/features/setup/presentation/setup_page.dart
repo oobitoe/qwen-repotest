@@ -327,7 +327,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                             labelText: l10n.password,
                             prefixIcon: const Icon(AppIcons.lockOutline),
                           ),
-                          validator: (v) => (v == null || v.length < 6)
+                          validator: (v) => (v == null || v.length < 8)
                               ? l10n.minPasswordLength
                               : null,
                         ),

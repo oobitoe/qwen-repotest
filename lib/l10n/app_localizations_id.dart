@@ -217,7 +217,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get invalidEmail => 'Email tidak valid';
 
   @override
-  String get minPasswordLength => 'Minimal 6 karakter';
+  String get minPasswordLength => 'Minimal 8 karakter';
 
   @override
   String loginFailed(Object error) {

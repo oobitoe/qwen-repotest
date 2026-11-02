@@ -216,7 +216,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidEmail => 'Invalid email';
 
   @override
-  String get minPasswordLength => 'Minimum 6 characters';
+  String get minPasswordLength => 'Minimum 8 characters';
 
   @override
   String loginFailed(Object error) {

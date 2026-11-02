@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
@@ -11,6 +13,10 @@ import 'shared/providers/core_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Hapus database lama saat schema berubah (v1 -> v2 dengan businessId + storeId)
+  // Data lama akan dihapus dan dibuat ulang seed baru saat onCreate dijalankan
+  await _deleteDatabaseIfNeeded();
 
   // Muat environment variabel (.env) sebelum inisialisasi layanan lain,
   // agar POCKETBASE_URL dan sebagainya tersedia untuk PocketBaseClient.
@@ -28,6 +34,18 @@ Future<void> main() async {
   registerAllSyncMetas(db);
 
   runApp(const ProviderScope(child: PosApp()));
+}
+
+/// Hapus database SQLite lama jika ada (untuk migrasi skema v1 -> v2).
+/// Data lama akan dihapus dan dibuat ulang seed baru dengan businessId + storeId.
+Future<void> _deleteDatabaseIfNeeded() async {
+  final homeDir = Platform.environment['HOME'] ?? '/tmp';
+  final dbDir = Directory(p.join(homeDir, '.pos_database'));
+  final dbFile = File(p.join(dbDir.path, 'pos_database.sqlite'));
+  if (dbFile.existsSync()) {
+    await dbFile.delete();
+    debugPrint('Database lama dihapus: ${dbFile.path}');
+  }
 }
 
 class PosApp extends ConsumerWidget {

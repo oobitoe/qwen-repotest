@@ -75,13 +75,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (migrator) async {
           await migrator.createAll();
-          // Seed data alat listrik + 3 bulan transaksi
+          // Seed data baru dengan businessId + storeId
           await seedDatabase(this);
         },
         beforeOpen: (details) async {

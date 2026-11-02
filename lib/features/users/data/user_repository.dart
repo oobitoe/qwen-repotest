@@ -11,10 +11,10 @@ class UserRepository {
   final AppDatabase db;
   final SyncableDao dao;
 
-  /// Ambil semua user aktif dari tabel Profils lokal, difilter per businessId.
-  Future<List<Profile>> getUsersByBusiness(String businessId) async {
+  /// Ambil semua user aktif dari tabel Profils lokal, difilter per businessId dan storeId.
+  Future<List<Profile>> getUsersByBusiness(String businessId, String storeId) async {
     return (db.select(db.profiles)
-          ..where((t) => t.businessId.equals(businessId) & t.isActive.equals(true))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.isActive.equals(true))
           ..orderBy([(t) => OrderingTerm(expression: t.fullName)]))
         .get();
   }
@@ -29,6 +29,7 @@ class UserRepository {
   Future<void> createUser({
     required String id,
     required String businessId,
+    required String storeId,
     required String email,
     required String fullName,
     required String role,
@@ -45,6 +46,7 @@ class UserRepository {
         ProfilesCompanion.insert(
           id: id,
           businessId: Value(businessId),
+          storeId: Value(storeId),
           email: email,
           fullName: fullName,
           role: role,
@@ -63,6 +65,7 @@ class UserRepository {
         payload: {
           'id': id,
           'business_id': businessId,
+          'store_id': storeId,
           'email': email,
           'full_name': fullName,
           'role': role,
@@ -81,6 +84,7 @@ class UserRepository {
     await _pushToPocketBase(
       id: id,
       businessId: businessId,
+      storeId: storeId,
       email: email,
       fullName: fullName,
       role: role,
@@ -92,6 +96,7 @@ class UserRepository {
   Future<void> updateUser({
     required String id,
     required String businessId,
+    required String storeId,
     required String email,
     required String fullName,
     required String role,
@@ -112,6 +117,7 @@ class UserRepository {
         ProfilesCompanion(
           id: Value(id),
           businessId: Value(businessId),
+          storeId: Value(storeId),
           email: Value(email),
           fullName: Value(fullName),
           role: Value(role),
@@ -131,6 +137,7 @@ class UserRepository {
         payload: {
           'id': id,
           'business_id': businessId,
+          'store_id': storeId,
           'email': email,
           'full_name': fullName,
           'role': role,
@@ -147,6 +154,7 @@ class UserRepository {
     await _pushToPocketBase(
       id: id,
       businessId: businessId,
+      storeId: storeId,
       email: email,
       fullName: fullName,
       role: role,
@@ -171,6 +179,7 @@ class UserRepository {
         ProfilesCompanion(
           id: Value(id),
           businessId: Value(existing.businessId),
+          storeId: Value(existing.storeId),
           email: Value(existing.email),
           fullName: Value(existing.fullName),
           role: Value(existing.role),
@@ -190,6 +199,7 @@ class UserRepository {
         payload: {
           'id': id,
           'business_id': existing.businessId,
+          'store_id': existing.storeId,
           'email': existing.email,
           'full_name': existing.fullName,
           'role': existing.role,
@@ -206,6 +216,7 @@ class UserRepository {
     await _pushToPocketBase(
       id: id,
       businessId: existing.businessId,
+      storeId: existing.storeId,
       email: existing.email,
       fullName: existing.fullName,
       role: existing.role,
@@ -216,6 +227,7 @@ class UserRepository {
   Future<void> _pushToPocketBase({
     required String id,
     required String businessId,
+    required String storeId,
     required String email,
     required String fullName,
     required String role,
@@ -242,6 +254,7 @@ class UserRepository {
             if (password != null) 'password': password,
             if (password != null) 'passwordConfirm': password,
             'businessId': businessId,
+            'storeId': storeId,
           },
         );
       } else {
@@ -252,6 +265,7 @@ class UserRepository {
           if (password != null) 'password': password,
           if (password != null) 'passwordConfirm': password,
           'businessId': businessId,
+          'storeId': storeId,
           'emailVisibility': true,
         });
       }

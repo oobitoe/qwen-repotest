@@ -24,7 +24,7 @@ class SyncQueueStatuses {
   static const String failed = 'failed';
 }
 
-// ---------- Tabel organisasi & pengguna ----------
+// ---------- Tabel induk (tidak perlu businessId/storeId) ----------
 
 class Businesses extends Table {
   TextColumn get id => text()();
@@ -44,7 +44,7 @@ class Businesses extends Table {
 
 class Stores extends Table {
   TextColumn get id => text()();
-  TextColumn get businessId => text().references(Businesses, #id)();
+  TextColumn get businessId => text().references(Businesses, #id)(); // Bisnis yang memiliki toko ini
   TextColumn get name => text()();
   TextColumn get address => text().nullable()();
   TextColumn get phone => text().nullable()();
@@ -59,10 +59,12 @@ class Stores extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Profil pengguna lokal (autentikasi utama lewat Supabase Auth).
+// ---------- Tabel organisasi & pengguna ----------
+
 class Profiles extends Table {
-  TextColumn get id => text()(); // uid Supabase Auth
+  TextColumn get id => text()(); // uid Supabase Auth / PocketBase user id
   TextColumn get businessId => text().withDefault(const Constant('local'))(); // Bisnis yang memiliki user ini
+  TextColumn get storeId => text().withDefault(const Constant('local'))(); // Toko/cabang yang memiliki user ini
   TextColumn get email => text()();
   TextColumn get fullName => text()();
   TextColumn get role => text()(); // owner|admin|manager|kasir|staff_gudang
@@ -82,7 +84,8 @@ class Profiles extends Table {
 
 class Categories extends Table {
   TextColumn get id => text()();
-  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get businessId => text().withDefault(const Constant('local'))(); // Bisnis yang memiliki kategori ini
+  TextColumn get storeId => text().withDefault(const Constant('local'))(); // Toko yang memiliki kategori ini
   TextColumn get name => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -98,6 +101,8 @@ class Categories extends Table {
 
 class Units extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))(); // Bisnis yang memiliki unit ini
+  TextColumn get storeId => text().withDefault(const Constant('local'))(); // Toko yang memiliki unit ini
   TextColumn get name => text()();
   TextColumn get abbreviation => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -113,7 +118,8 @@ class Units extends Table {
 
 class Products extends Table {
   TextColumn get id => text()();
-  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get businessId => text().withDefault(const Constant('local'))(); // Bisnis yang memiliki produk ini
+  TextColumn get storeId => text().withDefault(const Constant('local'))(); // Toko yang memiliki produk ini
   TextColumn get sku => text().unique()();
   /// Barcode produk (digabung dari ProductBarcodes — satu barcode primer per produk)
   TextColumn get barcode => text().nullable()();
@@ -134,8 +140,8 @@ class Products extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
-  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
   TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -145,6 +151,8 @@ class Products extends Table {
 
 class ProductVariants extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get productId => text().references(Products, #id)();
   TextColumn get name => text()();
   TextColumn get sku => text().nullable()();
@@ -161,9 +169,12 @@ class ProductVariants extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ---------- Ledger pergerakan stok — satu-satunya sumber kebenaran perubahan stok.
+// ---------- Ledger pergerakan stok — satu-satunya sumber kebenaran perubahan stok.----------
+
 class StockMovements extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get productId => text().references(Products, #id)();
   /// initial | purchase | sale | sale_return | purchase_return | adjustment | transfer_in | transfer_out | correction
   TextColumn get type => text()();
@@ -186,6 +197,8 @@ class StockMovements extends Table {
 
 class Suppliers extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   TextColumn get phone => text().nullable()();
   TextColumn get email => text().nullable()();
@@ -205,6 +218,8 @@ class Suppliers extends Table {
 
 class Customers extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get code => text().nullable()();
   TextColumn get name => text()();
   TextColumn get phone => text().nullable()();
@@ -229,6 +244,8 @@ class Customers extends Table {
 
 class StockAdjustments extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get referenceNumber => text()();
   TextColumn get note => text().nullable()();
   TextColumn get createdBy => text().nullable()();
@@ -244,6 +261,8 @@ class StockAdjustments extends Table {
 
 class StockAdjustmentItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get adjustmentId => text().references(StockAdjustments, #id)();
   TextColumn get productId => text().references(Products, #id)();
   RealColumn get quantityBefore => real()();
@@ -256,6 +275,8 @@ class StockAdjustmentItems extends Table {
 
 class StockOpnames extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get referenceNumber => text()();
   TextColumn get status => text().withDefault(const Constant('draft'))();
   TextColumn get createdBy => text().nullable()();
@@ -268,6 +289,8 @@ class StockOpnames extends Table {
 
 class StockOpnameItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get opnameId => text().references(StockOpnames, #id)();
   TextColumn get productId => text().references(Products, #id)();
   RealColumn get systemStock => real()();
@@ -281,6 +304,8 @@ class StockOpnameItems extends Table {
 
 class Sales extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get invoiceNumber => text().unique()();
   TextColumn get customerNameSnapshot => text().nullable()();
   RealColumn get subtotal => real()();
@@ -307,6 +332,8 @@ class Sales extends Table {
 
 class SaleItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get saleId => text().references(Sales, #id)();
   TextColumn get productId => text().references(Products, #id)();
   // Snapshot agar histori tidak berubah saat produk diedit:
@@ -330,6 +357,8 @@ class SaleItems extends Table {
 
 class SalePayments extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get saleId => text().references(Sales, #id)();
   RealColumn get amount => real()();
   TextColumn get paymentMethod => text()();
@@ -347,6 +376,8 @@ class SalePayments extends Table {
 
 class SaleReturns extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get saleId => text().references(Sales, #id)();
   TextColumn get referenceNumber => text()();
   RealColumn get total => real().withDefault(const Constant(0))();
@@ -362,6 +393,8 @@ class SaleReturns extends Table {
 
 class SaleReturnItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get returnId => text().references(SaleReturns, #id)();
   TextColumn get productId => text().references(Products, #id)();
   RealColumn get quantity => real()();
@@ -379,10 +412,12 @@ class SaleReturnItems extends Table {
 
 class StockTransfers extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))(); // Toko asal
   @ReferenceName('fromStore')
   TextColumn get fromStoreId => text().nullable().references(Stores, #id)();
   @ReferenceName('toStore')
-  TextColumn get toStoreId => text().nullable().references(Stores, #id)();
+  TextColumn get toStoreId => text().nullable().references(Stores, #id)(); // Toko tujuan
   TextColumn get referenceNumber => text()();
   TextColumn get status => text().withDefault(const Constant('pending'))(); // pending | shipped | received | cancelled
   TextColumn get createdBy => text().nullable()();
@@ -399,6 +434,8 @@ class StockTransfers extends Table {
 
 class StockTransferItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get transferId => text().references(StockTransfers, #id)();
   TextColumn get productId => text().references(Products, #id)();
   RealColumn get quantity => real()();
@@ -415,6 +452,8 @@ class StockTransferItems extends Table {
 
 class CustomerAddresses extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get customerId => text().references(Customers, #id)();
   TextColumn get label => text()();
   TextColumn get address => text()();
@@ -433,6 +472,7 @@ class CustomerAddresses extends Table {
 class BusinessSettings extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get key => text()();
   TextColumn get value => text().withDefault(const Constant('{}'))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -446,6 +486,7 @@ class BusinessSettings extends Table {
 
 class StoreSettings extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
   TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get key => text()();
   TextColumn get value => text().withDefault(const Constant('{}'))();
@@ -461,6 +502,7 @@ class StoreSettings extends Table {
 class TaxSettings extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   RealColumn get rate => real().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
@@ -476,6 +518,7 @@ class TaxSettings extends Table {
 class PaymentMethodsConfig extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get code => text()();
   TextColumn get name => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
@@ -490,7 +533,8 @@ class PaymentMethodsConfig extends Table {
 
 class Devices extends Table {
   TextColumn get id => text()();
-  TextColumn get businessId => text().nullable()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get deviceId => text()();
   TextColumn get name => text().nullable()();
   DateTimeColumn get lastSeenAt => dateTime().nullable()();
@@ -508,6 +552,7 @@ class Devices extends Table {
 class FinancialAdjustments extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get description => text()();
   RealColumn get amount => real()();
   TextColumn get type => text()(); // credit | debit
@@ -525,6 +570,8 @@ class FinancialAdjustments extends Table {
 
 class AuditLogs extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get userId => text().named('user_id')();
   TextColumn get userName => text().named('user_name')();
   TextColumn get action => text().named('action')();
@@ -543,6 +590,8 @@ class AuditLogs extends Table {
 
 class ExpenseCategories extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -558,6 +607,8 @@ class ExpenseCategories extends Table {
 
 class Expenses extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get categoryId => text().nullable().references(ExpenseCategories, #id)();
   TextColumn get description => text()();
   RealColumn get amount => real()();
@@ -576,6 +627,8 @@ class Expenses extends Table {
 
 class IncomeCategories extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -591,6 +644,8 @@ class IncomeCategories extends Table {
 
 class IncomeEntries extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get categoryId => text().nullable().references(IncomeCategories, #id)();
   TextColumn get description => text()();
   RealColumn get amount => real()();
@@ -612,6 +667,7 @@ class IncomeEntries extends Table {
 class CashRegisters extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   RealColumn get openingBalance => real().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
@@ -628,6 +684,8 @@ class CashRegisters extends Table {
 
 class CashSessions extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get registerId => text().references(CashRegisters, #id)();
   TextColumn get openedBy => text().nullable()();
   DateTimeColumn get openedAt => dateTime().withDefault(currentDateAndTime)();
@@ -649,6 +707,8 @@ class CashSessions extends Table {
 
 class CashMovements extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get sessionId => text().nullable().references(CashSessions, #id)();
   TextColumn get type => text()(); // sale | expense | income | transfer | adjustment
   RealColumn get amount => real()();
@@ -668,6 +728,7 @@ class CashMovements extends Table {
 class Accounts extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   TextColumn get type => text()(); // cash | bank | e_wallet
   RealColumn get balance => real().withDefault(const Constant(0))();
@@ -684,6 +745,8 @@ class Accounts extends Table {
 
 class AccountTransactions extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get accountId => text().references(Accounts, #id)();
   TextColumn get type => text()(); // debit | credit
   RealColumn get amount => real()();
@@ -704,6 +767,7 @@ class AccountTransactions extends Table {
 class Purchases extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get referenceNumber => text()();
   TextColumn get supplierId => text().nullable().references(Suppliers, #id)();
   TextColumn get supplierName => text()();
@@ -728,6 +792,8 @@ class Purchases extends Table {
 
 class PurchaseItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get purchaseId => text().references(Purchases, #id)();
   TextColumn get productId => text().references(Products, #id)();
   // Snapshot agar histori tidak berubah saat produk diedit:
@@ -749,6 +815,8 @@ class PurchaseItems extends Table {
 
 class PurchasePayments extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get purchaseId => text().references(Purchases, #id)();
   RealColumn get amount => real()();
   TextColumn get paymentMethod => text()();
@@ -767,6 +835,7 @@ class PurchasePayments extends Table {
 class PurchaseOrders extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get supplierId => text().references(Suppliers, #id)();
   TextColumn get referenceNumber => text()();
   TextColumn get status => text().withDefault(const Constant('draft'))(); // draft | ordered | received | cancelled
@@ -788,6 +857,8 @@ class PurchaseOrders extends Table {
 
 class PurchaseOrderItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get orderId => text().references(PurchaseOrders, #id)();
   TextColumn get productId => text().references(Products, #id)();
   TextColumn get productNameSnapshot => text()();
@@ -809,6 +880,8 @@ class PurchaseOrderItems extends Table {
 
 class PurchaseReturns extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get purchaseId => text().references(Purchases, #id)();
   TextColumn get referenceNumber => text()();
   RealColumn get total => real().withDefault(const Constant(0))();
@@ -824,6 +897,8 @@ class PurchaseReturns extends Table {
 
 class PurchaseReturnItems extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get returnId => text().references(PurchaseReturns, #id)();
   TextColumn get productId => text().references(Products, #id)();
   RealColumn get quantity => real()();
@@ -842,6 +917,7 @@ class PurchaseReturnItems extends Table {
 class Debts extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get supplierId => text().nullable().references(Suppliers, #id)();
   TextColumn get customerId => text().nullable().references(Customers, #id)();
   TextColumn get type => text()(); // payable | receivable
@@ -861,6 +937,8 @@ class Debts extends Table {
 
 class DebtPayments extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get debtId => text().references(Debts, #id)();
   RealColumn get amount => real()();
   DateTimeColumn get paidAt => dateTime().withDefault(currentDateAndTime)();
@@ -873,12 +951,12 @@ class DebtPayments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-
 // ---------- Manajemen Role & Izin ----------
 
 class Roles extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get name => text()();
   TextColumn get description => text().nullable()();
   BoolColumn get isSystem => boolean().withDefault(const Constant(false))();
@@ -895,6 +973,8 @@ class Roles extends Table {
 
 class Permissions extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get code => text().unique()();
   TextColumn get description => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -908,6 +988,8 @@ class Permissions extends Table {
 
 class RolePermissions extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get roleId => text().references(Roles, #id)();
   TextColumn get permissionId => text().references(Permissions, #id)();
   IntColumn get version => integer().withDefault(const Constant(1))();
@@ -921,6 +1003,7 @@ class RolePermissions extends Table {
 class BusinessMembers extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().references(Businesses, #id)();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get userId => text()();
   TextColumn get role => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -935,8 +1018,9 @@ class BusinessMembers extends Table {
 
 class UserStoreAccess extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text().withDefault(const Constant('local'))();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get userId => text()();
-  TextColumn get storeId => text().references(Stores, #id)();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get remoteId => text().nullable()(); // ID di PocketBase (base58url 22 krn)
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
@@ -950,7 +1034,7 @@ class UserStoreAccess extends Table {
 class SaleSequences extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text().withDefault(const Constant('local'))();
-  TextColumn get storeId => text().nullable().references(Stores, #id)();
+  TextColumn get storeId => text().withDefault(const Constant('local'))();
   TextColumn get prefix => text().withDefault(const Constant('INV'))();
   IntColumn get lastNumber => integer().withDefault(const Constant(0))();
   DateTimeColumn get date => dateTime().withDefault(currentDateAndTime)();

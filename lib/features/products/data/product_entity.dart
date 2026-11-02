@@ -4,6 +4,8 @@ library;
 class ProductEntity {
   const ProductEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.sku,
     this.barcode,
     required this.name,
@@ -21,6 +23,8 @@ class ProductEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String sku;
   final String? barcode;
   final String name;
@@ -38,6 +42,8 @@ class ProductEntity {
 
   ProductEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? sku,
     String? barcode,
     String? name,
@@ -55,6 +61,8 @@ class ProductEntity {
   }) {
     return ProductEntity(
       id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      storeId: storeId ?? this.storeId,
       sku: sku ?? this.sku,
       barcode: barcode ?? this.barcode,
       name: name ?? this.name,
@@ -87,6 +95,8 @@ class ProductEntity {
 class CategoryEntity {
   const CategoryEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.name,
     required this.isActive,
     required this.createdAt,
@@ -94,6 +104,8 @@ class CategoryEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String name;
   final bool isActive;
   final DateTime createdAt;
@@ -101,6 +113,8 @@ class CategoryEntity {
 
   CategoryEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? name,
     bool? isActive,
     DateTime? createdAt,
@@ -108,6 +122,8 @@ class CategoryEntity {
   }) {
     return CategoryEntity(
       id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      storeId: storeId ?? this.storeId,
       name: name ?? this.name,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,

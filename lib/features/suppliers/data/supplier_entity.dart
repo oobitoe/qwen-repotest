@@ -2,6 +2,8 @@
 class SupplierEntity {
   const SupplierEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.name,
     this.phone,
     this.email,
@@ -13,6 +15,8 @@ class SupplierEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String name;
   final String? phone;
   final String? email;
@@ -24,6 +28,8 @@ class SupplierEntity {
 
   SupplierEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? name,
     String? phone,
     String? email,
@@ -35,6 +41,8 @@ class SupplierEntity {
   }) {
     return SupplierEntity(
       id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      storeId: storeId ?? this.storeId,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       email: email ?? this.email,

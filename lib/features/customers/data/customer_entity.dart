@@ -2,6 +2,8 @@
 class CustomerEntity {
   const CustomerEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     this.code,
     required this.name,
     this.phone,
@@ -16,6 +18,8 @@ class CustomerEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String? code;
   final String name;
   final String? phone;
@@ -30,6 +34,8 @@ class CustomerEntity {
 
   CustomerEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? code,
     String? name,
     String? phone,
@@ -44,6 +50,8 @@ class CustomerEntity {
   }) {
     return CustomerEntity(
       id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      storeId: storeId ?? this.storeId,
       code: code ?? this.code,
       name: name ?? this.name,
       phone: phone ?? this.phone,

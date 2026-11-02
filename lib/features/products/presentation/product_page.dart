@@ -41,14 +41,14 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     final profile = ref.watch(userProfileProvider);
     final _businessId = profile.value?.businessId ?? 'local';
     final _storeId = profile.value?.storeId ?? 'local';
-    final productsAsync = ref.watch(paginatedProductsStreamProvider(
+    final productsAsync = ref.watch(paginatedProductsStreamProvider((
       page: _currentPage,
       pageSize: _pageSize,
       query: _query,
       categoryId: _selectedCategoryId,
       businessId: _businessId,
       storeId: _storeId,
-    ));
+    )));
 
     return Scaffold(
       body: Column(

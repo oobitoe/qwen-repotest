@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import '../../categories/data/category_repository.dart';
 import '../../products/data/product_entity.dart';
 import 'package:uuid/uuid.dart';
@@ -159,13 +160,14 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final repo = ref.read(categoryRepositoryProvider);
-    await repo.saveCategory(CategoryEntity(
+    final profile = ref.read(userProfileProvider);
+    await repo.saveCategory(
       id: const Uuid().v4(),
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
       name: _nameCtrl.text.trim(),
       isActive: true,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ));
+    );
     if (mounted) Navigator.of(context).pop();
   }
 

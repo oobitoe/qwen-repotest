@@ -186,12 +186,12 @@ class _CustomerFormState extends ConsumerState<_CustomerForm> {
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
+      address: '', // TODO: ambil dari form
+      notes: '', // TODO: ambil dari form
       tier: _tierCtrl.text.trim().isEmpty ? 'Regular' : _tierCtrl.text.trim(),
       rewardPoints: 0,
       isActive: true,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ));
+    );
     if (mounted) Navigator.of(context).pop();
   }
 

@@ -191,9 +191,7 @@ class _SupplierFormState extends ConsumerState<_SupplierForm> {
           : _addressCtrl.text.trim(),
       notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       isActive: true,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ));
+    );
     if (mounted) Navigator.of(context).pop();
   }
 

@@ -22,12 +22,14 @@ class CategoryRepository {
         for (final r in rows)
           CategoryEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             name: r.name,
             isActive: r.isActive,
             createdAt: r.createdAt,
             updatedAt: r.updatedAt,
           ),
-      ];
+      ]
     });
   }
 
@@ -42,6 +44,8 @@ class CategoryRepository {
         .where((r) => r.name.toLowerCase().contains(q))
         .map((r) => CategoryEntity(
               id: r.id,
+              businessId: r.businessId,
+              storeId: r.storeId,
               name: r.name,
               isActive: r.isActive,
               createdAt: r.createdAt,

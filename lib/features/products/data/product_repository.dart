@@ -5,6 +5,7 @@ import 'package:async/async.dart'; // for StreamZip
 import '../../../core/database/app_database.dart';
 import '../../../core/database/sync_dao.dart';
 import '../../../shared/providers/core_providers.dart';
+import '../../../shared/providers/user_profile_provider.dart';
 import 'product_entity.dart';
 
 /// Hasil pagination generik.
@@ -73,9 +74,12 @@ class ProductRepository {
     String? query,
     String? categoryId,
     bool onlyActive = true,
+    required String businessId,
+    required String storeId,
   }) async {
-    var q = _db.select(_db.products);
-    
+    var q = _db.select(_db.products)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
+
     if (onlyActive) {
       q.where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
     }
@@ -89,9 +93,10 @@ class ProductRepository {
           t.sku.like(searchTerm) |
           t.barcode.like(searchTerm));
     }
-    
+
     // Get total count
-    final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()]);
+    final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()])
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       countQuery.where(_db.products.isActive.equals(true) & _db.products.deletedAt.isNull());
     }
@@ -107,17 +112,18 @@ class ProductRepository {
     }
     final totalCountResult = await countQuery.getSingleOrNull();
     final totalCount = totalCountResult?.read(_db.products.id.count()) ?? 0;
-    
-    // Apply pagination
+
     // Apply pagination
     q.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
     q.limit(pageSize, offset: (page - 1) * pageSize);
-    
+
     final rows = await q.get();
     final items = [
       for (final r in rows)
         ProductEntity(
           id: r.id,
+          businessId: r.businessId,
+          storeId: r.storeId,
           sku: r.sku,
           barcode: r.barcode,
           name: r.name,
@@ -134,7 +140,7 @@ class ProductRepository {
           updatedAt: r.updatedAt,
         ),
     ];
-    
+
     return PaginatedResult(
       items: items,
       totalCount: totalCount,
@@ -144,10 +150,14 @@ class ProductRepository {
   }
 
   /// Cari produk berdasarkan kata kunci (nama, SKU, atau barcode).
-  Future<List<ProductEntity>> searchProducts(String query) async {
+  Future<List<ProductEntity>> searchProducts({
+    required String query,
+    required String businessId,
+    required String storeId,
+  }) async {
     final q = query.toLowerCase();
     final rows = await (_db.select(_db.products)
-          ..where((t) => t.deletedAt.isNull()))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.deletedAt.isNull()))
         .get();
     return rows
         .where((r) {
@@ -158,6 +168,8 @@ class ProductRepository {
         })
         .map((r) => ProductEntity(
               id: r.id,
+              businessId: r.businessId,
+              storeId: r.storeId,
               sku: r.sku,
               barcode: r.barcode,
               name: r.name,
@@ -177,9 +189,14 @@ class ProductRepository {
   }
 
   /// Ambil produk menipis stok (stock <= minStock).
-  Future<List<ProductEntity>> lowStockProducts() async {
+  Future<List<ProductEntity>> lowStockProducts({
+    required String businessId,
+    required String storeId,
+  }) async {
     final rows = await (_db.select(_db.products)
           ..where((t) =>
+              t.businessId.equals(businessId) &
+              t.storeId.equals(storeId) &
               t.isActive.equals(true) &
               t.deletedAt.isNull() &
               (t.stock - t.minStock).isSmallerOrEqualValue(0)))
@@ -188,6 +205,8 @@ class ProductRepository {
       for (final r in rows)
         ProductEntity(
           id: r.id,
+          businessId: r.businessId,
+          storeId: r.storeId,
           sku: r.sku,
           barcode: r.barcode,
           name: r.name,
@@ -240,10 +259,13 @@ class ProductRepository {
     String? query,
     String? categoryId,
     bool onlyActive = true,
+    required String businessId,
+    required String storeId,
   }) {
     // Base query builder
     buildQuery() {
-      var q = _db.select(_db.products);
+      var q = _db.select(_db.products)
+        ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
       if (onlyActive) {
         q.where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
       }
@@ -263,7 +285,8 @@ class ProductRepository {
     }
 
     // Count query
-    final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()]);
+    final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()])
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       countQuery.where(_db.products.isActive.equals(true) & _db.products.deletedAt.isNull());
     }
@@ -331,14 +354,17 @@ final productRepositoryProvider = Provider<ProductRepository>((ref) {
 /// Provider untuk produk dengan pagination.
 final paginatedProductsProvider = FutureProvider.family<
     PaginatedResult<ProductEntity>,
-    ({int page, int pageSize, String? query, String? categoryId})>(
+    ({int page, int pageSize, String? query, String? categoryId, String businessId, String storeId})>(
   (ref, params) async {
     final repo = ref.watch(productRepositoryProvider);
+    final profile = ref.watch(userProfileProvider);
     return repo.getProductsPaginated(
       page: params.page,
       pageSize: params.pageSize,
       query: params.query,
       categoryId: params.categoryId,
+      businessId: params.businessId,
+      storeId: params.storeId,
     );
   },
 );
@@ -346,19 +372,30 @@ final paginatedProductsProvider = FutureProvider.family<
 /// Stream produk aktif untuk UI (kompatibilitas mundur).
 final productsProvider = StreamProvider<List<ProductEntity>>((ref) {
   final repo = ref.watch(productRepositoryProvider);
-  return repo.watchProducts();
+  final profile = ref.watch(userProfileProvider);
+  return repo.watchProducts(
+    businessId: profile.value?.businessId ?? 'local',
+    storeId: profile.value?.storeId ?? 'local',
+  );
 });
 
 /// Stream produk menipis stok.
 final lowStockProductsStreamProvider = StreamProvider<List<ProductEntity>>((ref) {
   final repo = ref.watch(productRepositoryProvider);
-  return repo.watchProducts().asyncMap((_) => repo.lowStockProducts());
+  final profile = ref.watch(userProfileProvider);
+  return repo.watchProducts(
+    businessId: profile.value?.businessId ?? 'local',
+    storeId: profile.value?.storeId ?? 'local',
+  ).asyncMap((_) => repo.lowStockProducts(
+    businessId: profile.value?.businessId ?? 'local',
+    storeId: profile.value?.storeId ?? 'local',
+  ));
 });
 
 /// Stream produk dengan pagination + filter (real-time auto-update).
 final paginatedProductsStreamProvider = StreamProvider.family<
     PaginatedResult<ProductEntity>,
-    ({int page, int pageSize, String? query, String? categoryId})>(
+    ({int page, int pageSize, String? query, String? categoryId, String businessId, String storeId})>(
   (ref, params) {
     final repo = ref.watch(productRepositoryProvider);
     return repo.watchProductsPaginated(
@@ -366,6 +403,8 @@ final paginatedProductsStreamProvider = StreamProvider.family<
       pageSize: params.pageSize,
       query: params.query,
       categoryId: params.categoryId,
+      businessId: params.businessId,
+      storeId: params.storeId,
     );
   },
 );

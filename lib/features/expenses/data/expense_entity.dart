@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 class ExpenseEntity {
   const ExpenseEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     this.categoryId,
     required this.description,
     required this.amount,
@@ -16,6 +18,8 @@ class ExpenseEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String? categoryId;
   final String description;
   final double amount;
@@ -36,6 +40,8 @@ class ExpenseEntity {
   /// Copy with untuk update.
   ExpenseEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? categoryId,
     String? description,
     double? amount,
@@ -48,6 +54,8 @@ class ExpenseEntity {
   }) =>
       ExpenseEntity(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
         categoryId: categoryId ?? this.categoryId,
         description: description ?? this.description,
         amount: amount ?? this.amount,
@@ -64,6 +72,8 @@ class ExpenseEntity {
 class ExpenseCategoryEntity {
   const ExpenseCategoryEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.name,
     this.isActive = true,
     required this.createdAt,
@@ -72,6 +82,8 @@ class ExpenseCategoryEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String name;
   final bool isActive;
   final DateTime createdAt;
@@ -80,6 +92,8 @@ class ExpenseCategoryEntity {
 
   ExpenseCategoryEntity copyWith({
     String? id,
+    String? businessId,
+    String? storeId,
     String? name,
     bool? isActive,
     DateTime? createdAt,
@@ -88,6 +102,8 @@ class ExpenseCategoryEntity {
   }) =>
       ExpenseCategoryEntity(
         id: id ?? this.id,
+        businessId: businessId ?? this.businessId,
+        storeId: storeId ?? this.storeId,
         name: name ?? this.name,
         isActive: isActive ?? this.isActive,
         createdAt: createdAt ?? this.createdAt,

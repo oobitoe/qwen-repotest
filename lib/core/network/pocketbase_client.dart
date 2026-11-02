@@ -55,6 +55,7 @@ class PocketBaseClient {
     required String email,
     required String password,
     required String name,
+    String? businessId, // Bisnis yang memiliki user ini (multi-business)
   }) async {
     final record = await _instance!
         .collection('users')
@@ -64,6 +65,7 @@ class PocketBaseClient {
           'passwordConfirm': password,
           'name': name,
           'emailVisibility': true,
+          if (businessId != null) 'businessId': businessId,
         });
     return record;
   }

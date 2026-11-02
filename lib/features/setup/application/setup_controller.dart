@@ -132,10 +132,10 @@ class SetupController extends Notifier<SetupState> {
         return;
       }
 
-      // 4. Sudah online + PB reachable → cek apakah sudah ada user (PB + lokal)
+      // 4. Sudah online + PB reachable → cek apakah sudah ada Owner (PB + lokal)
       final pbUserCount = await _countPocketBaseUsers();
-      final localUserCount = await _countLocalUsers();
-      final needsFirstOwner = pbUserCount == 0 && localUserCount == 0;
+      final localOwnerCount = await _countLocalOwners();
+      final needsFirstOwner = pbUserCount == 0 && localOwnerCount == 0;
 
       await Future.delayed(const Duration(milliseconds: 500));
       state = state.copyWith(
@@ -160,6 +160,7 @@ class SetupController extends Notifier<SetupState> {
     required String email,
     required String password,
     required String fullName,
+    required String businessId, // Bisnis yang memiliki Owner ini (WAJIB)
   }) async {
     state = state.copyWith(status: SetupStatus.checking, error: null);
     try {
@@ -167,6 +168,7 @@ class SetupController extends Notifier<SetupState> {
             email,
             password,
             fullName,
+            businessId: businessId,
           );
 
       // Tandai setup selesai di sync_metadata
@@ -196,26 +198,30 @@ class SetupController extends Notifier<SetupState> {
     return count.read(db.businesses.id.count()) ?? 0;
   }
 
-  /// Jumlah user di tabel Profiles lokal (Drift).
-  Future<int> _countLocalUsers() async {
-    final count = await (db.selectOnly(db.profiles)
-          ..addColumns([db.profiles.id.count()]))
-        .getSingle();
-    return count.read(db.profiles.id.count()) ?? 0;
+  /// Jumlah user dengan role Owner di tabel Profils lokal (Drift).
+  /// Digunakan untuk menentukan apakah sudah ada Owner pertama atau belum.
+  Future<int> _countLocalOwners() async {
+    final owners = await (db.select(db.profiles)
+          ..where((t) => t.role.equals('owner')))
+        .get();
+    return owners.length;
   }
 
   /// Jumlah user di PocketBase collection `users`.
-  Future<int> _countPocketBaseUsers() async {
+  /// Jika [businessId] disediakan, hanya hitung user milik bisnis tersebut.
+  Future<int> _countPocketBaseUsers({String? businessId}) async {
+    final filter = businessId != null ? 'businessId = $businessId' : null;
     final page = await PocketBaseClient.instance
         .collection('users')
-        .getList(page: 1, perPage: 1);
+        .getList(page: 1, perPage: 1, filter: filter);
     return page.totalItems;
   }
 
   /// Simpan bisnis dan toko pertama kali, lalu tandai setup selesai.
   /// Semua data disimpan ke Drift lokal dan di-enqueue ke `sync_queue` untuk
   /// dikirim ke PocketBase saat sinkronisasi berjalan.
-  Future<void> completeSetup({
+  /// Return businessId yang baru dibuat.
+  Future<String> completeSetup({
     required String businessName,
     required String businessCurrency,
     required String businessTimezone,
@@ -301,17 +307,20 @@ class SetupController extends Notifier<SetupState> {
       // Tandai setup selesai di sync_metadata
       await _setSetupCompleted(true);
 
-      state = const SetupState(
+      state = state.copyWith(
         status: SetupStatus.ready,
         needsSetup: false,
         online: true,
         pocketbaseReachable: true,
       );
+
+      return businessId;
     } catch (e) {
       state = state.copyWith(
         status: SetupStatus.error,
         error: 'Gagal menyimpan setup: $e',
       );
+      rethrow;
     }
   }
 

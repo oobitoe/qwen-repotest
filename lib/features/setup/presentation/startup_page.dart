@@ -125,7 +125,7 @@ class _StartupPageState extends ConsumerState<StartupPage> {
             const CircularProgressIndicator(),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Memeriksa koneksi dan server PocketBase\...',
+              'Memeriksa koneksi dan server\...',
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme

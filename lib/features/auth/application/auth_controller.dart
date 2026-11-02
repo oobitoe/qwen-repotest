@@ -89,6 +89,7 @@ class AuthController extends Notifier<AuthState> {
     String password,
     String fullName, {
     UserRole role = UserRole.kasir,
+    String? businessId, // Bisnis yang memiliki user ini
   }) async {
     final pb = PocketBaseClient.client;
 
@@ -103,6 +104,7 @@ class AuthController extends Notifier<AuthState> {
       email: email,
       password: password,
       name: fullName,
+      businessId: businessId,
     );
 
     // Login otomatis setelah daftar agar token tersimpan di authStore.
@@ -116,8 +118,9 @@ class AuthController extends Notifier<AuthState> {
   Future<void> registerFirstOwner(
     String email,
     String password,
-    String fullName,
-  ) async {
+    String fullName, {
+    String? businessId, // Bisnis yang memiliki Owner ini (WAJIB)
+  }) async {
     final pb = PocketBaseClient.client;
 
     // Pastikan server reachable sebelum mencoba daftar.
@@ -131,6 +134,7 @@ class AuthController extends Notifier<AuthState> {
       email: email,
       password: password,
       name: fullName,
+      businessId: businessId,
     );
 
     // Login otomatis setelah daftar agar token tersimpan di authStore.

@@ -41,6 +41,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   final _ownerPassword = TextEditingController();
 
   int _step = 0; // 0 = bisnis, 1 = owner pertama
+  String? _businessId; // ID bisnis yang baru dibuat (untuk tag user)
   bool _busy = false;
 
   @override
@@ -72,7 +73,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
     setState(() => _busy = true);
 
     try {
-      await ref.read(setupControllerProvider.notifier).completeSetup(
+      final businessId = await ref.read(setupControllerProvider.notifier).completeSetup(
             businessName: _businessName.text.trim(),
             businessCurrency: _businessCurrency.text.trim(),
             businessTimezone: _businessTimezone.text.trim(),
@@ -87,18 +88,20 @@ class _SetupPageState extends ConsumerState<SetupPage> {
 
       if (!mounted) return;
 
+      // Simpan businessId untuk langkah pendaftaran Owner pertama
+      _businessId = businessId;
+
+      if (!mounted) return;
       final setupState = ref.read(setupControllerProvider);
-      if (setupState.status == SetupStatus.ready) {
-        // Tidak perlu Owner pertama (user sudah ada) → langsung ke login
-        if (mounted) {
-          context.go(AppRoutes.login);
-        }
-      } else {
-        // Perlu daftar Owner pertama → pindah ke langkah 1
+      if (setupState.needsFirstOwner) {
+        // Belum ada Owner di kedua database → lanjut ke pendaftaran Owner pertama (langkah 1)
         setState(() {
           _step = 1;
           _busy = false;
         });
+      } else {
+        // Owner sudah ada → langsung ke login
+        context.go(AppRoutes.login);
       }
     } catch (e) {
       if (!mounted) return;
@@ -123,6 +126,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
             email: _ownerEmail.text.trim(),
             password: _ownerPassword.text.trim(),
             fullName: _ownerFullName.text.trim(),
+            businessId: _businessId ?? '', // businessId sudah dijamin ada saat langkah 1
           );
 
       if (!mounted) return;

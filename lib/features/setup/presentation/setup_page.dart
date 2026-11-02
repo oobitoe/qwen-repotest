@@ -126,7 +126,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
             email: _ownerEmail.text.trim(),
             password: _ownerPassword.text.trim(),
             fullName: _ownerFullName.text.trim(),
-            businessId: _businessId ?? '', // businessId sudah dijamin ada saat langkah 1
+            businessId: _businessId, // businessId sudah dijamin ada saat langkah 1
           );
 
       if (!mounted) return;

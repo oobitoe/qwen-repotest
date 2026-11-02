@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @minPasswordLength.
   ///
   /// In en, this message translates to:
-  /// **'Minimum 6 characters'**
+  /// **'Minimum 8 characters'**
   String get minPasswordLength;
 
   /// No description provided for @loginFailed.

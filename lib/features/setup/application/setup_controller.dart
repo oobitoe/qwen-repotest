@@ -160,7 +160,7 @@ class SetupController extends Notifier<SetupState> {
     required String email,
     required String password,
     required String fullName,
-    required String businessId, // Bisnis yang memiliki Owner ini (WAJIB)
+    String? businessId, // Bisnis yang memiliki Owner ini (WAJIB untuk setup)
   }) async {
     state = state.copyWith(status: SetupStatus.checking, error: null);
     try {

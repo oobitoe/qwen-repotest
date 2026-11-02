@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../application/auth_controller.dart';
 import '../../../app/router/app_router.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/providers/core_providers.dart';
 
 /// Halaman registrasi akun baru via Supabase Auth.
 class RegisterPage extends ConsumerStatefulWidget {
@@ -36,12 +37,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _busy = true);
     try {
+      // Ambil bisnis pertama dari database lokal untuk dikaitkan ke user baru
+      final db = ref.read(databaseProvider);
+      final firstBusiness = await (db.select(db.businesses)..limit(1)).getSingleOrNull();
+      final businessId = firstBusiness?.id;
+
       await ref.read(authProvider.notifier).signUp(
         _email.text.trim(),
         _password.text.trim(),
         _fullName.text.trim(),
         role: UserRole.owner, // Role dikunci Owner sesuai dropdown
-        businessId: null, // Akan diisi oleh setup flow jika melalui first-run
+        businessId: businessId, // Bisnis terkait (jika ada)
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

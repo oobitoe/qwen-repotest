@@ -13,10 +13,10 @@ class CategoryRepository {
   final AppDatabase _db;
   final SyncableDao _dao;
 
-  /// Stream semua kategori aktif.
-  Stream<List<CategoryEntity>> watchCategories() {
+  /// Stream semua kategori aktif, difilter per businessId dan storeId.
+  Stream<List<CategoryEntity>> watchCategories(String businessId, String storeId) {
     final q = _db.select(_db.categories)
-      ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.isActive.equals(true) & t.deletedAt.isNull());
     return q.watch().map((rows) {
       return [
         for (final r in rows)
@@ -33,10 +33,10 @@ class CategoryRepository {
 
   /// Cari kategori berdasarkan nama (filter di sisi Dart karena Drift
   /// pada versi ini tidak menyediakan `like` pada GeneratedColumn).
-  Future<List<CategoryEntity>> searchCategories(String query) async {
+  Future<List<CategoryEntity>> searchCategories(String businessId, String storeId, String query) async {
     final q = query.toLowerCase();
     final rows = await (_db.select(_db.categories)
-          ..where((t) => t.deletedAt.isNull()))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.deletedAt.isNull()))
         .get();
     return rows
         .where((r) => r.name.toLowerCase().contains(q))
@@ -51,14 +51,22 @@ class CategoryRepository {
   }
 
   /// Simpan kategori dan enqueue ke outbox.
-  Future<void> saveCategory(CategoryEntity category) async {
+  Future<void> saveCategory({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String name,
+    required bool isActive,
+  }) async {
     await _dao.upsertAndEnqueue(
       'category',
       {
-        'name': category.name,
-        'is_active': category.isActive,
+        'name': name,
+        'is_active': isActive,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: category.id,
+      id: id,
     );
   }
 
@@ -78,5 +86,6 @@ final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
 /// Stream kategori aktif untuk UI.
 final categoriesProvider = StreamProvider<List<CategoryEntity>>((ref) {
   final repo = ref.watch(categoryRepositoryProvider);
-  return repo.watchCategories();
+  // TODO: Dapatkan businessId dan storeId dari userProfileProvider
+  return repo.watchCategories('', '');
 });

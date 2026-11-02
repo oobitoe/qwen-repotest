@@ -8,6 +8,8 @@ import '../../../shared/providers/core_providers.dart';
 class PurchaseEntity {
   const PurchaseEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.referenceNumber,
     required this.supplierId,
     required this.supplierName,
@@ -24,6 +26,8 @@ class PurchaseEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String referenceNumber;
   final String supplierId;
   final String supplierName;
@@ -50,6 +54,8 @@ class PurchaseEntity {
 class PurchaseItemEntity {
   const PurchaseItemEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.purchaseId,
     required this.productId,
     required this.productName,
@@ -62,6 +68,8 @@ class PurchaseItemEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String purchaseId;
   final String productId;
   final String productName;
@@ -89,9 +97,9 @@ class PurchaseRepository {
   // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
-  Stream<List<PurchaseEntity>> watchPurchases() => Stream.value([]);
+  Stream<List<PurchaseEntity>> watchPurchases({required String businessId, required String storeId}) => Stream.value([]);
 
-  Future<List<PurchaseEntity>> searchPurchases(String query) async => [];
+  Future<List<PurchaseEntity>> searchPurchases({required String businessId, required String storeId, required String query}) async => [];
 
   Future<void> savePurchase({
     required String referenceNumber,
@@ -105,6 +113,8 @@ class PurchaseRepository {
     required String paymentMethod,
     required bool isCredit,
     required String createdBy,
+    required String businessId,
+    required String storeId,
   }) async {
     final purchaseId = _uuid.v4();
     await _dao.enqueue(
@@ -124,6 +134,8 @@ class PurchaseRepository {
         'payment_method': paymentMethod,
         'is_credit': isCredit,
         'created_by': createdBy,
+        'business_id': businessId,
+        'store_id': storeId,
         'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
     );
@@ -133,6 +145,10 @@ class PurchaseRepository {
 /// Input item pembelian.
 class PurchaseItemInput {
   const PurchaseItemInput({
+    required this.id,
+    required this.businessId,
+    required this.storeId,
+    required this.purchaseId,
     required this.productId,
     required this.productName,
     required this.sku,
@@ -141,12 +157,17 @@ class PurchaseItemInput {
     required this.quantity,
   });
 
+  final String id;
+  final String businessId;
+  final String storeId;
+  final String purchaseId;
   final String productId;
   final String productName;
   final String sku;
   final double unitPrice;
   final double costPrice;
   final double quantity;
+  final double receivedQuantity;
 
   double get lineTotal => unitPrice * quantity;
 }
@@ -156,7 +177,7 @@ final purchaseRepositoryProvider = Provider<PurchaseRepository>((ref) {
   return PurchaseRepository(dao);
 });
 
-final purchasesProvider = StreamProvider<List<PurchaseEntity>>((ref) {
+final purchasesProvider = StreamProvider.family<List<PurchaseEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(purchaseRepositoryProvider);
-  return repo.watchPurchases();
+  return repo.watchPurchases(businessId: params.businessId, storeId: params.storeId);
 });

@@ -33,9 +33,10 @@ class ProductRepository {
   final AppDatabase _db;
   final SyncableDao _dao;
 
-  /// Stream semua produk aktif.
-  Stream<List<ProductEntity>> watchProducts({bool onlyActive = true}) {
-    final q = _db.select(_db.products);
+  /// Stream semua produk aktif, difilter per businessId dan storeId.
+  Stream<List<ProductEntity>> watchProducts({bool onlyActive = true, required String businessId, required String storeId}) {
+    final q = _db.select(_db.products)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
     }
@@ -44,6 +45,8 @@ class ProductRepository {
         for (final r in rows)
           ProductEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             sku: r.sku,
             barcode: r.barcode,
             name: r.name,

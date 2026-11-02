@@ -13,9 +13,9 @@ class SaleRepository {
   // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
-  Stream<List<SaleEntity>> watchSales() => Stream.value([]);
+  Stream<List<SaleEntity>> watchSales({required String businessId, required String storeId}) => Stream.value([]);
 
-  Future<List<SaleEntity>> searchSales(String query) async => [];
+  Future<List<SaleEntity>> searchSales({required String businessId, required String storeId, required String query}) async => [];
 
   Future<void> saveSale({
     required String invoiceNumber,
@@ -29,6 +29,8 @@ class SaleRepository {
     required bool isCredit,
     required String status,
     required String cashierId,
+    required String businessId,
+    required String storeId,
   }) async {
     final saleId = _uuid.v4();
     await _dao.enqueue(
@@ -48,6 +50,8 @@ class SaleRepository {
         'is_credit': isCredit,
         'status': status,
         'cashier_id': cashierId,
+        'business_id': businessId,
+        'store_id': storeId,
         'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
     );
@@ -58,6 +62,8 @@ class SaleRepository {
     required String saleId,
     required double total,
     required String cashierId,
+    required String businessId,
+    required String storeId,
   }) async {
     final returnId = _uuid.v4();
     await _dao.enqueue(
@@ -70,6 +76,8 @@ class SaleRepository {
         'sale_id': saleId,
         'total': total,
         'cashier_id': cashierId,
+        'business_id': businessId,
+        'store_id': storeId,
         'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
       },
     );
@@ -81,7 +89,7 @@ final saleRepositoryProvider = Provider<SaleRepository>((ref) {
   return SaleRepository(dao);
 });
 
-final salesProvider = StreamProvider<List<SaleEntity>>((ref) {
+final salesProvider = StreamProvider.family<List<SaleEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(saleRepositoryProvider);
-  return repo.watchSales();
+  return repo.watchSales(businessId: params.businessId, storeId: params.storeId);
 });

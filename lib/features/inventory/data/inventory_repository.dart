@@ -17,12 +17,15 @@ class InventoryRepository {
   // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
-  /// Stream riwayat pergerakan stok.
+  /// Stream riwayat pergerakan stok, difilter per businessId dan storeId.
   Stream<List<StockMovementEntity>> watchStockMovements({
     String? productId,
+    required String businessId,
+    required String storeId,
     int limit = 50,
   }) {
-    final movements = _db.select(_db.stockMovements);
+    final movements = _db.select(_db.stockMovements)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (productId != null) {
       movements.where((t) => t.productId.equals(productId));
     }
@@ -39,6 +42,8 @@ class InventoryRepository {
         for (final r in movementRows)
           StockMovementEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             productId: r.productId,
             productName: productMap[r.productId],
             type: r.type,
@@ -64,6 +69,8 @@ class InventoryRepository {
     required String referenceId,
     String? note,
     String? createdBy,
+    required String businessId,
+    required String storeId,
   }) async {
     await _db.transaction(() async {
       // Ambil stock saat ini
@@ -77,6 +84,8 @@ class InventoryRepository {
         StockMovementsCompanion.insert(
           id: _uuid.v4(),
           productId: productId,
+          businessId: Value(businessId),
+          storeId: Value(storeId),
           type: type,
           quantity: quantity,
           balanceAfter: newBalance,
@@ -92,6 +101,8 @@ class InventoryRepository {
         'product',
         {
           'stock': newBalance,
+          'business_id': businessId,
+          'store_id': storeId,
         },
         id: productId,
       );
@@ -110,6 +121,8 @@ class InventoryRepository {
           'reference_id': referenceId,
           'note': note,
           'created_by': createdBy,
+          'business_id': businessId,
+          'store_id': storeId,
         },
       );
     });
@@ -121,6 +134,8 @@ class InventoryRepository {
     required List<AdjustmentItem> items,
     String? note,
     String? createdBy,
+    required String businessId,
+    required String storeId,
   }) async {
     await _db.transaction(() async {
       final adjustmentId = _uuid.v4();
@@ -128,6 +143,8 @@ class InventoryRepository {
       await _db.into(_db.stockAdjustments).insert(
         StockAdjustmentsCompanion.insert(
           id: adjustmentId,
+          businessId: Value(businessId),
+          storeId: Value(storeId),
           referenceNumber: referenceNumber,
           note: Value(note),
           createdBy: Value(createdBy),
@@ -139,6 +156,8 @@ class InventoryRepository {
           StockAdjustmentItemsCompanion.insert(
             id: _uuid.v4(),
             adjustmentId: adjustmentId,
+            businessId: Value(businessId),
+            storeId: Value(storeId),
             productId: item.productId,
             quantityBefore: item.quantityBefore,
             quantityAfter: item.quantityAfter,
@@ -151,6 +170,8 @@ class InventoryRepository {
           'product',
           {
             'stock': item.quantityAfter,
+            'business_id': businessId,
+            'store_id': storeId,
           },
           id: item.productId,
         );
@@ -160,6 +181,8 @@ class InventoryRepository {
           StockMovementsCompanion.insert(
             id: _uuid.v4(),
             productId: item.productId,
+            businessId: Value(businessId),
+            storeId: Value(storeId),
             type: 'adjustment',
             quantity: item.quantityAfter - item.quantityBefore,
             balanceAfter: item.quantityAfter,
@@ -181,6 +204,8 @@ class InventoryRepository {
           'reference_number': referenceNumber,
           'note': note,
           'created_by': createdBy,
+          'business_id': businessId,
+          'store_id': storeId,
         },
       );
     });
@@ -191,6 +216,8 @@ class InventoryRepository {
     required String referenceNumber,
     required List<OpnameItem> items,
     String? createdBy,
+    required String businessId,
+    required String storeId,
   }) async {
     await _db.transaction(() async {
       final opnameId = _uuid.v4();
@@ -198,6 +225,8 @@ class InventoryRepository {
       await _db.into(_db.stockOpnames).insert(
         StockOpnamesCompanion.insert(
           id: opnameId,
+          businessId: Value(businessId),
+          storeId: Value(storeId),
           referenceNumber: referenceNumber,
           status: const Value('draft'),
           createdBy: Value(createdBy),
@@ -209,6 +238,8 @@ class InventoryRepository {
           StockOpnameItemsCompanion.insert(
             id: _uuid.v4(),
             opnameId: opnameId,
+            businessId: Value(businessId),
+            storeId: Value(storeId),
             productId: item.productId,
             systemStock: item.systemStock,
             countedStock: item.countedStock,
@@ -225,6 +256,8 @@ class InventoryRepository {
           'reference_number': referenceNumber,
           'status': 'draft',
           'created_by': createdBy,
+          'business_id': businessId,
+          'store_id': storeId,
         },
       );
     });
@@ -265,7 +298,7 @@ final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
   return InventoryRepository(db, dao);
 });
 
-final stockMovementsProvider = StreamProvider<List<StockMovementEntity>>((ref) {
+final stockMovementsProvider = StreamProvider.family<List<StockMovementEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(inventoryRepositoryProvider);
-  return repo.watchStockMovements();
+  return repo.watchStockMovements(businessId: params.businessId, storeId: params.storeId);
 });

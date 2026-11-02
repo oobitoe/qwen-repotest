@@ -13,14 +13,16 @@ class SupplierRepository {
   final AppDatabase _db;
   final SyncableDao _dao;
 
-  Stream<List<SupplierEntity>> watchSuppliers() {
+  Stream<List<SupplierEntity>> watchSuppliers({required String businessId, required String storeId}) {
     final q = _db.select(_db.suppliers)
-      ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.isActive.equals(true) & t.deletedAt.isNull());
     return q.watch().map((rows) {
       return [
         for (final r in rows)
           SupplierEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             name: r.name,
             phone: r.phone,
             email: r.email,
@@ -34,10 +36,10 @@ class SupplierRepository {
     });
   }
 
-  Future<List<SupplierEntity>> searchSuppliers(String query) async {
+  Future<List<SupplierEntity>> searchSuppliers({required String businessId, required String storeId, required String query}) async {
     final q = query.toLowerCase();
     final rows = await (_db.select(_db.suppliers)
-          ..where((t) => t.deletedAt.isNull()))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.deletedAt.isNull()))
         .get();
     return rows
         .where((r) =>
@@ -45,6 +47,8 @@ class SupplierRepository {
             (r.phone ?? '').toLowerCase().contains(q))
         .map((r) => SupplierEntity(
               id: r.id,
+              businessId: r.businessId,
+              storeId: r.storeId,
               name: r.name,
               phone: r.phone,
               email: r.email,
@@ -57,18 +61,30 @@ class SupplierRepository {
         .toList();
   }
 
-  Future<void> saveSupplier(SupplierEntity supplier) async {
+  Future<void> saveSupplier({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String name,
+    required String? phone,
+    required String? email,
+    required String? address,
+    required String? notes,
+    required bool isActive,
+  }) async {
     await _dao.upsertAndEnqueue(
       'supplier',
       {
-        'name': supplier.name,
-        'phone': supplier.phone,
-        'email': supplier.email,
-        'address': supplier.address,
-        'notes': supplier.notes,
-        'is_active': supplier.isActive,
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'address': address,
+        'notes': notes,
+        'is_active': isActive,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: supplier.id,
+      id: id,
     );
   }
 
@@ -83,7 +99,7 @@ final supplierRepositoryProvider = Provider<SupplierRepository>((ref) {
   return SupplierRepository(db, dao);
 });
 
-final suppliersProvider = StreamProvider<List<SupplierEntity>>((ref) {
+final suppliersProvider = StreamProvider.family<List<SupplierEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(supplierRepositoryProvider);
-  return repo.watchSuppliers();
+  return repo.watchSuppliers(businessId: params.businessId, storeId: params.storeId);
 });

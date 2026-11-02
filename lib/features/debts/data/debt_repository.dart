@@ -16,9 +16,14 @@ class DebtRepository {
   // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
-  /// Stream semua hutang/piutang aktif.
-  Stream<List<DebtEntity>> watchDebts({bool onlyActive = true}) {
-    final q = _db.select(_db.debts);
+  /// Stream semua hutang/piutang aktif, difilter per businessId dan storeId.
+  Stream<List<DebtEntity>> watchDebts({
+    bool onlyActive = true,
+    required String businessId,
+    required String storeId,
+  }) {
+    final q = _db.select(_db.debts)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.status.equals('open') | t.status.equals('partially_paid'));
     }
@@ -28,6 +33,8 @@ class DebtRepository {
         for (final r in rows)
           DebtEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             supplierId: r.supplierId,
             customerId: r.customerId,
             type: r.type,
@@ -42,10 +49,14 @@ class DebtRepository {
     });
   }
 
-  /// Stream hutang/piutang by tipe (payable/receivable).
-  Stream<List<DebtEntity>> watchDebtsByType(String type) {
+  /// Stream hutang/piutang by tipe (payable/receivable), difilter per businessId dan storeId.
+  Stream<List<DebtEntity>> watchDebtsByType({
+    required String type,
+    required String businessId,
+    required String storeId,
+  }) {
     return (_db.select(_db.debts)
-          ..where((t) => t.type.equals(type))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.type.equals(type))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch()
         .map((rows) {
@@ -53,6 +64,8 @@ class DebtRepository {
         for (final r in rows)
           DebtEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             supplierId: r.supplierId,
             customerId: r.customerId,
             type: r.type,
@@ -68,9 +81,13 @@ class DebtRepository {
   }
 
   /// Stream pembayaran untuk hutang tertentu.
-  Stream<List<DebtPaymentEntity>> watchDebtPayments(String debtId) {
+  Stream<List<DebtPaymentEntity>> watchDebtPayments({
+    required String debtId,
+    required String businessId,
+    required String storeId,
+  }) {
     return (_db.select(_db.debtPayments)
-          ..where((t) => t.debtId.equals(debtId))
+          ..where((t) => t.debtId.equals(debtId) & t.businessId.equals(businessId) & t.storeId.equals(storeId))
           ..orderBy([(t) => OrderingTerm.desc(t.paidAt)]))
         .watch()
         .map((rows) {
@@ -88,19 +105,32 @@ class DebtRepository {
   }
 
   /// Simpan hutang/piutang (create atau update) dan enqueue ke outbox.
-  Future<void> saveDebt(DebtEntity debt) async {
+  Future<void> saveDebt({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String? supplierId,
+    required String? customerId,
+    required String type,
+    required double amount,
+    required double paidAmount,
+    required String status,
+    required DateTime? dueDate,
+  }) async {
     await _dao.upsertAndEnqueue(
       'debt',
       {
-        'supplier_id': debt.supplierId,
-        'customer_id': debt.customerId,
-        'type': debt.type,
-        'amount': debt.amount,
-        'paid_amount': debt.paidAmount,
-        'status': debt.status,
-        'due_date': debt.dueDate?.millisecondsSinceEpoch,
+        'supplier_id': supplierId,
+        'customer_id': customerId,
+        'type': type,
+        'amount': amount,
+        'paid_amount': paidAmount,
+        'status': status,
+        'due_date': dueDate?.millisecondsSinceEpoch,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: debt.id,
+      id: id,
     );
   }
 
@@ -114,9 +144,11 @@ class DebtRepository {
     required String debtId,
     required double amount,
     String? createdBy,
+    required String businessId,
+    required String storeId,
   }) async {
     final paymentId = _uuid.v4();
-    
+
     // Get current debt
     final debt = await (_db.select(_db.debts)
           ..where((t) => t.id.equals(debtId)))
@@ -142,6 +174,8 @@ class DebtRepository {
             DebtPaymentsCompanion.insert(
               id: paymentId,
               debtId: debtId,
+              businessId: Value(businessId),
+              storeId: Value(storeId),
               amount: amount,
               paidAt: Value(DateTime.now().toUtc()),
               createdBy: Value(createdBy),
@@ -166,6 +200,8 @@ class DebtRepository {
         'amount': amount,
         'paid_at': DateTime.now().toUtc().millisecondsSinceEpoch,
         'created_by': createdBy,
+        'business_id': businessId,
+        'store_id': storeId,
       },
       id: paymentId,
     );
@@ -175,15 +211,19 @@ class DebtRepository {
       {
         'paid_amount': newPaidAmount,
         'status': newStatus,
+        'business_id': businessId,
+        'store_id': storeId,
       },
       id: debtId,
     );
   }
 
   /// Total hutang (payable) yang belum lunas.
-  Future<double> totalPayable() async {
+  Future<double> totalPayable({required String businessId, required String storeId}) async {
     final rows = await (_db.select(_db.debts)
           ..where((t) =>
+              t.businessId.equals(businessId) &
+              t.storeId.equals(storeId) &
               t.type.equals('payable') &
               (t.status.equals('open') | t.status.equals('partially_paid'))))
         .get();
@@ -191,9 +231,11 @@ class DebtRepository {
   }
 
   /// Total piutang (receivable) yang belum lunas.
-  Future<double> totalReceivable() async {
+  Future<double> totalReceivable({required String businessId, required String storeId}) async {
     final rows = await (_db.select(_db.debts)
           ..where((t) =>
+              t.businessId.equals(businessId) &
+              t.storeId.equals(storeId) &
               t.type.equals('receivable') &
               (t.status.equals('open') | t.status.equals('partially_paid'))))
         .get();
@@ -201,12 +243,14 @@ class DebtRepository {
   }
 
   /// Hutang/piutang yang jatuh tempo (due date <= today dan belum lunas).
-  Future<List<DebtEntity>> overdueDebts() async {
+  Future<List<DebtEntity>> overdueDebts({required String businessId, required String storeId}) async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
-    
+
     final rows = await (_db.select(_db.debts)
           ..where((t) =>
+              t.businessId.equals(businessId) &
+              t.storeId.equals(storeId) &
               t.dueDate.isSmallerOrEqualValue(startOfDay) &
               (t.status.equals('open') | t.status.equals('partially_paid'))))
         .get();
@@ -214,6 +258,8 @@ class DebtRepository {
       for (final r in rows)
         DebtEntity(
           id: r.id,
+          businessId: r.businessId,
+          storeId: r.storeId,
           supplierId: r.supplierId,
           customerId: r.customerId,
           type: r.type,
@@ -236,19 +282,19 @@ final debtRepositoryProvider = Provider<DebtRepository>((ref) {
 });
 
 /// Stream hutang/piutang aktif untuk UI.
-final debtsProvider = StreamProvider<List<DebtEntity>>((ref) {
+final debtsProvider = StreamProvider.family<List<DebtEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(debtRepositoryProvider);
-  return repo.watchDebts();
+  return repo.watchDebts(businessId: params.businessId, storeId: params.storeId);
 });
 
 /// Stream hutang (payable) untuk UI.
-final payablesProvider = StreamProvider<List<DebtEntity>>((ref) {
+final payablesProvider = StreamProvider.family<List<DebtEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(debtRepositoryProvider);
-  return repo.watchDebtsByType('payable');
+  return repo.watchDebtsByType(type: 'payable', businessId: params.businessId, storeId: params.storeId);
 });
 
 /// Stream piutang (receivable) untuk UI.
-final receivablesProvider = StreamProvider<List<DebtEntity>>((ref) {
+final receivablesProvider = StreamProvider.family<List<DebtEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(debtRepositoryProvider);
-  return repo.watchDebtsByType('receivable');
+  return repo.watchDebtsByType(type: 'receivable', businessId: params.businessId, storeId: params.storeId);
 });

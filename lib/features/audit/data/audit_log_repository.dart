@@ -155,6 +155,8 @@ class AuditLogRepository {
     String? newValue,
     String? ipAddress,
     String? deviceInfo,
+    required String businessId,
+    required String storeId,
   }) async {
     final entry = AuditLogEntity(
       id: const Uuid().v4(),
@@ -171,7 +173,24 @@ class AuditLogRepository {
       createdAt: DateTime.now().toUtc(),
     );
 
-    await _db.into(_db.auditLogs).insert(entry.toCompanion());
+    await _db.into(_db.auditLogs).insert(
+      AuditLogsCompanion.insert(
+        id: entry.id,
+        businessId: Value(businessId),
+        storeId: Value(storeId),
+        userId: Value(entry.userId),
+        userName: Value(entry.userName),
+        action: Value(entry.action.name),
+        entityType: Value(entry.entityType),
+        entityId: Value(entry.entityId),
+        description: Value(entry.description),
+        oldValue: Value(entry.oldValue),
+        newValue: Value(entry.newValue),
+        ipAddress: Value(entry.ipAddress),
+        deviceInfo: Value(entry.deviceInfo),
+        createdAt: Value(entry.createdAt.toUtc()),
+      ),
+    );
   }
 
   /// Catat aktivitas dengan deteksi perubahan otomatis.
@@ -185,6 +204,8 @@ class AuditLogRepository {
     required dynamic newValue,
     String? ipAddress,
     String? deviceInfo,
+    required String businessId,
+    required String storeId,
   }) async {
     if (oldValue == newValue) return;
 
@@ -194,11 +215,13 @@ class AuditLogRepository {
       action: AuditAction.update,
       entityType: entityType,
       entityId: entityId,
-      description: 'Mengubah $fieldName dari "$oldValue" menjadi "$newValue"',
+      description: 'Mengubah $fieldName dari \"$oldValue\" menjadi \"$newValue\"',
       oldValue: oldValue.toString(),
       newValue: newValue.toString(),
       ipAddress: ipAddress,
       deviceInfo: deviceInfo,
+      businessId: businessId,
+      storeId: storeId,
     );
   }
 
@@ -211,6 +234,8 @@ class AuditLogRepository {
     required String description,
     String? ipAddress,
     String? deviceInfo,
+    required String businessId,
+    required String storeId,
   }) async {
     await log(
       userId: userId,
@@ -221,6 +246,8 @@ class AuditLogRepository {
       description: description,
       ipAddress: ipAddress,
       deviceInfo: deviceInfo,
+      businessId: businessId,
+      storeId: storeId,
     );
   }
 
@@ -233,6 +260,8 @@ class AuditLogRepository {
     required String description,
     String? ipAddress,
     String? deviceInfo,
+    required String businessId,
+    required String storeId,
   }) async {
     await log(
       userId: userId,
@@ -243,6 +272,8 @@ class AuditLogRepository {
       description: description,
       ipAddress: ipAddress,
       deviceInfo: deviceInfo,
+      businessId: businessId,
+      storeId: storeId,
     );
   }
 
@@ -256,8 +287,11 @@ class AuditLogRepository {
     String? query,
     int limit = 100,
     int offset = 0,
+    required String businessId,
+    required String storeId,
   }) async {
-    var q = _db.select(_db.auditLogs);
+    var q = _db.select(_db.auditLogs)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
 
     if (userId != null) {
       q.where((t) => t.userId.equals(userId));
@@ -303,8 +337,11 @@ class AuditLogRepository {
   Future<Map<String, int>> getStats({
     DateTime? startDate,
     DateTime? endDate,
+    required String businessId,
+    required String storeId,
   }) async {
-    var query = _db.select(_db.auditLogs);
+    var query = _db.select(_db.auditLogs)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
 
     if (startDate != null) {
       query.where((t) => t.createdAt.isBiggerOrEqualValue(startDate.toUtc()));

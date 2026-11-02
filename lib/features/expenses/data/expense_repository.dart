@@ -13,11 +13,14 @@ class ExpenseRepository {
   final AppDatabase _db;
   final SyncableDao _dao;
 
-  /// Stream semua kategori pengeluaran aktif.
+  /// Stream semua kategori pengeluaran aktif, difilter per businessId dan storeId.
   Stream<List<ExpenseCategoryEntity>> watchExpenseCategories({
     bool onlyActive = true,
+    required String businessId,
+    required String storeId,
   }) {
-    final q = _db.select(_db.expenseCategories);
+    final q = _db.select(_db.expenseCategories)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
     }
@@ -26,6 +29,8 @@ class ExpenseRepository {
         for (final r in rows)
           ExpenseCategoryEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             name: r.name,
             isActive: r.isActive,
             createdAt: r.createdAt,
@@ -36,9 +41,14 @@ class ExpenseRepository {
     });
   }
 
-  /// Stream semua pengeluaran aktif.
-  Stream<List<ExpenseEntity>> watchExpenses({bool onlyActive = true}) {
-    final q = _db.select(_db.expenses);
+  /// Stream semua pengeluaran aktif, difilter per businessId dan storeId.
+  Stream<List<ExpenseEntity>> watchExpenses({
+    bool onlyActive = true,
+    required String businessId,
+    required String storeId,
+  }) {
+    final q = _db.select(_db.expenses)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.deletedAt.isNull());
     }
@@ -48,6 +58,8 @@ class ExpenseRepository {
         for (final r in rows)
           ExpenseEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             categoryId: r.categoryId,
             description: r.description,
             amount: r.amount,
@@ -62,10 +74,14 @@ class ExpenseRepository {
   }
 
   /// Cari pengeluaran berdasarkan kata kunci.
-  Future<List<ExpenseEntity>> searchExpenses(String query) async {
+  Future<List<ExpenseEntity>> searchExpenses({
+    required String businessId,
+    required String storeId,
+    required String query,
+  }) async {
     final q = query.toLowerCase();
     final rows = await (_db.select(_db.expenses)
-          ..where((t) => t.deletedAt.isNull()))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.deletedAt.isNull()))
         .get();
     return rows
         .where((r) =>
@@ -73,6 +89,8 @@ class ExpenseRepository {
             (r.categoryId ?? '').toLowerCase().contains(q))
         .map((r) => ExpenseEntity(
               id: r.id,
+              businessId: r.businessId,
+              storeId: r.storeId,
               categoryId: r.categoryId,
               description: r.description,
               amount: r.amount,
@@ -86,14 +104,22 @@ class ExpenseRepository {
   }
 
   /// Simpan kategori pengeluaran (create atau update) dan enqueue ke outbox.
-  Future<void> saveExpenseCategory(ExpenseCategoryEntity category) async {
+  Future<void> saveExpenseCategory({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String name,
+    required bool isActive,
+  }) async {
     await _dao.upsertAndEnqueue(
       'expense_category',
       {
-        'name': category.name,
-        'is_active': category.isActive,
+        'name': name,
+        'is_active': isActive,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: category.id,
+      id: id,
     );
   }
 
@@ -103,17 +129,28 @@ class ExpenseRepository {
   }
 
   /// Simpan pengeluaran (create atau update) dan enqueue ke outbox.
-  Future<void> saveExpense(ExpenseEntity expense) async {
+  Future<void> saveExpense({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String? categoryId,
+    required String description,
+    required double amount,
+    required String paymentMethod,
+    required String? createdBy,
+  }) async {
     await _dao.upsertAndEnqueue(
       'expense',
       {
-        'category_id': expense.categoryId,
-        'description': expense.description,
-        'amount': expense.amount,
-        'payment_method': expense.paymentMethod,
-        'created_by': expense.createdBy,
+        'category_id': categoryId,
+        'description': description,
+        'amount': amount,
+        'payment_method': paymentMethod,
+        'created_by': createdBy,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: expense.id,
+      id: id,
     );
   }
 
@@ -123,13 +160,15 @@ class ExpenseRepository {
   }
 
   /// Total pengeluaran hari ini.
-  Future<double> todayExpensesTotal() async {
+  Future<double> todayExpensesTotal({required String businessId, required String storeId}) async {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     final rows = await (_db.select(_db.expenses)
           ..where((t) =>
+              t.businessId.equals(businessId) &
+              t.storeId.equals(storeId) &
               t.deletedAt.isNull() &
               t.createdAt.isBiggerOrEqualValue(startOfDay) &
               t.createdAt.isSmallerThanValue(endOfDay)))
@@ -138,13 +177,15 @@ class ExpenseRepository {
   }
 
   /// Total pengeluaran bulan ini.
-  Future<double> monthlyExpensesTotal() async {
+  Future<double> monthlyExpensesTotal({required String businessId, required String storeId}) async {
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
     final endOfMonth = DateTime(now.year, now.month + 1, 1);
 
     final rows = await (_db.select(_db.expenses)
           ..where((t) =>
+              t.businessId.equals(businessId) &
+              t.storeId.equals(storeId) &
               t.deletedAt.isNull() &
               t.createdAt.isBiggerOrEqualValue(startOfMonth) &
               t.createdAt.isSmallerThanValue(endOfMonth)))
@@ -153,9 +194,9 @@ class ExpenseRepository {
   }
 
   /// Total pengeluaran per kategori.
-  Future<Map<String, double>> expensesByCategory() async {
+  Future<Map<String, double>> expensesByCategory({required String businessId, required String storeId}) async {
     final rows = await (_db.select(_db.expenses)
-          ..where((t) => t.deletedAt.isNull()))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.deletedAt.isNull()))
         .get();
 
     final Map<String, double> result = {};
@@ -176,13 +217,13 @@ final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
 
 /// Stream kategori pengeluaran aktif untuk UI.
 final expenseCategoriesProvider =
-    StreamProvider<List<ExpenseCategoryEntity>>((ref) {
+    StreamProvider.family<List<ExpenseCategoryEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(expenseRepositoryProvider);
-  return repo.watchExpenseCategories();
+  return repo.watchExpenseCategories(businessId: params.businessId, storeId: params.storeId);
 });
 
 /// Stream pengeluaran aktif untuk UI.
-final expensesProvider = StreamProvider<List<ExpenseEntity>>((ref) {
+final expensesProvider = StreamProvider.family<List<ExpenseEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(expenseRepositoryProvider);
-  return repo.watchExpenses();
+  return repo.watchExpenses(businessId: params.businessId, storeId: params.storeId);
 });

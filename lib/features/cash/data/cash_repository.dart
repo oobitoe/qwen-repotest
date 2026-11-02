@@ -16,9 +16,10 @@ class CashRepository {
   // ignore: prefer_const_constructors
   final Uuid _uuid = Uuid();
 
-  /// Stream semua register kasir aktif.
-  Stream<List<CashRegisterEntity>> watchRegisters({bool onlyActive = true}) {
-    final q = _db.select(_db.cashRegisters);
+  /// Stream semua register kasir aktif, difilter per businessId dan storeId.
+  Stream<List<CashRegisterEntity>> watchRegisters({bool onlyActive = true, required String businessId, required String storeId}) {
+    final q = _db.select(_db.cashRegisters)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
     }
@@ -27,6 +28,8 @@ class CashRepository {
         for (final r in rows)
           CashRegisterEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             name: r.name,
             openingBalance: r.openingBalance,
             isActive: r.isActive,
@@ -35,9 +38,10 @@ class CashRepository {
     });
   }
 
-  /// Stream semua sesi kasir.
-  Stream<List<CashSessionEntity>> watchSessions({bool onlyActive = true}) {
-    final q = _db.select(_db.cashSessions);
+  /// Stream semua sesi kasir, difilter per businessId dan storeId.
+  Stream<List<CashSessionEntity>> watchSessions({bool onlyActive = true, required String businessId, required String storeId}) {
+    final q = _db.select(_db.cashSessions)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.status.equals('open'));
     }
@@ -61,11 +65,14 @@ class CashRepository {
     });
   }
 
-  /// Stream mutasi rekening untuk akun tertentu.
-  Stream<List<AccountTransactionEntity>> watchAccountTransactions(
-      String accountId) {
+  /// Stream mutasi rekening untuk akun tertentu, difilter per businessId dan storeId.
+  Stream<List<AccountTransactionEntity>> watchAccountTransactions({
+    required String accountId,
+    required String businessId,
+    required String storeId,
+  }) {
     return (_db.select(_db.accountTransactions)
-          ..where((t) => t.accountId.equals(accountId))
+          ..where((t) => t.accountId.equals(accountId) & t.businessId.equals(businessId) & t.storeId.equals(storeId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch()
         .map((rows) {
@@ -85,9 +92,10 @@ class CashRepository {
     });
   }
 
-  /// Stream semua rekening aktif.
-  Stream<List<AccountEntity>> watchAccounts({bool onlyActive = true}) {
-    final q = _db.select(_db.accounts);
+  /// Stream semua rekening aktif, difilter per businessId dan storeId.
+  Stream<List<AccountEntity>> watchAccounts({bool onlyActive = true, required String businessId, required String storeId}) {
+    final q = _db.select(_db.accounts)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     if (onlyActive) {
       q.where((t) => t.isActive.equals(true));
     }
@@ -96,6 +104,8 @@ class CashRepository {
         for (final r in rows)
           AccountEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             name: r.name,
             type: r.type,
             balance: r.balance,
@@ -108,15 +118,24 @@ class CashRepository {
   }
 
   /// Simpan register kasir (create atau update) dan enqueue ke outbox.
-  Future<void> saveCashRegister(CashRegisterEntity register) async {
+  Future<void> saveCashRegister({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String name,
+    required double openingBalance,
+    required bool isActive,
+  }) async {
     await _dao.upsertAndEnqueue(
       'cash_register',
       {
-        'name': register.name,
-        'opening_balance': register.openingBalance,
-        'is_active': register.isActive,
+        'name': name,
+        'opening_balance': openingBalance,
+        'is_active': isActive,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: register.id,
+      id: id,
     );
   }
 
@@ -130,6 +149,8 @@ class CashRepository {
     required String registerId,
     required double openingBalance,
     required String openedBy,
+    required String businessId,
+    required String storeId,
   }) async {
     final sessionId = _uuid.v4();
     await _dao.upsertAndEnqueue(
@@ -140,6 +161,8 @@ class CashRepository {
         'opened_at': DateTime.now().toUtc().millisecondsSinceEpoch,
         'opening_balance': openingBalance,
         'status': 'open',
+        'business_id': businessId,
+        'store_id': storeId,
       },
       id: sessionId,
     );
@@ -166,16 +189,26 @@ class CashRepository {
   }
 
   /// Simpan rekening (create atau update) dan enqueue ke outbox.
-  Future<void> saveAccount(AccountEntity account) async {
+  Future<void> saveAccount({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String name,
+    required String type,
+    required double balance,
+    required bool isActive,
+  }) async {
     await _dao.upsertAndEnqueue(
       'account',
       {
-        'name': account.name,
-        'type': account.type,
-        'balance': account.balance,
-        'is_active': account.isActive,
+        'name': name,
+        'type': type,
+        'balance': balance,
+        'is_active': isActive,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: account.id,
+      id: id,
     );
   }
 
@@ -192,6 +225,8 @@ class CashRepository {
     String? referenceType,
     String? referenceId,
     String? createdBy,
+    required String businessId,
+    required String storeId,
   }) async {
     final transactionId = _uuid.v4();
     await _db.transaction(() async {
@@ -200,6 +235,8 @@ class CashRepository {
             AccountTransactionsCompanion.insert(
               id: transactionId,
               accountId: accountId,
+              businessId: Value(businessId),
+              storeId: Value(storeId),
               type: type,
               amount: amount,
               referenceType: Value(referenceType),
@@ -235,26 +272,31 @@ class CashRepository {
         'reference_id': referenceId,
         'created_by': createdBy,
         'created_at': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'business_id': businessId,
+        'store_id': storeId,
       },
       id: transactionId,
     );
   }
 
   /// Total saldo kas (semua register + sesi terbuka).
-  Future<double> totalCashBalance() async {
-    final registers = await _db.select(_db.cashRegisters).get();
+  Future<double> totalCashBalance({required String businessId, required String storeId}) async {
+    final registers = await _db.select(_db.cashRegisters)
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
+    final registersList = await registers.get();
     final sessions = await (_db.select(_db.cashSessions)
-          ..where((t) => t.status.equals('open')))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.status.equals('open')))
         .get();
 
-    double total = registers.fold(0.0, (sum, r) => sum + r.openingBalance);
+    double total = registersList.fold(0.0, (sum, r) => sum + r.openingBalance);
     total += sessions.fold(0.0, (sum, s) => sum + (s.actualBalance ?? 0));
     return total;
   }
 
   /// Total saldo per tipe rekening.
-  Future<Map<String, double>> balanceByAccountType() async {
-    final accounts = await _db.select(_db.accounts).get();
+  Future<Map<String, double>> balanceByAccountType({required String businessId, required String storeId}) async {
+    final accounts = await _db.select(_db.accounts)
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId)).get();
     final Map<String, double> result = {};
     for (final a in accounts) {
       if (!a.isActive) continue;
@@ -272,19 +314,19 @@ final cashRepositoryProvider = Provider<CashRepository>((ref) {
 });
 
 /// Stream register kasir aktif untuk UI.
-final cashRegistersProvider = StreamProvider<List<CashRegisterEntity>>((ref) {
+final cashRegistersProvider = StreamProvider.family<List<CashRegisterEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(cashRepositoryProvider);
-  return repo.watchRegisters();
+  return repo.watchRegisters(businessId: params.businessId, storeId: params.storeId);
 });
 
 /// Stream sesi kasir untuk UI.
-final cashSessionsProvider = StreamProvider<List<CashSessionEntity>>((ref) {
+final cashSessionsProvider = StreamProvider.family<List<CashSessionEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(cashRepositoryProvider);
-  return repo.watchSessions();
+  return repo.watchSessions(businessId: params.businessId, storeId: params.storeId);
 });
 
 /// Stream rekening untuk UI.
-final accountsProvider = StreamProvider<List<AccountEntity>>((ref) {
+final accountsProvider = StreamProvider.family<List<AccountEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(cashRepositoryProvider);
-  return repo.watchAccounts();
+  return repo.watchAccounts(businessId: params.businessId, storeId: params.storeId);
 });

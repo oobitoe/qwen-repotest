@@ -13,14 +13,16 @@ class CustomerRepository {
   final AppDatabase _db;
   final SyncableDao _dao;
 
-  Stream<List<CustomerEntity>> watchCustomers() {
+  Stream<List<CustomerEntity>> watchCustomers({required String businessId, required String storeId}) {
     final q = _db.select(_db.customers)
-      ..where((t) => t.isActive.equals(true) & t.deletedAt.isNull());
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.isActive.equals(true) & t.deletedAt.isNull());
     return q.watch().map((rows) {
       return [
         for (final r in rows)
           CustomerEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             code: r.code,
             name: r.name,
             phone: r.phone,
@@ -37,10 +39,10 @@ class CustomerRepository {
     });
   }
 
-  Future<List<CustomerEntity>> searchCustomers(String query) async {
+  Future<List<CustomerEntity>> searchCustomers({required String businessId, required String storeId, required String query}) async {
     final q = query.toLowerCase();
     final rows = await (_db.select(_db.customers)
-          ..where((t) => t.deletedAt.isNull()))
+          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.deletedAt.isNull()))
         .get();
     return rows
         .where((r) =>
@@ -49,6 +51,8 @@ class CustomerRepository {
             (r.code ?? '').toLowerCase().contains(q))
         .map((r) => CustomerEntity(
               id: r.id,
+              businessId: r.businessId,
+              storeId: r.storeId,
               code: r.code,
               name: r.name,
               phone: r.phone,
@@ -64,21 +68,36 @@ class CustomerRepository {
         .toList();
   }
 
-  Future<void> saveCustomer(CustomerEntity customer) async {
+  Future<void> saveCustomer({
+    required String id,
+    required String businessId,
+    required String storeId,
+    required String? code,
+    required String name,
+    required String? phone,
+    required String? email,
+    required String? address,
+    required String? notes,
+    required String tier,
+    required int rewardPoints,
+    required bool isActive,
+  }) async {
     await _dao.upsertAndEnqueue(
       'customer',
       {
-        'code': customer.code,
-        'name': customer.name,
-        'phone': customer.phone,
-        'email': customer.email,
-        'address': customer.address,
-        'notes': customer.notes,
-        'tier': customer.tier,
-        'reward_points': customer.rewardPoints,
-        'is_active': customer.isActive,
+        'code': code,
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'address': address,
+        'notes': notes,
+        'tier': tier,
+        'reward_points': rewardPoints,
+        'is_active': isActive,
+        'business_id': businessId,
+        'store_id': storeId,
       },
-      id: customer.id,
+      id: id,
     );
   }
 
@@ -93,7 +112,7 @@ final customerRepositoryProvider = Provider<CustomerRepository>((ref) {
   return CustomerRepository(db, dao);
 });
 
-final customersProvider = StreamProvider<List<CustomerEntity>>((ref) {
+final customersProvider = StreamProvider.family<List<CustomerEntity>, ({String businessId, String storeId})>((ref, params) {
   final repo = ref.watch(customerRepositoryProvider);
-  return repo.watchCustomers();
+  return repo.watchCustomers(businessId: params.businessId, storeId: params.storeId);
 });

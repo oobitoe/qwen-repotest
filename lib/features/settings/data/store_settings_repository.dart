@@ -93,7 +93,7 @@ class StoreSettingsRepository {
 
     // Ambil tax settings aktif
     final taxRows = await (_db.select(_db.taxSettings)
-          ..where((t) => t.isActive.equals(true)))
+          ..where((t) => t.businessId.equals(business.id) & t.isActive.equals(true)))
         .get();
     final taxRate = taxRows.isNotEmpty ? taxRows.first.rate : 0.0;
     final taxName = taxRows.isNotEmpty ? taxRows.first.name : 'PPN';

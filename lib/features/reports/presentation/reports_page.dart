@@ -70,9 +70,12 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
   }
 
   ReportFilter _buildFilter() {
+    final profile = ref.read(userProfileProvider);
     return ReportFilter(
       startDate: _startDate,
       endDate: _endDate,
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
     );
   }
 

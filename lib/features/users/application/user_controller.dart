@@ -56,7 +56,7 @@ class UserController extends Notifier<UserState> {
     try {
       final businessId = await _currentBusinessId();
       final repo = UserRepository(db, SyncableDao(db));
-      final users = await repo.getUsersByBusiness(businessId);
+      final users = await repo.getUsersByBusiness(businessId, 'local');
       state = state.copyWith(users: users, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Gagal memuat daftar pengguna: $e');
@@ -78,6 +78,7 @@ class UserController extends Notifier<UserState> {
       await repo.createUser(
         id: id,
         businessId: businessId,
+        storeId: 'local',
         email: email,
         fullName: fullName,
         role: role,
@@ -106,6 +107,7 @@ class UserController extends Notifier<UserState> {
       await repo.updateUser(
         id: id,
         businessId: businessId,
+        storeId: 'local',
         email: email,
         fullName: fullName,
         role: role,

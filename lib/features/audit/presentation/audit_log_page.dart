@@ -368,6 +368,7 @@ class _AuditLogList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(userProfileProvider);
     final logsAsync = ref.watch(_auditLogsProvider(
       _AuditLogsParams(
         query: query,
@@ -375,6 +376,8 @@ class _AuditLogList extends ConsumerWidget {
         endDate: endDate,
         action: action,
         entityType: entityType,
+        businessId: profile.value?.businessId ?? 'local',
+        storeId: profile.value?.storeId ?? 'local',
       ),
     ));
 
@@ -410,6 +413,8 @@ class _AuditLogsParams {
     required this.endDate,
     required this.action,
     required this.entityType,
+    required this.businessId,
+    required this.storeId,
   });
 
   final String query;
@@ -417,6 +422,8 @@ class _AuditLogsParams {
   final DateTime? endDate;
   final AuditAction? action;
   final String? entityType;
+  final String businessId;
+  final String storeId;
 
   @override
   bool operator ==(Object other) =>
@@ -447,6 +454,8 @@ final _auditLogsProvider = FutureProvider.family<List<AuditLogEntity>, _AuditLog
       endDate: params.endDate,
       action: params.action,
       entityType: params.entityType,
+      businessId: params.businessId,
+      storeId: params.storeId,
     );
   },
 );

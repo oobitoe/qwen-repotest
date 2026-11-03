@@ -297,8 +297,9 @@ class CashRepository {
 
   /// Total saldo per tipe rekening.
   Future<Map<String, double>> balanceByAccountType({required String businessId, required String storeId}) async {
-    final accounts = await _db.select(_db.accounts)
-          ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId)).get();
+    final query = _db.select(_db.accounts)
+      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
+    final accounts = await query.get();
     final Map<String, double> result = {};
     for (final a in accounts) {
       if (!a.isActive) continue;

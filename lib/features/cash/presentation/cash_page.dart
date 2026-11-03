@@ -650,7 +650,11 @@ class _OpenSessionFormState extends ConsumerState<_OpenSessionForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final registers = ref.watch(cashRegistersProvider);
+    final profile = ref.watch(userProfileProvider);
+    final registers = ref.watch(cashRegistersProvider((
+      businessId: profile.value?.businessId ?? 'local',
+      storeId: profile.value?.storeId ?? 'local',
+    )));
 
     return Padding(
       padding: EdgeInsets.only(

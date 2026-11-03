@@ -90,7 +90,8 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       // Simpan businessId dan storeId untuk langkah pendaftaran Owner pertama
       _businessId = businessId;
       final storeRow = await (ref.read(setupControllerProvider.notifier).db.select(ref.read(setupControllerProvider.notifier).db.stores)
-            ..where((t) => t.businessId.equals(businessId) & t.deletedAt.isNull()))
+            ..where((t) => t.businessId.equals(businessId))
+            ..where((t) => t.deletedAt.isNull()))
           .getSingleOrNull();
       _storeId = storeRow?.id;
 

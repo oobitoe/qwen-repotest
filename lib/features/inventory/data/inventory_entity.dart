@@ -2,6 +2,8 @@
 class StockMovementEntity {
   const StockMovementEntity({
     required this.id,
+    required this.businessId,
+    required this.storeId,
     required this.productId,
     this.productName,
     required this.type,
@@ -15,6 +17,8 @@ class StockMovementEntity {
   });
 
   final String id;
+  final String businessId;
+  final String storeId;
   final String productId;
   final String? productName;
   final String type;

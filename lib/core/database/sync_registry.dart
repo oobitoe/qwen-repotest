@@ -626,7 +626,7 @@ void registerAllSyncMetas([AppDatabase? db]) {
 
   SyncableDao.register(_meta('device', db_.devices, (j) => DevicesCompanion(
         id: Value(s(j['id'])),
-        businessId: Value(sn(j['business_id'])),
+        businessId: Value(sn(j['business_id']) ?? 'local'),
         deviceId: Value(s(j['device_id'])),
         name: Value(sn(j['name'])),
         lastSeenAt: Value(dt(j['last_seen_at'])),
@@ -699,7 +699,7 @@ void registerAllSyncMetas([AppDatabase? db]) {
   SyncableDao.register(_meta('sale_sequence', db_.saleSequences, (j) => SaleSequencesCompanion(
         id: Value(s(j['id'])),
         businessId: Value(sn(j['business_id']) ?? 'local'),
-        storeId: Value(sn(j['store_id'])),
+        storeId: Value(sn(j['store_id']) ?? 'local'),
         prefix: Value(s(j['prefix'])),
         lastNumber: Value(i(j['lastNumber'])),
         date: Value(dt(j['date']) ?? DateTime.now().toUtc()),

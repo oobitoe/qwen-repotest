@@ -206,6 +206,7 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final profile = ref.watch(userProfileProvider);
 
     return AlertDialog(
       title: const Text('Pembelian Baru'),
@@ -221,7 +222,10 @@ class _PurchaseFormState extends ConsumerState<_PurchaseForm> {
                 validator: (v) => (v == null || v.isEmpty) ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: AppSpacing.md),
-              ref.watch(suppliersProvider).when(
+              ref.watch(suppliersProvider((
+                businessId: profile.value?.businessId ?? 'local',
+                storeId: profile.value?.storeId ?? 'local',
+              ))).when(
                     data: (items) => DropdownButtonFormField<String>(
                       initialValue: _supplierId,
                       decoration: const InputDecoration(labelText: 'Supplier'),

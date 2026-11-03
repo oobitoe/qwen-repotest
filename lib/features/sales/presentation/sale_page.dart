@@ -208,6 +208,7 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final profile = ref.watch(userProfileProvider);
 
     return AlertDialog(
       title: const Text('Penjualan Baru'),
@@ -223,7 +224,10 @@ class _SaleFormState extends ConsumerState<_SaleForm> {
                 validator: (v) => (v == null || v.isEmpty) ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: AppSpacing.md),
-              ref.watch(customersProvider).when(
+              ref.watch(customersProvider((
+                businessId: profile.value?.businessId ?? 'local',
+                storeId: profile.value?.storeId ?? 'local',
+              ))).when(
                     data: (items) => DropdownButtonFormField<String>(
                       initialValue: _customerId,
                       decoration: const InputDecoration(labelText: 'Pelanggan'),

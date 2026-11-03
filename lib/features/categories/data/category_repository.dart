@@ -29,7 +29,7 @@ class CategoryRepository {
             createdAt: r.createdAt,
             updatedAt: r.updatedAt,
           ),
-      ]
+      ];
     });
   }
 

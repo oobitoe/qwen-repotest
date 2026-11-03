@@ -155,6 +155,7 @@ class PurchaseItemInput {
     required this.unitPrice,
     required this.costPrice,
     required this.quantity,
+    this.receivedQuantity = 0,
   });
 
   final String id;

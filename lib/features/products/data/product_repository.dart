@@ -96,7 +96,7 @@ class ProductRepository {
 
     // Get total count
     final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()])
-      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
+      ..where(_db.products.businessId.equals(businessId) & _db.products.storeId.equals(storeId));
     if (onlyActive) {
       countQuery.where(_db.products.isActive.equals(true) & _db.products.deletedAt.isNull());
     }
@@ -286,7 +286,7 @@ class ProductRepository {
 
     // Count query
     final countQuery = _db.selectOnly(_db.products)..addColumns([_db.products.id.count()])
-      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
+      ..where(_db.products.businessId.equals(businessId) & _db.products.storeId.equals(storeId));
     if (onlyActive) {
       countQuery.where(_db.products.isActive.equals(true) & _db.products.deletedAt.isNull());
     }
@@ -312,6 +312,8 @@ class ProductRepository {
         for (final r in rows)
           ProductEntity(
             id: r.id,
+            businessId: r.businessId,
+            storeId: r.storeId,
             sku: r.sku,
             barcode: r.barcode,
             name: r.name,

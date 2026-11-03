@@ -215,7 +215,7 @@ class AuditLogRepository {
       action: AuditAction.update,
       entityType: entityType,
       entityId: entityId,
-      description: 'Mengubah $fieldName dari \"$oldValue\" menjadi \"$newValue\"',
+      description: 'Mengubah $fieldName dari "$oldValue" menjadi "$newValue"',
       oldValue: oldValue.toString(),
       newValue: newValue.toString(),
       ipAddress: ipAddress,

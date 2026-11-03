@@ -283,15 +283,15 @@ class CashRepository {
 
   /// Total saldo kas (semua register + sesi terbuka).
   Future<double> totalCashBalance({required String businessId, required String storeId}) async {
-    final registers = await _db.select(_db.cashRegisters)
+    final registers = _db.select(_db.cashRegisters)
           ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
     final registersList = await registers.get();
-    final sessions = await (_db.select(_db.cashSessions)
+    final sessionsQuery = (_db.select(_db.cashSessions)
           ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId) & t.status.equals('open')))
-        .get();
+      ..get();
 
     double total = registersList.fold(0.0, (sum, r) => sum + r.openingBalance);
-    total += sessions.fold(0.0, (sum, s) => sum + (s.actualBalance ?? 0));
+    total += (await sessionsQuery.get()).fold(0.0, (sum, s) => sum + (s.actualBalance ?? 0));
     return total;
   }
 

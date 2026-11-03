@@ -205,33 +205,33 @@ class ReportsRepository {
     required String storeId,
   }) async {
     // Query sales filtered by businessId dan storeId
-    final sales = await _db.select(_db.sales)
+    final salesQuery = _db.select(_db.sales)
       ..where((t) => t.businessId.equals(businessId))
       ..where((t) => t.storeId.equals(storeId));
 
     if (filter.startDate != null) {
-      sales.where((t) => t.createdAt.isBiggerOrEqualValue(filter.startDate!));
+      salesQuery.where((t) => t.createdAt.isBiggerOrEqualValue(filter.startDate!));
     }
     if (filter.endDate != null) {
-      sales.where((t) => t.createdAt.isSmallerOrEqualValue(filter.endDate!));
+      salesQuery.where((t) => t.createdAt.isSmallerOrEqualValue(filter.endDate!));
     }
     if (filter.cashierId != null) {
-      sales.where((t) => t.cashierId.equals(filter.cashierId!));
+      salesQuery.where((t) => t.cashierId.equals(filter.cashierId!));
     }
 
-    final saleRows = await sales.get();
+    final saleRows = await salesQuery.get();
 
     // Group by date
     final Map<String, SalesReportData> grouped = {};
 
-    for (final sale in saleRows) {
-      // Fetch sale items for this sale
-      final items = await _db.select(_db.saleItems)
-        ..where((t) => t.saleId.equals(sale.id))
-        ..where((t) => t.businessId.equals(businessId))
-        ..where((t) => t.storeId.equals(storeId));
+      for (final sale in saleRows) {
+        // Fetch sale items for this sale
+        final itemsQuery = _db.select(_db.saleItems)
+          ..where((t) => t.saleId.equals(sale.id))
+          ..where((t) => t.businessId.equals(businessId))
+          ..where((t) => t.storeId.equals(storeId));
 
-      final itemRows = await items.get();
+        final itemRows = await itemsQuery.get();
 
       final dateKey = _formatPeriod(sale.createdAt, filter);
 
@@ -296,31 +296,31 @@ class ReportsRepository {
     int limit = 20,
   }) async {
     // Query sale items filtered by businessId dan storeId
-    final items = await _db.select(_db.saleItems)
+    final itemsQuery = _db.select(_db.saleItems)
       ..where((t) => t.businessId.equals(businessId))
       ..where((t) => t.storeId.equals(storeId));
 
     if (filter.startDate != null) {
-      items.where((t) => _db.sales.createdAt.isBiggerOrEqualValue(filter.startDate!));
+      itemsQuery.where((t) => _db.sales.createdAt.isBiggerOrEqualValue(filter.startDate!));
     }
     if (filter.endDate != null) {
-      items.where((t) => _db.sales.createdAt.isSmallerOrEqualValue(filter.endDate!));
+      itemsQuery.where((t) => _db.sales.createdAt.isSmallerOrEqualValue(filter.endDate!));
     }
 
     // Join with sales for date filter
-    items.join([
+    itemsQuery.join([
       innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
     ]);
 
-    final itemRows = await items.get();
+    final itemRows = await itemsQuery.get();
 
     // Fetch products and categories in batch
     final productIds = itemRows.map((i) => i.productId).toSet().toList();
     final products = <String, Map<String, dynamic>>{};
     for (final pid in productIds) {
-      final p = await _db.select(_db.products)
+      final pQuery = _db.select(_db.products)
         ..where((t) => t.id.equals(pid));
-      final pRow = await p.getSingleOrNull();
+      final pRow = await pQuery.getSingleOrNull();
       if (pRow != null) {
         products[pid] = {
           'sku': pRow.sku,
@@ -337,9 +337,9 @@ class ReportsRepository {
         .toList();
     final categories = <String, String>{};
     for (final cid in categoryIds) {
-      final c = await _db.select(_db.categories)
+      final cQuery = _db.select(_db.categories)
         ..where((t) => t.id.equals(cid));
-      final cRow = await c.getSingleOrNull();
+      final cRow = await cQuery.getSingleOrNull();
       if (cRow != null) {
         categories[cid] = cRow.name;
       }
@@ -365,7 +365,7 @@ class ReportsRepository {
           productName: productName,
           sku: sku,
           categoryName: categoryName,
-          quantitySold: item.quantity.toInt(),
+          quantitySold: (item.quantity).toInt(),
           totalRevenue: revenue,
           totalProfit: profit,
         );
@@ -375,7 +375,7 @@ class ReportsRepository {
           productName: productName,
           sku: sku,
           categoryName: categoryName,
-          quantitySold: existing.quantitySold + item.quantity.toInt(),
+          quantitySold: existing.quantitySold + (item.quantity).toInt(),
           totalRevenue: existing.totalRevenue + revenue,
           totalProfit: existing.totalProfit + profit,
         );
@@ -415,9 +415,9 @@ class ReportsRepository {
         .toList();
     final categories = <String, String>{};
     for (final cid in categoryIds) {
-      final c = await _db.select(_db.categories)
+      final cQuery = _db.select(_db.categories)
         ..where((t) => t.id.equals(cid));
-      final cRow = await c.getSingleOrNull();
+      final cRow = await cQuery.getSingleOrNull();
       if (cRow != null) {
         categories[cid] = cRow.name;
       }

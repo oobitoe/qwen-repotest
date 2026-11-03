@@ -215,7 +215,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
+              const CircularProgressIndicator(),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'Memeriksa koneksi dan server PocketBase…',

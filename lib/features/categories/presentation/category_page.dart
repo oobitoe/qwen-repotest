@@ -6,7 +6,6 @@ import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/providers/user_profile_provider.dart';
 import '../../categories/data/category_repository.dart';
-import '../../products/data/product_entity.dart';
 import 'package:uuid/uuid.dart';
 
 /// Halaman manajemen kategori: daftar kategori dengan pencarian dan

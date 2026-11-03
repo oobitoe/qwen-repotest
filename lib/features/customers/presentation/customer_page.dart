@@ -6,7 +6,6 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/providers/user_profile_provider.dart';
-import '../../customers/data/customer_entity.dart';
 import '../../customers/data/customer_repository.dart';
 
 /// Halaman manajemen pelanggan dengan tier dan poin reward.

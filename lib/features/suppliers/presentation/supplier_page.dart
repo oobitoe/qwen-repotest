@@ -6,7 +6,6 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/providers/user_profile_provider.dart';
-import '../../suppliers/data/supplier_entity.dart';
 import '../../suppliers/data/supplier_repository.dart';
 
 /// Halaman manajemen supplier.

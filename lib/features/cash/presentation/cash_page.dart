@@ -122,9 +122,9 @@ class _CashRegisterTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final profile = ref.watch(userProfileProvider);
-    final _businessId = profile.value?.businessId ?? 'local';
-    final _storeId = profile.value?.storeId ?? 'local';
-    final registers = ref.watch(cashRegistersProvider((businessId: _businessId, storeId: _storeId)));
+    final businessId = profile.value?.businessId ?? 'local';
+    final storeId = profile.value?.storeId ?? 'local';
+    final registers = ref.watch(cashRegistersProvider((businessId: businessId, storeId: storeId)));
 
     return registers.when(
       data: (items) {
@@ -191,9 +191,9 @@ class _AccountsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final profile = ref.watch(userProfileProvider);
-    final _businessId = profile.value?.businessId ?? 'local';
-    final _storeId = profile.value?.storeId ?? 'local';
-    final accounts = ref.watch(accountsProvider((businessId: _businessId, storeId: _storeId)));
+    final businessId = profile.value?.businessId ?? 'local';
+    final storeId = profile.value?.storeId ?? 'local';
+    final accounts = ref.watch(accountsProvider((businessId: businessId, storeId: storeId)));
 
     return accounts.when(
       data: (items) {
@@ -275,9 +275,9 @@ class _CashSessionsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final profile = ref.watch(userProfileProvider);
-    final _businessId = profile.value?.businessId ?? 'local';
-    final _storeId = profile.value?.storeId ?? 'local';
-    final sessions = ref.watch(cashSessionsProvider((businessId: _businessId, storeId: _storeId)));
+    final businessId = profile.value?.businessId ?? 'local';
+    final storeId = profile.value?.storeId ?? 'local';
+    final sessions = ref.watch(cashSessionsProvider((businessId: businessId, storeId: storeId)));
 
     return sessions.when(
       data: (items) {

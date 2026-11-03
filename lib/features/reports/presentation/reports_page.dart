@@ -236,7 +236,6 @@ class _SalesReportTab extends ConsumerWidget {
 final _salesReportProvider = FutureProvider.family<List<SalesReportData>, ReportFilter>(
   (ref, filter) async {
     final repo = ref.watch(reportsRepositoryProvider);
-    final profile = ref.watch(userProfileProvider);
     return repo.getSalesReport(
       filter,
       businessId: filter.businessId,
@@ -393,7 +392,6 @@ class _ProductsReportTab extends ConsumerWidget {
 final _topProductsProvider = FutureProvider.family<List<TopProductReportData>, ReportFilter>(
   (ref, filter) async {
     final repo = ref.watch(reportsRepositoryProvider);
-    final profile = ref.watch(userProfileProvider);
     return repo.getTopProductsReport(
       filter,
       businessId: filter.businessId,
@@ -461,7 +459,6 @@ class _InventoryReportTab extends ConsumerWidget {
 final _stockReportProvider = FutureProvider.family<List<StockReportData>, ReportFilter>(
   (ref, filter) async {
     final repo = ref.watch(reportsRepositoryProvider);
-    final profile = ref.watch(userProfileProvider);
     return repo.getStockReport(
       filter,
       businessId: filter.businessId,

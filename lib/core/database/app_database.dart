@@ -72,7 +72,22 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
+  AppDatabase([QueryExecutor? executor])
+      : super(executor ?? _createDatabaseExecutor());
+
+  /// Global encryption key for the database
+  static String? _encryptionKey;
+
+  /// Set encryption key for the database
+  static Future<void> setEncryptionKey(String? key) async {
+    _encryptionKey = key;
+  }
+
+  /// Get current encryption key
+  static String? get encryptionKey => _encryptionKey;
+
+  /// Check if database is encrypted
+  static bool get isEncrypted => _encryptionKey != null;
 
   @override
   int get schemaVersion => 2;
@@ -89,12 +104,34 @@ class AppDatabase extends _$AppDatabase {
         },
       );
 
-  static QueryExecutor _openConnection() {
-    // Gunakan database file persisten di direktori aplikasi
-    return NativeDatabase(File(_databasePathSync()));
+  static QueryExecutor _createDatabaseExecutor() {
+    return NativeDatabase(File(_databasePath()));
   }
 
-  static String _databasePathSync() {
+  /// Get database path with encryption support
+  static String _databasePath() {
+    final homeDir = Platform.environment['HOME'] ?? '/tmp';
+    final dirName = _encryptionKey != null ? '.pos_database_encrypted' : '.pos_database';
+    final fileName = _encryptionKey != null ? 'pos_database.db' : 'pos_database.sqlite';
+    final dbDir = Directory(p.join(homeDir, dirName));
+    if (!dbDir.existsSync()) {
+      dbDir.createSync(recursive: true);
+    }
+    return p.join(dbDir.path, fileName);
+  }
+
+  /// Get encrypted database path (for migration)
+  static String get encryptedDatabasePath {
+    final homeDir = Platform.environment['HOME'] ?? '/tmp';
+    final dbDir = Directory(p.join(homeDir, '.pos_database_encrypted'));
+    if (!dbDir.existsSync()) {
+      dbDir.createSync(recursive: true);
+    }
+    return p.join(dbDir.path, 'pos_database.db');
+  }
+
+  /// Get plaintext database path (for migration)
+  static String get plaintextDatabasePath {
     final homeDir = Platform.environment['HOME'] ?? '/tmp';
     final dbDir = Directory(p.join(homeDir, '.pos_database'));
     if (!dbDir.existsSync()) {

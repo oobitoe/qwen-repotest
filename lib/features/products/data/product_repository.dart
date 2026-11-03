@@ -359,7 +359,6 @@ final paginatedProductsProvider = FutureProvider.family<
     ({int page, int pageSize, String? query, String? categoryId, String businessId, String storeId})>(
   (ref, params) async {
     final repo = ref.watch(productRepositoryProvider);
-    final profile = ref.watch(userProfileProvider);
     return repo.getProductsPaginated(
       page: params.page,
       pageSize: params.pageSize,

@@ -272,7 +272,7 @@ class SetupController extends Notifier<SetupState> {
     state = state.copyWith(status: SetupStatus.checking, error: null);
 
     try {
-      final uuid = const Uuid();
+      final uuid = Uuid();  // ignore: prefer_const_declarations, prefer_const_constructors
       final businessId = uuid.v4();
       final storeId = uuid.v4();
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -287,7 +287,7 @@ class SetupController extends Notifier<SetupState> {
             timezone: Value(businessTimezone),
             createdAt: Value(DateTime.fromMillisecondsSinceEpoch(now)),
             updatedAt: Value(DateTime.fromMillisecondsSinceEpoch(now)),
-            version: Value(1),
+            version: const Value(1),
             syncStatus: const Value('pending'),
           ),
         );
@@ -302,7 +302,7 @@ class SetupController extends Notifier<SetupState> {
             phone: Value(storePhone),
             createdAt: Value(DateTime.fromMillisecondsSinceEpoch(now)),
             updatedAt: Value(DateTime.fromMillisecondsSinceEpoch(now)),
-            version: Value(1),
+            version: const Value(1),
             syncStatus: const Value('pending'),
           ),
         );

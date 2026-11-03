@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
 import '../database/app_database.dart';
@@ -283,28 +282,4 @@ class SecurityManager {
 
     return _lockoutDuration;
   }
-
-  /// Check if database file is encrypted
-  static Future<bool> isDatabaseEncrypted() async {
-    final encryptedPath = AppDatabase.encryptedDatabasePath;
-    if (!File(encryptedPath).existsSync()) {
-      return false;
-    }
-
-    try {
-      final file = File(encryptedPath);
-      final bytes = await file.readAsBytes();
-      return bytes.length > 100;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /// Get encrypted database path
-  static String get encryptedDatabasePath =>
-      AppDatabase.encryptedDatabasePath;
-
-  /// Get plaintext database path (for migration)
-  static String get plaintextDatabasePath =>
-      AppDatabase.plaintextDatabasePath;
 }

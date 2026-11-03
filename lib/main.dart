@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
+import 'core/database/app_database.dart';
 import 'core/database/sync_registry.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/providers/core_providers.dart';
@@ -14,8 +16,10 @@ import 'shared/providers/core_providers.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Inisialisasi enkripsi database sebelum database dibuat
+  await _initializeDatabaseEncryption();
+
   // Hapus database lama saat schema berubah (v1 -> v2 dengan businessId + storeId)
-  // Data lama akan dihapus dan dibuat ulang seed baru saat onCreate dijalankan
   await _deleteDatabaseIfNeeded();
 
   // Muat environment variabel (.env) sebelum inisialisasi layanan lain,
@@ -36,16 +40,51 @@ Future<void> main() async {
   runApp(const ProviderScope(child: PosApp()));
 }
 
+/// Inisialisasi enkripsi database sebelum AppDatabase dibuat.
+/// Jika kunci enkripsi tersedia, file database terenkripsi akan didekripsi
+/// ke lokasi kerja untuk digunakan Drift.
+Future<void> _initializeDatabaseEncryption() async {
+  final prefs = await _getPrefs();
+  final encryptionKey = prefs.getString('database_encryption_key');
+
+  if (encryptionKey != null && encryptionKey.isNotEmpty) {
+    await AppDatabase.setEncryptionKey(encryptionKey);
+    await AppDatabase.initializeEncryptedDatabase();
+  }
+}
+
+/// Ambil instance SharedPreferences
+Future<SharedPreferences> _getPrefs() async {
+  return SharedPreferences.getInstance();
+}
+
 /// Hapus database SQLite lama jika ada (untuk migrasi skema v1 -> v2).
 /// Data lama akan dihapus dan dibuat ulang seed baru dengan businessId + storeId.
 Future<void> _deleteDatabaseIfNeeded() async {
   final homeDir = Platform.environment['HOME'] ?? '/tmp';
-  final dbDir = Directory(p.join(homeDir, '.pos_database'));
-  final dbFile = File(p.join(dbDir.path, 'pos_database.sqlite'));
-  if (dbFile.existsSync()) {
-    await dbFile.delete();
-    debugPrint('Database lama dihapus: ${dbFile.path}');
+
+  // Hapus file database lama (plaintext di .pos_database)
+  final oldDbDir = Directory(p.join(homeDir, '.pos_database'));
+  final oldDbFile = File(p.join(oldDbDir.path, 'pos_database.sqlite'));
+  if (oldDbFile.existsSync()) {
+    await oldDbFile.delete();
+    debugPrint('Database lama dihapus: ${oldDbFile.path}');
   }
+
+  // Hapus file kerja jika ada (plaintext di .pos_database_working)
+  final workingDbDir = Directory(p.join(homeDir, '.pos_database_working'));
+  final workingDbFile = File(p.join(workingDbDir.path, 'pos_database.sqlite'));
+  if (workingDbFile.existsSync()) {
+    await workingDbFile.delete();
+    debugPrint('Database kerja dihapus: ${workingDbFile.path}');
+  }
+}
+
+/// Amankan database saat aplikasi ditutup.
+/// Harus dipanggil sebelum aplikasi keluar untuk mengenkripsi file database
+/// sehingga database browser tidak bisa membacanya.
+Future<void> secureDatabaseOnExit() async {
+  await AppDatabase.secureDatabaseAtRest();
 }
 
 class PosApp extends ConsumerWidget {

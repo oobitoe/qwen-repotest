@@ -199,37 +199,53 @@ class ReportsRepository {
   final AppDatabase _db;
 
   /// Laporan penjualan per hari/minggu/bulan.
-  Future<List<SalesReportData>> getSalesReport(ReportFilter filter, {required String businessId, required String storeId}) async {
-    // Query penjualan dengan grouping berdasarkan periode
-    final query = _db.select(_db.sales)
-      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
-    query.join([
-      innerJoin(_db.saleItems, _db.saleItems.saleId.equalsExp(_db.sales.id)),
-    ]);
+  Future<List<SalesReportData>> getSalesReport(
+    ReportFilter filter, {
+    required String businessId,
+    required String storeId,
+  }) async {
+    // Query sales filtered by businessId dan storeId
+    final sales = await _db.select(_db.sales)
+      ..where((t) => t.businessId.equals(businessId))
+      ..where((t) => t.storeId.equals(storeId));
 
-    // Apply filters
     if (filter.startDate != null) {
-      query.where(_db.sales.createdAt.isBiggerOrEqualValue(filter.startDate!));
+      sales.where((t) => t.createdAt.isBiggerOrEqualValue(filter.startDate!));
     }
     if (filter.endDate != null) {
-      query.where(_db.sales.createdAt.isSmallerOrEqualValue(filter.endDate!));
+      sales.where((t) => t.createdAt.isSmallerOrEqualValue(filter.endDate!));
     }
     if (filter.cashierId != null) {
-      query.where(_db.sales.cashierId.equals(filter.cashierId!));
+      sales.where((t) => t.cashierId.equals(filter.cashierId!));
     }
 
-    final rows = await query.get();
+    final saleRows = await sales.get();
 
-    // Group by date (simplified - in production use SQL grouping)
+    // Group by date
     final Map<String, SalesReportData> grouped = {};
 
-    for (final row in rows) {
-      final sale = row.readTable(_db.sales);
-      final item = row.readTable(_db.saleItems);
+    for (final sale in saleRows) {
+      // Fetch sale items for this sale
+      final items = await _db.select(_db.saleItems)
+        ..where((t) => t.saleId.equals(sale.id))
+        ..where((t) => t.businessId.equals(businessId))
+        ..where((t) => t.storeId.equals(storeId));
+
+      final itemRows = await items.get();
+
       final dateKey = _formatPeriod(sale.createdAt, filter);
 
       final existing = grouped[dateKey];
       if (existing == null) {
+        final totalCogs = itemRows.fold<double>(
+          0,
+          (sum, item) => sum + item.costPrice * item.quantity,
+        );
+        final totalProfit = itemRows.fold<double>(
+          0,
+          (sum, item) => sum + (item.unitPrice - item.costPrice) * item.quantity,
+        );
+
         grouped[dateKey] = SalesReportData(
           period: dateKey,
           totalSales: sale.total,
@@ -239,53 +255,104 @@ class ReportsRepository {
           netRevenue: sale.total,
           totalDiscount: sale.discount,
           totalTax: sale.tax,
-          cogs: item.costPrice * item.quantity,
-          grossProfit: (item.unitPrice - item.costPrice) * item.quantity - sale.discount,
+          cogs: totalCogs,
+          grossProfit: totalProfit - sale.discount,
         );
       } else {
+        final totalCogs = itemRows.fold<double>(
+          0,
+          (sum, item) => sum + item.costPrice * item.quantity,
+        );
+        final totalProfit = itemRows.fold<double>(
+          0,
+          (sum, item) => sum + (item.unitPrice - item.costPrice) * item.quantity,
+        );
+
         grouped[dateKey] = SalesReportData(
           period: dateKey,
           totalSales: existing.totalSales + sale.total,
           totalTransactions: existing.totalTransactions + 1,
-          averageTransaction: (existing.totalSales + sale.total) / (existing.totalTransactions + 1),
+          averageTransaction: (existing.totalSales + sale.total) /
+              (existing.totalTransactions + 1),
           grossRevenue: existing.grossRevenue + sale.subtotal,
           netRevenue: existing.netRevenue + sale.total,
           totalDiscount: existing.totalDiscount + sale.discount,
           totalTax: existing.totalTax + sale.tax,
-          cogs: existing.cogs + (item.costPrice * item.quantity),
-          grossProfit: existing.grossProfit + ((item.unitPrice - item.costPrice) * item.quantity - sale.discount),
+          cogs: existing.cogs + totalCogs,
+          grossProfit: existing.grossProfit + totalProfit - sale.discount,
         );
       }
     }
 
-    return grouped.values.toList()..sort((a, b) => a.period.compareTo(b.period));
+    return grouped.values.toList()
+      ..sort((a, b) => a.period.compareTo(b.period));
   }
 
   /// Top produk terjual.
-  Future<List<TopProductReportData>> getTopProductsReport(ReportFilter filter, {required String businessId, required String storeId, int limit = 20}) async {
-    final query = _db.select(_db.saleItems)
-      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
-    query.join([
-      innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
-      leftOuterJoin(_db.products, _db.products.id.equalsExp(_db.saleItems.productId)),
-      leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.products.categoryId)),
-    ]);
+  Future<List<TopProductReportData>> getTopProductsReport(
+    ReportFilter filter, {
+    required String businessId,
+    required String storeId,
+    int limit = 20,
+  }) async {
+    // Query sale items filtered by businessId dan storeId
+    final items = await _db.select(_db.saleItems)
+      ..where((t) => t.businessId.equals(businessId))
+      ..where((t) => t.storeId.equals(storeId));
 
     if (filter.startDate != null) {
-      query.where(_db.sales.createdAt.isBiggerOrEqualValue(filter.startDate!));
+      items.where((t) => _db.sales.createdAt.isBiggerOrEqualValue(filter.startDate!));
     }
     if (filter.endDate != null) {
-      query.where(_db.sales.createdAt.isSmallerOrEqualValue(filter.endDate!));
+      items.where((t) => _db.sales.createdAt.isSmallerOrEqualValue(filter.endDate!));
     }
 
-    final rows = await query.get();
+    // Join with sales for date filter
+    items.join([
+      innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
+    ]);
+
+    final itemRows = await items.get();
+
+    // Fetch products and categories in batch
+    final productIds = itemRows.map((i) => i.productId).toSet().toList();
+    final products = <String, Map<String, dynamic>>{};
+    for (final pid in productIds) {
+      final p = await _db.select(_db.products)
+        ..where((t) => t.id.equals(pid));
+      final pRow = await p.getSingleOrNull();
+      if (pRow != null) {
+        products[pid] = {
+          'sku': pRow.sku,
+          'name': pRow.name,
+          'categoryId': pRow.categoryId,
+        };
+      }
+    }
+
+    final categoryIds = products.values
+        .map((p) => p['categoryId'] as String?)
+        .whereType<String>()
+        .toSet()
+        .toList();
+    final categories = <String, String>{};
+    for (final cid in categoryIds) {
+      final c = await _db.select(_db.categories)
+        ..where((t) => t.id.equals(cid));
+      final cRow = await c.getSingleOrNull();
+      if (cRow != null) {
+        categories[cid] = cRow.name;
+      }
+    }
 
     final Map<String, TopProductReportData> grouped = {};
 
-    for (final row in rows) {
-      final item = row.readTable(_db.saleItems);
-      final product = row.readTableOrNull(_db.products);
-      final category = row.readTableOrNull(_db.categories);
+    for (final item in itemRows) {
+      final p = products[item.productId];
+      final productName = p?['name'] ?? '';
+      final sku = p?['sku'] ?? '';
+      final categoryId = p?['categoryId'];
+      final categoryName = categoryId != null ? categories[categoryId] ?? 'Tanpa Kategori' : 'Tanpa Kategori';
 
       final key = item.productId;
       final existing = grouped[key];
@@ -295,9 +362,9 @@ class ReportsRepository {
       if (existing == null) {
         grouped[key] = TopProductReportData(
           productId: item.productId,
-          productName: item.productName,
-          sku: product?.sku ?? '',
-          categoryName: category?.name ?? 'Tanpa Kategori',
+          productName: productName,
+          sku: sku,
+          categoryName: categoryName,
           quantitySold: item.quantity.toInt(),
           totalRevenue: revenue,
           totalProfit: profit,
@@ -305,9 +372,9 @@ class ReportsRepository {
       } else {
         grouped[key] = TopProductReportData(
           productId: item.productId,
-          productName: item.productName,
-          sku: product?.sku ?? '',
-          categoryName: category?.name ?? 'Tanpa Kategori',
+          productName: productName,
+          sku: sku,
+          categoryName: categoryName,
           quantitySold: existing.quantitySold + item.quantity.toInt(),
           totalRevenue: existing.totalRevenue + revenue,
           totalProfit: existing.totalProfit + profit,
@@ -322,47 +389,64 @@ class ReportsRepository {
   }
 
   /// Laporan stok (produk dengan stok rendah/habis).
-  Future<List<StockReportData>> getStockReport(ReportFilter filter, {required String businessId, required String storeId}) async {
+  Future<List<StockReportData>> getStockReport(
+    ReportFilter filter, {
+    required String businessId,
+    required String storeId,
+  }) async {
     final query = _db.select(_db.products)
-      ..where((t) => t.businessId.equals(businessId) & t.storeId.equals(storeId));
-    query.join([
-      leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.products.categoryId)),
-    ]);
+      ..where((t) => t.businessId.equals(businessId))
+      ..where((t) => t.storeId.equals(storeId));
 
     if (filter.categoryId != null) {
-      query.where(_db.products.categoryId.equals(filter.categoryId!));
+      query.where((t) => t.categoryId.equals(filter.categoryId!));
     }
 
     // Only active products
-    query.where(_db.products.isActive.equals(true));
+    query.where((t) => t.isActive.equals(true));
 
     final rows = await query.get();
 
+    // Fetch categories
+    final categoryIds = rows
+        .map((r) => r.categoryId)
+        .whereType<String>()
+        .toSet()
+        .toList();
+    final categories = <String, String>{};
+    for (final cid in categoryIds) {
+      final c = await _db.select(_db.categories)
+        ..where((t) => t.id.equals(cid));
+      final cRow = await c.getSingleOrNull();
+      if (cRow != null) {
+        categories[cid] = cRow.name;
+      }
+    }
+
     return rows.map((row) {
-      final product = row.readTable(_db.products);
-      final category = row.readTableOrNull(_db.categories);
-      final stock = product.stock;
-      final minStock = product.minStock;
+      final categoryName = row.categoryId != null
+          ? categories[row.categoryId] ?? 'Tanpa Kategori'
+          : 'Tanpa Kategori';
 
       String status;
-      if (stock <= 0) {
+      if (row.stock <= 0) {
         status = 'out';
-      } else if (stock <= minStock) {
+      } else if (row.stock <= row.minStock) {
         status = 'low';
       } else {
         status = 'normal';
       }
 
       return StockReportData(
-        productId: product.id,
-        productName: product.name,
-        sku: product.sku,
-        categoryName: category?.name ?? 'Tanpa Kategori',
-        currentStock: stock,
-        minStock: minStock,
-        costPrice: product.costPrice,
-        sellPrice: product.sellPrice,
-        stockValue: stock * product.costPrice,
+        productId: row.id,
+        productName: row.name,
+        sku: row.sku,
+        categoryName: categoryName,
+        currentStock: row.stock,
+        minStock: row.minStock,
+        costPrice: row.costPrice,
+        sellPrice: row.sellPrice,
+        stockValue: row.stock * row.costPrice,
         status: status,
       );
     }).toList()
@@ -374,14 +458,22 @@ class ReportsRepository {
   }
 
   /// Laporan arus kas.
-  Future<List<CashFlowReportData>> getCashFlowReport(ReportFilter filter, {required String businessId, required String storeId}) async {
+  Future<List<CashFlowReportData>> getCashFlowReport(
+    ReportFilter filter, {
+    required String businessId,
+    required String storeId,
+  }) async {
     // This would aggregate cash_movements, expenses, income, sales payments
     // Simplified implementation
     return [];
   }
 
   /// Laporan laba rugi.
-  Future<List<ProfitLossReportData>> getProfitLossReport(ReportFilter filter, {required String businessId, required String storeId}) async {
+  Future<List<ProfitLossReportData>> getProfitLossReport(
+    ReportFilter filter, {
+    required String businessId,
+    required String storeId,
+  }) async {
     // This would calculate revenue, cogs, expenses, etc.
     // Simplified implementation
     return [];
@@ -389,7 +481,9 @@ class ReportsRepository {
 
   String _formatPeriod(DateTime date, ReportFilter filter) {
     // Group by day/week/month based on date range
-    final diff = (filter.endDate ?? DateTime.now()).difference(filter.startDate ?? date).inDays;
+    final diff = (filter.endDate ?? DateTime.now())
+        .difference(filter.startDate ?? date)
+        .inDays;
     if (diff <= 31) {
       return '${date.day}/${date.month}/${date.year}';
     } else if (diff <= 365) {

@@ -10,6 +10,7 @@ import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 import 'core/database/app_database.dart';
 import 'core/database/sync_registry.dart';
+import 'core/security/encrypted_database_manager.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/providers/core_providers.dart';
 
@@ -80,11 +81,85 @@ Future<void> _deleteDatabaseIfNeeded() async {
   }
 }
 
-/// Amankan database saat aplikasi ditutup.
-/// Harus dipanggil sebelum aplikasi keluar untuk mengenkripsi file database
-/// sehingga database browser tidak bisa membacanya.
+/// Amankan database saat aplikasi pindah background / close.
+/// Enkripsi file kerja kembali ke `.enc` dan hapus file plaintext.
 Future<void> secureDatabaseOnExit() async {
   await AppDatabase.secureDatabaseAtRest();
+}
+
+/// Widget observer untuk lifecycle aplikasi.
+/// - Saat app pindah background/inactive/paused: enkripsi database ke `.enc`
+/// - Saat app kembali ke foreground/resume: dekripsi database dari `.enc`
+class _DatabaseLifecycleObserver extends StatefulWidget {
+  final Widget child;
+
+  const _DatabaseLifecycleObserver({required this.child});
+
+  @override
+  State<_DatabaseLifecycleObserver> createState() =>
+      _DatabaseLifecycleObserverState();
+}
+
+class _DatabaseLifecycleObserverState extends State<_DatabaseLifecycleObserver>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        // App pindah ke background — enkripsi database untuk proteksi at-rest
+        secureDatabaseOnExit();
+        break;
+      case AppLifecycleState.resumed:
+        // App kembali ke foreground — dekripsi database untuk digunakan
+        _restoreDatabase();
+        break;
+      case AppLifecycleState.detached:
+        // App ditutup — enkripsi database
+        secureDatabaseOnExit();
+        break;
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
+
+  /// Dekripsi database dari `.enc` ke lokasi kerja saat app resume
+  Future<void> _restoreDatabase() async {
+    if (!AppDatabase.isEncryptionEnabled) return;
+
+    final encryptedPath = AppDatabase.encryptedDatabasePath();
+    final workingPath = AppDatabase.databasePath();
+
+    // Hapus file working yang mungkin ada (dari crash sebelumnya)
+    final workingFile = File(workingPath);
+    if (workingFile.existsSync()) {
+      await workingFile.delete();
+    }
+
+    // Dekripsi dari `.enc`
+    await EncryptedDatabaseManager.prepareDatabaseForUse(
+      encryptedDbPath: encryptedPath,
+      workingDbPath: workingPath,
+      encryptionKey: AppDatabase.encryptionKey!,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
 }
 
 class PosApp extends ConsumerWidget {
@@ -117,7 +192,9 @@ class PosApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) =>
-          _ConnectivityWatcher(child: child ?? const SizedBox.shrink()),
+          _DatabaseLifecycleObserver(
+            child: _ConnectivityWatcher(child: child ?? const SizedBox.shrink()),
+          ),
     );
   }
 }
